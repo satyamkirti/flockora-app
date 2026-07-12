@@ -16,3 +16,6 @@ export * from './AddEditTaskScreen';
 export * from './AddEditHealthRecordScreen';
 export * from './HealthRecordDetailScreen';
 export * from './PulseHomeScreen';
+export * from './EggDashboardScreen';
+export * from './AddEditEggRecordScreen';
+export * from './EggHistoryScreen';

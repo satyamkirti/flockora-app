@@ -21,3 +21,4 @@ export * from './ProgressBar';
 export * from './TaskRow';
 export * from './BirdPickerModal';
 export * from './HealthTimelineRow';
+export * from './BarChart';

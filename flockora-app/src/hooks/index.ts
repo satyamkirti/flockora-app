@@ -10,3 +10,8 @@ export * from './useHealthRecord';
 export * from './useHealthStats';
 export * from './useHealthDashboardStats';
 export * from './useHealthRecords';
+export * from './useEggRecord';
+export * from './useEggHistory';
+export * from './useEggDashboard';
+export * from './useEggStatistics';
+export * from './useEggProductionSeries';

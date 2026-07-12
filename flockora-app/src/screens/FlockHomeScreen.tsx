@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import {
   AppScreen,
   AppText,
@@ -11,9 +12,9 @@ import {
   FlockManagerModal,
   FadeInUp,
 } from '../components';
-import { useBirds, useFlocks } from '../hooks';
+import { useBirds, useFlocks, useEggDashboard } from '../hooks';
 import { FlockStackParamList } from '../navigation/flockTypes';
-import { colors, spacing } from '../theme';
+import { colors, radii, shadows, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<FlockStackParamList, 'FlockHome'>;
 
@@ -21,6 +22,7 @@ export function FlockHomeScreen({ navigation }: Props) {
   const { flocks, refresh: refreshFlocks } = useFlocks();
   const [selectedFlockId, setSelectedFlockId] = useState<number | null>(null);
   const { birds, loading, refresh: refreshBirds } = useBirds(selectedFlockId);
+  const { summary: eggSummary } = useEggDashboard();
   const [manageVisible, setManageVisible] = useState(false);
 
   const handleChanged = () => {
@@ -42,6 +44,19 @@ export function FlockHomeScreen({ navigation }: Props) {
         </View>
         <IconButton name="options-outline" onPress={() => setManageVisible(true)} />
       </View>
+
+      <Pressable style={[styles.eggCard, shadows.card]} onPress={() => navigation.navigate('EggDashboard')}>
+        <View style={styles.eggIconBubble}>
+          <AppText style={styles.eggIcon}>🥚</AppText>
+        </View>
+        <View style={styles.eggCardText}>
+          <AppText variant="cardTitle">Egg Production</AppText>
+          <AppText variant="caption" color={colors.secondaryText}>
+            {eggSummary.todayTotal} {eggSummary.todayTotal === 1 ? 'egg' : 'eggs'} today
+          </AppText>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={colors.mutedText} />
+      </Pressable>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow} contentContainerStyle={styles.chipRowContent}>
         <Pressable
@@ -116,6 +131,31 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: spacing.xs,
+  },
+  eggCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.cardSurface,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  eggIconBubble: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
+    backgroundColor: colors.warmCream,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  eggIcon: {
+    fontSize: 18,
+  },
+  eggCardText: {
+    flex: 1,
   },
   chipRow: {
     flexGrow: 0,

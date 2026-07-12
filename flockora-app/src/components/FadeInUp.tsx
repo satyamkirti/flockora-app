@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, ViewStyle } from 'react-native';
+import { Animated, StyleProp, ViewStyle } from 'react-native';
 
 type FadeInUpProps = {
   children: React.ReactNode;
   delay?: number;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function FadeInUp({ children, delay = 0, style }: FadeInUpProps) {

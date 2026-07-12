@@ -1,6 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
-const DATABASE_VERSION = 3;
+const DATABASE_VERSION = 4;
 
 export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA foreign_keys = ON;');
@@ -105,6 +105,30 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_health_records_reminderDate ON health_records(reminderDate);
     `);
     currentVersion = 3;
+  }
+
+  if (currentVersion === 3) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS egg_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        flockId INTEGER REFERENCES flocks(id) ON DELETE SET NULL,
+        birdId INTEGER REFERENCES birds(id) ON DELETE SET NULL,
+        date TEXT NOT NULL,
+        totalEggs INTEGER NOT NULL DEFAULT 0,
+        fertileEggs INTEGER NOT NULL DEFAULT 0,
+        crackedEggs INTEGER NOT NULL DEFAULT 0,
+        dirtyEggs INTEGER NOT NULL DEFAULT 0,
+        doubleYolkEggs INTEGER NOT NULL DEFAULT 0,
+        notes TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_egg_records_date ON egg_records(date);
+      CREATE INDEX IF NOT EXISTS idx_egg_records_flockId ON egg_records(flockId);
+      CREATE INDEX IF NOT EXISTS idx_egg_records_birdId ON egg_records(birdId);
+    `);
+    currentVersion = 4;
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

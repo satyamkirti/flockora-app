@@ -4,4 +4,7 @@ export type FlockStackParamList = {
   AddEditBird: { birdId?: number };
   HealthRecordDetail: { recordId: number };
   AddEditHealthRecord: { birdId: number; recordId?: number };
+  EggDashboard: undefined;
+  EggHistory: undefined;
+  AddEditEggRecord: { recordId?: number };
 };

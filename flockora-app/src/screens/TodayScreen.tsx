@@ -4,7 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
 import { AppScreen, AppText, SectionHeader, StatCard, TaskRow, EmptyState, PrimaryButton, ProgressBar } from '../components';
-import { useTodayTasks, useTaskStats, useBirds, useFlocks, useHealthDashboardStats } from '../hooks';
+import { useTodayTasks, useTaskStats, useBirds, useFlocks, useHealthDashboardStats, useEggDashboard } from '../hooks';
 import { taskRepository } from '../db/repositories';
 import { taskTypeByKey } from '../data/taskTypes';
 import { isTaskCompletedToday, isTaskOverdue, formatDueTime, getTimeOfDayGreeting } from '../utils/taskSchedule';
@@ -19,6 +19,7 @@ export function TodayScreen({ navigation }: Props) {
   const { tasks, loading, refresh: refreshTasks } = useTodayTasks();
   const { stats, refresh: refreshStats } = useTaskStats();
   const { stats: healthStats } = useHealthDashboardStats();
+  const { summary: eggSummary } = useEggDashboard();
   const { birds } = useBirds();
   const { flocks } = useFlocks();
 
@@ -52,6 +53,13 @@ export function TodayScreen({ navigation }: Props) {
     { title: 'Vaccinations Due', value: String(healthStats.vaccinationsDue), accentColor: colors.sunflowerYellow },
     { title: 'Health Alerts', value: String(healthStats.healthAlerts), accentColor: colors.alertCoral },
     { title: 'Recent Records', value: String(healthStats.recentRecordsCount), accentColor: colors.waterBlue },
+  ];
+
+  const eggSummaryCards = [
+    { title: 'Eggs Today', value: String(eggSummary.todayTotal), accentColor: colors.sunflowerYellow },
+    { title: 'Eggs This Week', value: String(eggSummary.weekTotal), accentColor: colors.leafGreen },
+    { title: 'Eggs This Month', value: String(eggSummary.monthTotal), accentColor: colors.hatchOrange },
+    { title: 'Avg Daily Eggs', value: eggSummary.averagePerDay.toFixed(1), accentColor: colors.waterBlue },
   ];
 
   return (
@@ -122,6 +130,19 @@ export function TodayScreen({ navigation }: Props) {
         <SectionHeader title="Flock Health" />
         <View style={styles.summaryGrid}>
           {healthSummaryCards.map((card) => (
+            <StatCard
+              key={card.title}
+              title={card.title}
+              value={card.value}
+              accentColor={card.accentColor}
+              style={styles.statCard}
+            />
+          ))}
+        </View>
+
+        <SectionHeader title="Egg Production" />
+        <View style={styles.summaryGrid}>
+          {eggSummaryCards.map((card) => (
             <StatCard
               key={card.title}
               title={card.title}
