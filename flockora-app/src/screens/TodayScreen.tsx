@@ -1,11 +1,41 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { AppScreen, AppText, SectionHeader, StatCard, CareTaskRow, StatusPill, PrimaryButton } from '../components';
-import { careTasks, todaySummaryCards } from '../data/mockData';
+import { careTasks } from '../data/mockData';
+import { useDashboardStats } from '../hooks';
 import { colors, radii, spacing, shadows } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 
 export function TodayScreen() {
+  const { stats } = useDashboardStats();
+
+  const summaryCards = [
+    {
+      title: 'Total Birds',
+      value: String(stats.totalBirds),
+      subtitle: stats.totalBirds === 1 ? '1 bird tracked' : `${stats.totalBirds} birds tracked`,
+      accentColor: colors.sunflowerYellow,
+    },
+    {
+      title: 'Active Birds',
+      value: String(stats.activeBirds),
+      subtitle: 'Currently active',
+      accentColor: colors.leafGreen,
+    },
+    {
+      title: 'Flocks',
+      value: String(stats.totalFlocks),
+      subtitle: stats.totalFlocks === 1 ? '1 group' : `${stats.totalFlocks} groups`,
+      accentColor: colors.hatchOrange,
+    },
+    {
+      title: 'Recently Added',
+      value: String(stats.recentlyAddedCount),
+      subtitle: stats.latestBirdName ? `Latest: ${stats.latestBirdName}` : 'In the last 7 days',
+      accentColor: colors.waterBlue,
+    },
+  ];
+
   return (
     <AppScreen>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -26,7 +56,7 @@ export function TodayScreen() {
 
         <View style={[styles.summaryCard, shadows.card]}>
           <View style={styles.summaryGrid}>
-            {todaySummaryCards.map((card) => (
+            {summaryCards.map((card) => (
               <StatCard
                 key={card.title}
                 title={card.title}

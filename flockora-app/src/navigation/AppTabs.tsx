@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { TodayScreen } from '../screens/TodayScreen';
 import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { CameraSheetScreen } from '../screens/CameraSheetScreen';
+import { FlockStack } from './FlockStack';
 import { colors } from '../theme';
 
 const Tab = createBottomTabNavigator();
@@ -35,7 +36,7 @@ export function AppTabs() {
       })}
     >
       <Tab.Screen name="Today" component={TodayScreen} />
-      <Tab.Screen name="Flock" component={() => <PlaceholderScreen title="Flock" />} />
+      <Tab.Screen name="Flock" component={FlockStack} />
       <Tab.Screen
         name="Camera/Add"
         component={CameraSheetScreen}

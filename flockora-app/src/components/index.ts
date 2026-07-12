@@ -14,3 +14,7 @@ export * from './ConfidenceBadge';
 export * from './OnboardingHeader';
 export * from './EditableFieldModal';
 export * from './BirdPhotoBadge';
+export * from './FormField';
+export * from './SegmentedControl';
+export * from './BirdListRow';
+export * from './FlockManagerModal';

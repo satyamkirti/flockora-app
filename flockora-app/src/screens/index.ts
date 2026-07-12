@@ -8,3 +8,6 @@ export * from './AddFirstBirdScreen';
 export * from './AIPhotoAnalysisLoadingScreen';
 export * from './ReviewConfirmBirdDetailsScreen';
 export * from './PersonalizedDashboardScreen';
+export * from './FlockHomeScreen';
+export * from './BirdProfileScreen';
+export * from './AddEditBirdScreen';

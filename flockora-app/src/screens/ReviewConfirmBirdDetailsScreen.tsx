@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSQLiteContext } from 'expo-sqlite';
 import {
   AppScreen,
   AppText,
@@ -14,18 +15,21 @@ import {
 } from '../components';
 import { speciesByKey } from '../data/onboardingData';
 import { useOnboarding } from '../context/OnboardingContext';
+import { birdRepository } from '../db/repositories';
 import { RootStackParamList } from '../navigation/types';
 import { AIField } from '../types/onboarding';
-import { colors, radii, shadows, spacing } from '../theme';
+import { colors, radii, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ReviewConfirmBirdDetails'>;
 
 type FieldKey = 'confirmedBreed' | 'confirmedSex' | 'confirmedColor' | 'confirmedLifeStage';
 
 export function ReviewConfirmBirdDetailsScreen({ navigation }: Props) {
+  const db = useSQLiteContext();
   const { speciesKey, bird, updateBird } = useOnboarding();
   const species = speciesByKey(speciesKey ?? 'chicken');
   const [editingField, setEditingField] = useState<FieldKey | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (bird.aiAnalysis && !bird.confirmedBreed) {
@@ -51,6 +55,33 @@ export function ReviewConfirmBirdDetailsScreen({ navigation }: Props) {
   ];
 
   const activeRow = rows.find((row) => row.key === editingField);
+
+  const handleConfirm = async () => {
+    setSaving(true);
+    try {
+      await birdRepository.create(db, {
+        name: bird.name.trim(),
+        species: speciesKey ?? 'chicken',
+        breed: bird.confirmedBreed || null,
+        sex: bird.confirmedSex || null,
+        dateOfBirth: null,
+        ageEstimate: bird.confirmedLifeStage || null,
+        acquisitionDate: new Date().toISOString().slice(0, 10),
+        color: bird.confirmedColor || null,
+        weight: null,
+        weightUnit: 'kg',
+        notes: null,
+        photoUri: bird.photoCaptured ? 'captured' : null,
+        isActive: true,
+        flockId: null,
+      });
+      navigation.replace('PersonalizedDashboard');
+    } catch (error) {
+      Alert.alert("Couldn't save your bird", 'Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <AppScreen>
@@ -94,7 +125,11 @@ export function ReviewConfirmBirdDetailsScreen({ navigation }: Props) {
         </FadeInUp>
       </ScrollView>
 
-      <PrimaryButton label="Confirm & Continue" onPress={() => navigation.replace('PersonalizedDashboard')} />
+      <PrimaryButton
+        label={saving ? 'Saving…' : 'Confirm & Continue'}
+        onPress={handleConfirm}
+        style={saving ? styles.disabled : undefined}
+      />
 
       {activeRow ? (
         <EditableFieldModal
@@ -151,5 +186,8 @@ const styles = StyleSheet.create({
   },
   footNote: {
     marginTop: spacing.md,
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });
