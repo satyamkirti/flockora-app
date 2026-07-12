@@ -13,3 +13,6 @@ export * from './BirdProfileScreen';
 export * from './AddEditBirdScreen';
 export * from './TaskDetailScreen';
 export * from './AddEditTaskScreen';
+export * from './AddEditHealthRecordScreen';
+export * from './HealthRecordDetailScreen';
+export * from './PulseHomeScreen';

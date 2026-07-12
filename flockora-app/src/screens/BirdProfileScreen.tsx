@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -9,11 +9,17 @@ import {
   IconButton,
   BirdPhotoBadge,
   StatusPill,
+  StatCard,
+  SegmentedControl,
+  HealthTimelineRow,
+  EmptyState,
   FadeInUp,
 } from '../components';
-import { useBird, useFlocks } from '../hooks';
+import { useBird, useFlocks, useHealthStats, useBirdHealthHistory } from '../hooks';
 import { birdRepository } from '../db/repositories';
 import { speciesByKey } from '../data/onboardingData';
+import { healthRecordTypeByKey } from '../data/healthRecordTypes';
+import { formatDueDate } from '../utils/taskSchedule';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
 
@@ -21,11 +27,21 @@ type Props = NativeStackScreenProps<FlockStackParamList, 'BirdProfile'>;
 
 type DetailRow = { label: string; value: string };
 
+type ProfileTab = 'details' | 'health';
+
+const profileTabOptions: { label: string; value: ProfileTab }[] = [
+  { label: 'Details', value: 'details' },
+  { label: 'Health', value: 'health' },
+];
+
 export function BirdProfileScreen({ route, navigation }: Props) {
   const { birdId } = route.params;
   const db = useSQLiteContext();
   const { bird, loading, refresh } = useBird(birdId);
   const { flocks } = useFlocks();
+  const { stats: healthStats } = useHealthStats(birdId);
+  const { records: healthRecords, loading: loadingHealth } = useBirdHealthHistory(birdId);
+  const [activeTab, setActiveTab] = useState<ProfileTab>('details');
 
   if (loading) {
     return (
@@ -59,6 +75,17 @@ export function BirdProfileScreen({ route, navigation }: Props) {
     { label: 'Weight', value: bird.weight != null ? `${bird.weight} ${bird.weightUnit ?? 'kg'}` : 'Not recorded' },
     { label: 'Flock', value: flockName },
   ];
+
+  const healthStatCards = [
+    { title: 'Treatments', value: String(healthStats.treatmentCount), accentColor: colors.hatchOrange },
+    { title: 'Vaccinations', value: String(healthStats.vaccinationsCompleted), accentColor: colors.leafGreen },
+    { title: 'Expenses', value: `$${healthStats.totalExpenses.toFixed(2)}`, accentColor: colors.waterBlue },
+    { title: 'Active Medicines', value: String(healthStats.activeMedicineCount), accentColor: colors.sunflowerYellow },
+  ];
+
+  const upcomingReminders = healthRecords.filter(
+    (record) => record.status === 'active' && record.reminderDate != null && new Date(record.reminderDate) >= new Date()
+  );
 
   const handleToggleActive = async () => {
     await birdRepository.setActive(db, bird.id, !bird.isActive);
@@ -98,36 +125,112 @@ export function BirdProfileScreen({ route, navigation }: Props) {
           <StatusPill label={bird.isActive ? 'Active' : 'Inactive'} tone={bird.isActive ? 'success' : 'neutral'} />
         </FadeInUp>
 
-        <FadeInUp delay={80} style={styles.card}>
-          {detailRows.map((row, index) => (
-            <View key={row.label} style={[styles.row, index === detailRows.length - 1 && styles.rowLast]}>
-              <AppText variant="caption" color={colors.mutedText}>
-                {row.label}
-              </AppText>
-              <AppText variant="cardTitle">{row.value}</AppText>
-            </View>
-          ))}
-        </FadeInUp>
+        <View style={styles.tabSwitch}>
+          <SegmentedControl options={profileTabOptions} value={activeTab} onChange={setActiveTab} />
+        </View>
 
-        {bird.notes ? (
-          <FadeInUp delay={140} style={styles.notesCard}>
-            <AppText variant="cardTitle" style={styles.notesLabel}>
-              Notes
-            </AppText>
-            <AppText variant="body" color={colors.secondaryText}>
-              {bird.notes}
-            </AppText>
-          </FadeInUp>
-        ) : null}
+        {activeTab === 'details' ? (
+          <>
+            <FadeInUp style={styles.card}>
+              {detailRows.map((row, index) => (
+                <View key={row.label} style={[styles.row, index === detailRows.length - 1 && styles.rowLast]}>
+                  <AppText variant="caption" color={colors.mutedText}>
+                    {row.label}
+                  </AppText>
+                  <AppText variant="cardTitle">{row.value}</AppText>
+                </View>
+              ))}
+            </FadeInUp>
 
-        <FadeInUp delay={200} style={styles.actions}>
-          <PrimaryButton
-            label={bird.isActive ? 'Mark Inactive' : 'Mark Active'}
-            onPress={handleToggleActive}
-            style={styles.secondaryButton}
-          />
-          <PrimaryButton label="Delete Bird" onPress={handleDelete} style={styles.deleteButton} />
-        </FadeInUp>
+            {bird.notes ? (
+              <FadeInUp delay={60} style={styles.notesCard}>
+                <AppText variant="cardTitle" style={styles.notesLabel}>
+                  Notes
+                </AppText>
+                <AppText variant="body" color={colors.secondaryText}>
+                  {bird.notes}
+                </AppText>
+              </FadeInUp>
+            ) : null}
+
+            <FadeInUp delay={120} style={styles.actions}>
+              <PrimaryButton
+                label={bird.isActive ? 'Mark Inactive' : 'Mark Active'}
+                onPress={handleToggleActive}
+                style={styles.secondaryButton}
+              />
+              <PrimaryButton label="Delete Bird" onPress={handleDelete} style={styles.deleteButton} />
+            </FadeInUp>
+          </>
+        ) : (
+          <>
+            <FadeInUp style={styles.healthStatsGrid}>
+              {healthStatCards.map((card) => (
+                <StatCard
+                  key={card.title}
+                  title={card.title}
+                  value={card.value}
+                  accentColor={card.accentColor}
+                  style={styles.healthStatCard}
+                />
+              ))}
+            </FadeInUp>
+
+            {upcomingReminders.length > 0 ? (
+              <FadeInUp delay={40} style={styles.remindersCard}>
+                <AppText variant="cardTitle" style={styles.notesLabel}>
+                  Upcoming Reminders
+                </AppText>
+                {upcomingReminders.map((record) => {
+                  const typeOption = healthRecordTypeByKey(record.type);
+                  return (
+                    <View key={record.id} style={styles.reminderRow}>
+                      <AppText style={styles.reminderIcon}>{typeOption.icon}</AppText>
+                      <AppText variant="body" style={styles.reminderText}>
+                        {record.title}
+                      </AppText>
+                      <AppText variant="caption" color={colors.secondaryText}>
+                        {formatDueDate(record.reminderDate as string)}
+                      </AppText>
+                    </View>
+                  );
+                })}
+              </FadeInUp>
+            ) : null}
+
+            <FadeInUp delay={80}>
+              <PrimaryButton
+                label="+ Add Health Record"
+                onPress={() => navigation.navigate('AddEditHealthRecord', { birdId: bird.id })}
+                style={styles.addHealthButton}
+              />
+            </FadeInUp>
+
+            {loadingHealth ? (
+              <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+            ) : healthRecords.length === 0 ? (
+              <FadeInUp delay={120}>
+                <EmptyState title="No health records yet" message="Log a checkup, treatment, or vaccination to start this bird's medical timeline." />
+              </FadeInUp>
+            ) : (
+              <FadeInUp delay={120} style={styles.timelineCard}>
+                {healthRecords.map((record) => {
+                  const typeOption = healthRecordTypeByKey(record.type);
+                  return (
+                    <HealthTimelineRow
+                      key={record.id}
+                      icon={typeOption.icon}
+                      title={record.title}
+                      dateLabel={record.startDate ? formatDueDate(record.startDate) : 'No date'}
+                      status={record.status}
+                      onPress={() => navigation.navigate('HealthRecordDetail', { recordId: record.id })}
+                    />
+                  );
+                })}
+              </FadeInUp>
+            )}
+          </>
+        )}
       </ScrollView>
     </AppScreen>
   );
@@ -161,6 +264,9 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginBottom: spacing.xs,
+  },
+  tabSwitch: {
+    marginBottom: spacing.lg,
   },
   card: {
     backgroundColor: colors.cardSurface,
@@ -200,5 +306,44 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: colors.alertCoral,
+  },
+  healthStatsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  healthStatCard: {
+    width: '48%',
+  },
+  remindersCard: {
+    backgroundColor: colors.cardSurface,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  reminderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+    gap: spacing.sm,
+  },
+  reminderIcon: {
+    fontSize: 18,
+  },
+  reminderText: {
+    flex: 1,
+  },
+  addHealthButton: {
+    marginBottom: spacing.lg,
+  },
+  timelineCard: {
+    backgroundColor: colors.cardSurface,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.lg,
   },
 });

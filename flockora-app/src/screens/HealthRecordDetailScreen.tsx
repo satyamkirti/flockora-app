@@ -2,39 +2,24 @@ import React from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
-import {
-  AppScreen,
-  AppText,
-  PrimaryButton,
-  IconButton,
-  StatusPill,
-  FadeInUp,
-} from '../components';
-import { useTask, useBirds, useFlocks } from '../hooks';
-import { taskRepository } from '../db/repositories';
+import { AppScreen, AppText, PrimaryButton, IconButton, StatusPill, FadeInUp } from '../components';
+import { useHealthRecord, useBirds } from '../hooks';
+import { healthRecordRepository } from '../db/repositories';
 import { cancelNotification } from '../services/notificationService';
-import { taskTypeByKey } from '../data/taskTypes';
-import { isTaskCompletedToday, isTaskOverdue, formatDueDate, formatDueTime } from '../utils/taskSchedule';
-import { TodayStackParamList } from '../navigation/todayTypes';
+import { healthRecordTypeByKey } from '../data/healthRecordTypes';
+import { formatDueDate } from '../utils/taskSchedule';
+import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
 
-type Props = NativeStackScreenProps<TodayStackParamList, 'TaskDetail'>;
-
-const repeatLabels: Record<string, string> = {
-  none: 'Does not repeat',
-  daily: 'Repeats daily',
-  weekly: 'Repeats weekly',
-  monthly: 'Repeats monthly',
-};
+type Props = NativeStackScreenProps<FlockStackParamList, 'HealthRecordDetail'>;
 
 type DetailRow = { label: string; value: string };
 
-export function TaskDetailScreen({ route, navigation }: Props) {
-  const { taskId } = route.params;
+export function HealthRecordDetailScreen({ route, navigation }: Props) {
+  const { recordId } = route.params;
   const db = useSQLiteContext();
-  const { task, loading, refresh } = useTask(taskId);
+  const { record, loading, refresh } = useHealthRecord(recordId);
   const { birds } = useBirds();
-  const { flocks } = useFlocks();
 
   if (loading) {
     return (
@@ -44,12 +29,12 @@ export function TaskDetailScreen({ route, navigation }: Props) {
     );
   }
 
-  if (!task) {
+  if (!record) {
     return (
       <AppScreen>
         <View style={styles.notFound}>
           <AppText variant="screenTitle" align="center">
-            Task not found
+            Record not found
           </AppText>
           <PrimaryButton label="Go back" onPress={() => navigation.goBack()} style={styles.notFoundButton} />
         </View>
@@ -57,38 +42,35 @@ export function TaskDetailScreen({ route, navigation }: Props) {
     );
   }
 
-  const typeOption = taskTypeByKey(task.type);
-  const birdName = birds.find((bird) => bird.id === task.birdId)?.name ?? null;
-  const flockName = flocks.find((flock) => flock.id === task.flockId)?.name ?? null;
-  const doneToday = isTaskCompletedToday(task);
-  const overdue = isTaskOverdue(task);
+  const typeOption = healthRecordTypeByKey(record.type);
+  const birdName = birds.find((bird) => bird.id === record.birdId)?.name ?? 'Unknown bird';
+  const isActive = record.status === 'active';
 
   const detailRows: DetailRow[] = [
-    { label: 'Due', value: `${formatDueDate(task.dueDate)} at ${formatDueTime(task.dueDate)}` },
-    { label: 'Repeat', value: repeatLabels[task.repeatType] ?? 'Does not repeat' },
-    { label: 'Bird', value: birdName ?? 'Not assigned' },
-    { label: 'Flock', value: flockName ?? 'Not assigned' },
-    { label: 'Reminder', value: task.notificationEnabled ? 'On' : 'Off' },
+    { label: 'Bird', value: birdName },
+    { label: 'Start Date', value: record.startDate ? formatDueDate(record.startDate) : 'Not recorded' },
+    { label: 'End Date', value: record.endDate ? formatDueDate(record.endDate) : 'Not recorded' },
+    { label: 'Medicine', value: record.medicine ?? 'Not recorded' },
+    { label: 'Dosage', value: record.dosage ?? 'Not recorded' },
+    { label: 'Veterinarian', value: record.veterinarian ?? 'Not recorded' },
+    { label: 'Cost', value: record.cost != null ? `$${record.cost.toFixed(2)}` : 'Not recorded' },
+    { label: 'Reminder', value: record.reminderDate ? formatDueDate(record.reminderDate) : 'None' },
   ];
 
-  const handleToggleComplete = async () => {
-    if (doneToday) {
-      await taskRepository.reopenTask(db, task.id);
-    } else {
-      await taskRepository.completeTask(db, task.id);
-    }
+  const handleToggleStatus = async () => {
+    await healthRecordRepository.setStatus(db, record.id, isActive ? 'completed' : 'active');
     refresh();
   };
 
   const handleDelete = () => {
-    Alert.alert('Delete task', `Delete "${task.title}"? This can't be undone.`, [
+    Alert.alert('Delete health record', `Delete "${record.title}"? This can't be undone.`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
-          await cancelNotification(task.notificationId);
-          await taskRepository.deleteTask(db, task.id);
+          await cancelNotification(record.notificationId);
+          await healthRecordRepository.deleteHealthRecord(db, record.id);
           navigation.goBack();
         },
       },
@@ -99,34 +81,31 @@ export function TaskDetailScreen({ route, navigation }: Props) {
     <AppScreen>
       <View style={styles.headerRow}>
         <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
-        <IconButton name="pencil" onPress={() => navigation.navigate('AddEditTask', { taskId: task.id })} />
+        <IconButton
+          name="pencil"
+          onPress={() => navigation.navigate('AddEditHealthRecord', { birdId: record.birdId, recordId: record.id })}
+        />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <FadeInUp style={styles.heroBlock}>
           <AppText style={styles.icon}>{typeOption.icon}</AppText>
           <AppText variant="display" align="center">
-            {task.title}
+            {record.title}
           </AppText>
           <AppText variant="body" color={colors.secondaryText} align="center" style={styles.subtitle}>
             {typeOption.label}
           </AppText>
-          {doneToday ? (
-            <StatusPill label="Completed" tone="success" />
-          ) : overdue ? (
-            <StatusPill label="Overdue" tone="warning" />
-          ) : (
-            <StatusPill label="Pending" tone="neutral" />
-          )}
+          <StatusPill label={isActive ? 'Active' : 'Completed'} tone={isActive ? 'warning' : 'success'} />
         </FadeInUp>
 
-        {task.description ? (
+        {record.notes ? (
           <FadeInUp delay={60} style={styles.notesCard}>
             <AppText variant="cardTitle" style={styles.notesLabel}>
-              Description
+              Notes
             </AppText>
             <AppText variant="body" color={colors.secondaryText}>
-              {task.description}
+              {record.notes}
             </AppText>
           </FadeInUp>
         ) : null}
@@ -144,11 +123,11 @@ export function TaskDetailScreen({ route, navigation }: Props) {
 
         <FadeInUp delay={180} style={styles.actions}>
           <PrimaryButton
-            label={doneToday ? 'Reopen Task' : 'Mark Complete'}
-            onPress={handleToggleComplete}
-            style={doneToday ? styles.secondaryButton : undefined}
+            label={isActive ? 'Mark Completed' : 'Reopen Record'}
+            onPress={handleToggleStatus}
+            style={isActive ? undefined : styles.secondaryButton}
           />
-          <PrimaryButton label="Delete Task" onPress={handleDelete} style={styles.deleteButton} />
+          <PrimaryButton label="Delete Record" onPress={handleDelete} style={styles.deleteButton} />
         </FadeInUp>
       </ScrollView>
     </AppScreen>

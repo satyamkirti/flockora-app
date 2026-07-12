@@ -1,6 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
-const DATABASE_VERSION = 2;
+const DATABASE_VERSION = 3;
 
 export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA foreign_keys = ON;');
@@ -75,6 +75,36 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_tasks_repeatType ON tasks(repeatType);
     `);
     currentVersion = 2;
+  }
+
+  if (currentVersion === 2) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS health_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        birdId INTEGER NOT NULL REFERENCES birds(id) ON DELETE CASCADE,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        notes TEXT,
+        medicine TEXT,
+        dosage TEXT,
+        startDate TEXT,
+        endDate TEXT,
+        veterinarian TEXT,
+        cost REAL,
+        reminderDate TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        notificationId TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_health_records_birdId ON health_records(birdId);
+      CREATE INDEX IF NOT EXISTS idx_health_records_type ON health_records(type);
+      CREATE INDEX IF NOT EXISTS idx_health_records_status ON health_records(status);
+      CREATE INDEX IF NOT EXISTS idx_health_records_startDate ON health_records(startDate);
+      CREATE INDEX IF NOT EXISTS idx_health_records_reminderDate ON health_records(reminderDate);
+    `);
+    currentVersion = 3;
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

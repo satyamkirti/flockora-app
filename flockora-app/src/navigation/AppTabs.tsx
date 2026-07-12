@@ -5,6 +5,7 @@ import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { CameraSheetScreen } from '../screens/CameraSheetScreen';
 import { FlockStack } from './FlockStack';
 import { TodayStack } from './TodayStack';
+import { PulseStack } from './PulseStack';
 import { colors } from '../theme';
 
 const Tab = createBottomTabNavigator();
@@ -45,7 +46,7 @@ export function AppTabs() {
           tabBarLabel: '',
         }}
       />
-      <Tab.Screen name="Pulse" component={() => <PlaceholderScreen title="Pulse" />} />
+      <Tab.Screen name="Pulse" component={PulseStack} />
       <Tab.Screen name="More" component={() => <PlaceholderScreen title="More" />} />
     </Tab.Navigator>
   );

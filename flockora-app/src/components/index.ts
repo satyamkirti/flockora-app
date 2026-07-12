@@ -20,3 +20,4 @@ export * from './FlockManagerModal';
 export * from './ProgressBar';
 export * from './TaskRow';
 export * from './BirdPickerModal';
+export * from './HealthTimelineRow';

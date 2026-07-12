@@ -1,7 +1,13 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { FlockStackParamList } from './flockTypes';
-import { FlockHomeScreen, BirdProfileScreen, AddEditBirdScreen } from '../screens';
+import {
+  FlockHomeScreen,
+  BirdProfileScreen,
+  AddEditBirdScreen,
+  HealthRecordDetailScreen,
+  AddEditHealthRecordScreen,
+} from '../screens';
 
 const Stack = createNativeStackNavigator<FlockStackParamList>();
 
@@ -11,6 +17,8 @@ export function FlockStack() {
       <Stack.Screen name="FlockHome" component={FlockHomeScreen} />
       <Stack.Screen name="BirdProfile" component={BirdProfileScreen} />
       <Stack.Screen name="AddEditBird" component={AddEditBirdScreen} />
+      <Stack.Screen name="HealthRecordDetail" component={HealthRecordDetailScreen} />
+      <Stack.Screen name="AddEditHealthRecord" component={AddEditHealthRecordScreen} />
     </Stack.Navigator>
   );
 }
