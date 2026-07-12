@@ -1,119 +1,134 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { AppScreen, AppText, SectionHeader, StatCard, CareTaskRow, StatusPill, PrimaryButton } from '../components';
-import { careTasks } from '../data/mockData';
-import { useDashboardStats } from '../hooks';
-import { colors, radii, spacing, shadows } from '../theme';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSQLiteContext } from 'expo-sqlite';
+import { AppScreen, AppText, SectionHeader, StatCard, TaskRow, EmptyState, PrimaryButton, ProgressBar } from '../components';
+import { useTodayTasks, useTaskStats, useBirds, useFlocks } from '../hooks';
+import { taskRepository } from '../db/repositories';
+import { taskTypeByKey } from '../data/taskTypes';
+import { isTaskCompletedToday, isTaskOverdue, formatDueTime, getTimeOfDayGreeting } from '../utils/taskSchedule';
+import { Task } from '../types/task';
+import { TodayStackParamList } from '../navigation/todayTypes';
+import { colors, radii, spacing, shadows } from '../theme';
 
-export function TodayScreen() {
-  const { stats } = useDashboardStats();
+type Props = NativeStackScreenProps<TodayStackParamList, 'TodayHome'>;
+
+export function TodayScreen({ navigation }: Props) {
+  const db = useSQLiteContext();
+  const { tasks, loading, refresh: refreshTasks } = useTodayTasks();
+  const { stats, refresh: refreshStats } = useTaskStats();
+  const { birds } = useBirds();
+  const { flocks } = useFlocks();
+
+  const handleToggle = async (task: Task) => {
+    if (isTaskCompletedToday(task)) {
+      await taskRepository.reopenTask(db, task.id);
+    } else {
+      await taskRepository.completeTask(db, task.id);
+    }
+    refreshTasks();
+    refreshStats();
+  };
+
+  const progress = stats.todayTotal === 0 ? 0 : stats.completedToday / stats.todayTotal;
+  const today = new Date();
+  const dateLabel = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  }).format(today);
 
   const summaryCards = [
-    {
-      title: 'Total Birds',
-      value: String(stats.totalBirds),
-      subtitle: stats.totalBirds === 1 ? '1 bird tracked' : `${stats.totalBirds} birds tracked`,
-      accentColor: colors.sunflowerYellow,
-    },
-    {
-      title: 'Active Birds',
-      value: String(stats.activeBirds),
-      subtitle: 'Currently active',
-      accentColor: colors.leafGreen,
-    },
-    {
-      title: 'Flocks',
-      value: String(stats.totalFlocks),
-      subtitle: stats.totalFlocks === 1 ? '1 group' : `${stats.totalFlocks} groups`,
-      accentColor: colors.hatchOrange,
-    },
-    {
-      title: 'Recently Added',
-      value: String(stats.recentlyAddedCount),
-      subtitle: stats.latestBirdName ? `Latest: ${stats.latestBirdName}` : 'In the last 7 days',
-      accentColor: colors.waterBlue,
-    },
+    { title: "Today's Tasks", value: String(stats.todayTotal), accentColor: colors.sunflowerYellow },
+    { title: 'Completed', value: String(stats.completedToday), accentColor: colors.leafGreen },
+    { title: 'Pending', value: String(stats.pendingToday), accentColor: colors.hatchOrange },
+    { title: 'Overdue', value: String(stats.overdueCount), accentColor: colors.alertCoral },
   ];
 
   return (
     <AppScreen>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
             <AppText variant="caption" color={colors.leafGreen}>
-              Welcome back
+              {getTimeOfDayGreeting(today)}
             </AppText>
-            <AppText variant="display">Good morning, Emma</AppText>
-            <AppText variant="body" color={colors.secondaryText} style={styles.subtitle}>
-              Your flock looks good today.
-            </AppText>
+            <AppText variant="display">{dateLabel}</AppText>
           </View>
           <View style={styles.iconBubble}>
             <Ionicons name="sunny" size={24} color={colors.hatchOrange} />
           </View>
         </View>
 
-        <View style={[styles.summaryCard, shadows.card]}>
-          <View style={styles.summaryGrid}>
-            {summaryCards.map((card) => (
-              <StatCard
-                key={card.title}
-                title={card.title}
-                value={card.value}
-                subtitle={card.subtitle}
-                accentColor={card.accentColor}
-                style={styles.statCard}
-              />
-            ))}
+        <View style={[styles.progressCard, shadows.card]}>
+          <View style={styles.progressHeader}>
+            <AppText variant="sectionTitle">Today's Progress</AppText>
+            <AppText variant="caption" color={colors.secondaryText}>
+              {stats.completedToday} of {stats.todayTotal} done
+            </AppText>
           </View>
+          <ProgressBar progress={progress} />
         </View>
 
-        <SectionHeader title="Today's Care" />
-        <View style={styles.taskList}>
-          {careTasks.map((task) => (
-            <CareTaskRow
-              key={task.title}
-              title={task.title}
-              detail={task.detail}
-              completed={task.completed}
-              urgent={task.urgent}
+        <View style={styles.summaryGrid}>
+          {summaryCards.map((card) => (
+            <StatCard
+              key={card.title}
+              title={card.title}
+              value={card.value}
+              accentColor={card.accentColor}
+              style={styles.statCard}
             />
           ))}
         </View>
 
-        <View style={[styles.pulseCard, shadows.card]}>
-          <View style={styles.pulseHeader}>
-            <View>
-              <AppText variant="sectionTitle">Flock Pulse</AppText>
-              <AppText variant="caption" color={colors.secondaryText}>
-                Looking stable
-              </AppText>
-            </View>
-            <StatusPill label="Stable" tone="success" />
+        <SectionHeader title="Today's Tasks" />
+        {loading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : tasks.length === 0 ? (
+          <EmptyState title="No tasks today" message="Add your first care task to start your daily routine." />
+        ) : (
+          <View style={styles.taskList}>
+            {tasks.map((task) => {
+              const typeOption = taskTypeByKey(task.type);
+              const birdName = birds.find((bird) => bird.id === task.birdId)?.name;
+              const flockName = flocks.find((flock) => flock.id === task.flockId)?.name;
+              return (
+                <TaskRow
+                  key={task.id}
+                  icon={typeOption.icon}
+                  title={task.title}
+                  dueTimeLabel={formatDueTime(task.dueDate)}
+                  subjectLabel={birdName ?? flockName ?? null}
+                  completed={isTaskCompletedToday(task)}
+                  overdue={isTaskOverdue(task)}
+                  onToggle={() => handleToggle(task)}
+                  onPress={() => navigation.navigate('TaskDetail', { taskId: task.id })}
+                />
+              );
+            })}
           </View>
-          <AppText variant="body" color={colors.secondaryText} style={styles.pulseText}>
-            Egg production and recent care activity are within your normal pattern.
-          </AppText>
-          <PrimaryButton label="View pulse" style={styles.pulseButton} />
-        </View>
+        )}
       </ScrollView>
+
+      <PrimaryButton label="+ Add Task" onPress={() => navigation.navigate('AddEditTask', {})} />
     </AppScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   scrollContent: {
-    paddingBottom: 140,
+    paddingBottom: spacing.lg,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: spacing.lg,
-  },
-  subtitle: {
-    marginTop: spacing.xs,
   },
   iconBubble: {
     width: 48,
@@ -123,18 +138,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  summaryCard: {
+  progressCard: {
     backgroundColor: colors.cardSurface,
     borderRadius: radii.xl,
-    padding: spacing.md,
+    padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.lg,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
   summaryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   statCard: {
     width: '48%',
@@ -147,24 +169,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  pulseCard: {
-    backgroundColor: colors.cardSurface,
-    borderRadius: radii.xl,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginTop: spacing.lg,
-  },
-  pulseHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  pulseText: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  pulseButton: {
-    alignSelf: 'flex-start',
+  loader: {
+    marginTop: spacing.xl,
   },
 });
