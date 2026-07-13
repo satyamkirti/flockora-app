@@ -35,3 +35,4 @@ export * from './AddEditCandlingRecordScreen';
 export * from './AddEditHatchRecordScreen';
 export * from './CreateBirdsFromHatchScreen';
 export * from './ReportsScreen';
+export * from './BackupRestoreScreen';

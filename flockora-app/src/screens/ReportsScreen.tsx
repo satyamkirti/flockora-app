@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommonActions } from '@react-navigation/native';
-import { AppScreen, AppText, SectionHeader, StatCard, BarChart, FadeInUp } from '../components';
+import { AppScreen, AppText, IconButton, SectionHeader, StatCard, BarChart, FadeInUp } from '../components';
 import {
   useFlockDashboardStats,
   useEggStatistics,
@@ -98,6 +98,7 @@ export function ReportsScreen({ navigation }: Props) {
             A cross-flock view of everything you've logged.
           </AppText>
         </View>
+        <IconButton name="cloud-download-outline" onPress={() => navigation.navigate('BackupRestore')} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -155,6 +156,9 @@ export function ReportsScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     marginBottom: spacing.md,
   },
   subtitle: {

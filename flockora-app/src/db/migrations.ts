@@ -1,6 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
-const DATABASE_VERSION = 10;
+export const DATABASE_VERSION = 10;
 
 export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA foreign_keys = ON;');
