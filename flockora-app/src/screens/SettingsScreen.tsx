@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { useOnboarding } from '../context/OnboardingContext';
 import { DATABASE_VERSION } from '../db/migrations';
 import { clearTemporaryCache, formatBytes } from '../services/cacheService';
 import { MoreStackParamList } from '../navigation/moreTypes';
+import { PRIVACY_POLICY_URL, PRIVACY_POLICY_URL_IS_PLACEHOLDER } from '../config/privacyConfig';
 import { colors, radii, spacing } from '../theme';
 import packageJson from '../../package.json';
 
@@ -16,6 +17,29 @@ type Props = NativeStackScreenProps<MoreStackParamList, 'Settings'>;
 
 const APP_VERSION = Constants.expoConfig?.version ?? packageJson.version ?? 'Unknown';
 const LIBRARY_NAMES = Object.keys(packageJson.dependencies ?? {}).sort();
+
+const PRIVACY_POINTS: { title: string; body: string }[] = [
+  {
+    title: 'Local data',
+    body: 'Your birds, flocks, tasks, health records, eggs, feed, and breeding/hatching data are stored only in a private database on this device — no cloud sync, no account.',
+  },
+  {
+    title: 'Bird photo for AI analysis',
+    body: "When you add your first bird, its photo is uploaded to Flockora's own backend server (never a third-party AI provider) so it can suggest breed, sex, color, and life stage details for you to confirm. This is the only thing Flockora sends off this device automatically.",
+  },
+  {
+    title: 'No analytics',
+    body: 'Flockora does not collect analytics or usage data of any kind.',
+  },
+  {
+    title: 'No advertising',
+    body: 'Flockora shows no ads and includes no advertising SDKs.',
+  },
+  {
+    title: 'No third-party tracking',
+    body: 'Your data is never sold or shared with third parties for advertising or tracking.',
+  },
+];
 
 type SettingsRowProps = {
   label: string;
@@ -115,6 +139,17 @@ export function SettingsScreen({ navigation }: Props) {
     );
   };
 
+  const handlePrivacyPolicy = () => {
+    if (PRIVACY_POLICY_URL_IS_PLACEHOLDER) {
+      Alert.alert(
+        'Privacy Policy not yet published',
+        "Flockora doesn't have a published privacy policy online yet — this link will be added before the app is released. The Privacy Information above is accurate today."
+      );
+      return;
+    }
+    Linking.openURL(PRIVACY_POLICY_URL);
+  };
+
   return (
     <AppScreen>
       <View style={styles.headerRow}>
@@ -167,12 +202,31 @@ export function SettingsScreen({ navigation }: Props) {
             Privacy Information
           </AppText>
           <AppText variant="body" color={colors.secondaryText} style={styles.aboutBody}>
-            Flockora stores all of your data locally on this device in a private database — there is no cloud sync,
-            no user account, and no analytics or tracking of any kind. Nothing you enter is sent anywhere unless you
-            explicitly export a backup file yourself and choose to share it. Health/medical notes, like other data,
-            are stored unencrypted on this device, consistent with a local-only, single-user app; avoid sharing your
-            device or backup files with anyone you wouldn't trust with that information.
+            Flockora is a local-only app. Here's exactly what that means:
           </AppText>
+          <View style={styles.privacyList}>
+            {PRIVACY_POINTS.map((point) => (
+              <View key={point.title} style={styles.privacyItem}>
+                <AppText variant="body" style={styles.privacyItemTitle}>
+                  {point.title}
+                </AppText>
+                <AppText variant="caption" color={colors.secondaryText}>
+                  {point.body}
+                </AppText>
+              </View>
+            ))}
+          </View>
+          <AppText variant="body" color={colors.secondaryText} style={styles.aboutBody}>
+            Health/medical notes, like other data, are stored unencrypted on this device, consistent with a
+            local-only, single-user app; avoid sharing your device or backup files with anyone you wouldn't trust
+            with that information. A backup file is only ever sent anywhere if you explicitly export it and choose
+            to share it yourself.
+          </AppText>
+          <Pressable onPress={handlePrivacyPolicy} hitSlop={8}>
+            <AppText variant="button" color={colors.leafGreen}>
+              Read the full Privacy Policy →
+            </AppText>
+          </Pressable>
         </FadeInUp>
 
         <FadeInUp delay={100} style={styles.card}>
@@ -256,6 +310,16 @@ const styles = StyleSheet.create({
   },
   aboutBody: {
     marginBottom: spacing.md,
+  },
+  privacyList: {
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  privacyItem: {
+    gap: 2,
+  },
+  privacyItemTitle: {
+    color: colors.primaryText,
   },
   libraryList: {
     paddingBottom: spacing.md,
