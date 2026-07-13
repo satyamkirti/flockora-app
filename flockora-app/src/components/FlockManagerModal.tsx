@@ -5,7 +5,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { AppText } from './AppText';
 import { EditableFieldModal } from './EditableFieldModal';
 import { flockRepository } from '../db/repositories';
-import { FlockWithCount } from '../types/flock';
+import { createEmptyFlockInput, FlockWithCount } from '../types/flock';
 import { colors, radii, spacing } from '../theme';
 
 type FlockManagerModalProps = {
@@ -16,6 +16,10 @@ type FlockManagerModalProps = {
   selectable?: boolean;
   selectedFlockId?: number | null;
   onSelect?: (flockId: number | null) => void;
+  /** Optional — when provided, an extra icon appears per row for opening the full
+   *  species/breed/purpose/notes editor (AddEditFlockScreen). Omitted by callers that don't
+   *  have navigation available (e.g. the flock picker inside AddEditBirdScreen). */
+  onEditDetails?: (flock: FlockWithCount) => void;
 };
 
 export function FlockManagerModal({
@@ -26,6 +30,7 @@ export function FlockManagerModal({
   selectable = false,
   selectedFlockId = null,
   onSelect,
+  onEditDetails,
 }: FlockManagerModalProps) {
   const db = useSQLiteContext();
   const [newFlockName, setNewFlockName] = useState('');
@@ -34,7 +39,7 @@ export function FlockManagerModal({
   const handleCreate = async () => {
     const name = newFlockName.trim();
     if (!name) return;
-    await flockRepository.create(db, name);
+    await flockRepository.create(db, { ...createEmptyFlockInput(), name });
     setNewFlockName('');
     onChanged();
   };
@@ -87,6 +92,17 @@ export function FlockManagerModal({
                 </Pressable>
                 {selectable && selectedFlockId === flock.id ? (
                   <Ionicons name="checkmark-circle" size={22} color={colors.leafGreen} style={styles.rowIcon} />
+                ) : null}
+                {onEditDetails ? (
+                  <Pressable
+                    style={styles.rowIcon}
+                    onPress={() => {
+                      onClose();
+                      onEditDetails(flock);
+                    }}
+                  >
+                    <Ionicons name="options-outline" size={18} color={colors.mutedText} />
+                  </Pressable>
                 ) : null}
                 <Pressable style={styles.rowIcon} onPress={() => setRenamingFlock(flock)}>
                   <Ionicons name="pencil" size={18} color={colors.mutedText} />

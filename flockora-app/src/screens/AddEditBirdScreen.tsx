@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Animated,
+  Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -28,9 +29,29 @@ import {
 import { useBird, useFlocks } from '../hooks';
 import { birdRepository } from '../db/repositories';
 import { speciesByKey, speciesOptions } from '../data/onboardingData';
+import { captureFromCamera, pickFromGallery, PickPhotoOutcome } from '../services/imagePickerService';
 import { BirdInput, WeightUnit, createEmptyBirdInput } from '../types/bird';
+import { CapturedPhoto } from '../types/onboarding';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
+
+function showPermissionDeniedAlert(kind: 'camera' | 'gallery', canAskAgain: boolean, onUseOther: () => void) {
+  const otherLabel = kind === 'camera' ? 'Choose from Gallery' : 'Take a Photo';
+  const message =
+    kind === 'camera'
+      ? 'Flockora needs camera access to take a bird photo.'
+      : 'Flockora needs photo library access to choose a bird photo.';
+
+  const buttons: { text: string; onPress?: () => void; style?: 'cancel' | 'default' }[] = [
+    { text: otherLabel, onPress: onUseOther },
+  ];
+  if (canAskAgain === false) {
+    buttons.push({ text: 'Open Settings', onPress: () => Linking.openSettings() });
+  }
+  buttons.push({ text: 'Cancel', style: 'cancel' });
+
+  Alert.alert('Permission needed', message, buttons);
+}
 
 type Props = NativeStackScreenProps<FlockStackParamList, 'AddEditBird'>;
 
@@ -65,12 +86,14 @@ export function AddEditBirdScreen({ route, navigation }: Props) {
 
   const [form, setForm] = useState<BirdInput>(createEmptyBirdInput());
   const [weightText, setWeightText] = useState('');
-  const [photoCaptured, setPhotoCaptured] = useState(false);
+  // Legacy bird records created before real capture existed (Sprint 3.2/before) may have the
+  // literal string 'captured' stored as photoUri — that is never a usable image source.
+  const [photo, setPhoto] = useState<CapturedPhoto | null>(null);
+  const [isPicking, setIsPicking] = useState(false);
   const [dobMode, setDobMode] = useState<'dob' | 'age'>('age');
   const [flockModalVisible, setFlockModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hydrated, setHydrated] = useState(!isEditing);
-  const flash = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (isEditing && existingBird && !hydrated) {
@@ -87,11 +110,14 @@ export function AddEditBirdScreen({ route, navigation }: Props) {
         weightUnit: existingBird.weightUnit ?? 'kg',
         notes: existingBird.notes,
         photoUri: existingBird.photoUri,
+        tagId: existingBird.tagId,
         isActive: existingBird.isActive,
         flockId: existingBird.flockId,
       });
       setWeightText(existingBird.weight != null ? String(existingBird.weight) : '');
-      setPhotoCaptured(Boolean(existingBird.photoUri));
+      if (existingBird.photoUri && existingBird.photoUri !== 'captured') {
+        setPhoto({ uri: existingBird.photoUri, mimeType: 'image/jpeg', fileName: 'bird-photo.jpg' });
+      }
       setDobMode(existingBird.dateOfBirth ? 'dob' : 'age');
       setHydrated(true);
     }
@@ -103,10 +129,34 @@ export function AddEditBirdScreen({ route, navigation }: Props) {
   const normalizedSex: SexOption = form.sex === 'Male' || form.sex === 'Female' ? form.sex : 'Unknown';
   const flockName = flocks.find((flock) => flock.id === form.flockId)?.name ?? 'No Flock';
 
-  const handleCapture = () => {
-    flash.setValue(1);
-    Animated.timing(flash, { toValue: 0, duration: 420, useNativeDriver: true }).start();
-    setPhotoCaptured(true);
+  const handlePhotoOutcome = (outcome: PickPhotoOutcome, kind: 'camera' | 'gallery') => {
+    if (outcome.status === 'success') {
+      setPhoto(outcome.photo);
+      return;
+    }
+    if (outcome.status === 'permission_denied') {
+      showPermissionDeniedAlert(kind, outcome.canAskAgain, () => (kind === 'camera' ? handleChooseFromGallery() : handleTakePhoto()));
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    if (isPicking) return;
+    setIsPicking(true);
+    try {
+      handlePhotoOutcome(await captureFromCamera(), 'camera');
+    } finally {
+      setIsPicking(false);
+    }
+  };
+
+  const handleChooseFromGallery = async () => {
+    if (isPicking) return;
+    setIsPicking(true);
+    try {
+      handlePhotoOutcome(await pickFromGallery(), 'gallery');
+    } finally {
+      setIsPicking(false);
+    }
   };
 
   const handleSave = async () => {
@@ -127,7 +177,8 @@ export function AddEditBirdScreen({ route, navigation }: Props) {
       color: form.color?.trim() || null,
       weight: parsedWeight != null && !Number.isNaN(parsedWeight) ? parsedWeight : null,
       notes: form.notes?.trim() || null,
-      photoUri: photoCaptured ? form.photoUri ?? 'captured' : null,
+      photoUri: photo?.uri ?? null,
+      tagId: form.tagId?.trim() || null,
     };
 
     setSaving(true);
@@ -168,17 +219,53 @@ export function AddEditBirdScreen({ route, navigation }: Props) {
         keyboardVerticalOffset={16}
       >
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <FadeInUp>
-            <Pressable onPress={handleCapture} style={styles.captureCard}>
-              <BirdPhotoBadge icon={species.icon} size={88} style={styles.captureBadge} />
-              <AppText variant="caption" color={colors.leafGreen}>
-                {photoCaptured ? 'Photo captured' : 'Tap to add a photo'}
-              </AppText>
-              <Animated.View pointerEvents="none" style={[styles.flashOverlay, { opacity: flash }]} />
-            </Pressable>
+          <FadeInUp style={styles.captureWrap}>
+            {photo ? (
+              <View style={styles.previewWrap}>
+                <Image source={{ uri: photo.uri }} style={styles.previewImage} />
+                <View style={styles.previewActions}>
+                  <Pressable style={styles.secondaryButton} onPress={handleTakePhoto} disabled={isPicking}>
+                    <AppText variant="button" color={colors.secondaryText}>
+                      Retake
+                    </AppText>
+                  </Pressable>
+                  <Pressable style={styles.secondaryButton} onPress={handleChooseFromGallery} disabled={isPicking}>
+                    <AppText variant="button" color={colors.secondaryText}>
+                      Choose Another Photo
+                    </AppText>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.captureCard}>
+                <BirdPhotoBadge icon={species.icon} size={72} style={styles.captureBadge} />
+                <View style={styles.captureActions}>
+                  <Pressable style={styles.captureButton} onPress={handleTakePhoto} disabled={isPicking}>
+                    <Ionicons name="camera-outline" size={16} color={colors.cardSurface} />
+                    <AppText variant="caption" color={colors.cardSurface}>
+                      Take Photo
+                    </AppText>
+                  </Pressable>
+                  <Pressable style={styles.captureButtonOutline} onPress={handleChooseFromGallery} disabled={isPicking}>
+                    <Ionicons name="images-outline" size={16} color={colors.primaryText} />
+                    <AppText variant="caption" color={colors.primaryText}>
+                      Choose from Gallery
+                    </AppText>
+                  </Pressable>
+                </View>
+              </View>
+            )}
           </FadeInUp>
 
           <FormField label="Bird Name" value={form.name} onChangeText={(text) => update({ name: text })} placeholder="e.g. Daisy" />
+
+          <FormField
+            label="Leg Band / Tag ID"
+            optional
+            value={form.tagId ?? ''}
+            onChangeText={(text) => update({ tagId: text })}
+            placeholder="e.g. Y-042"
+          />
 
           <View style={styles.fieldBlock}>
             <AppText variant="cardTitle" style={styles.label}>
@@ -346,20 +433,60 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: spacing.lg,
   },
+  captureWrap: {
+    marginBottom: spacing.lg,
+  },
   captureCard: {
     alignSelf: 'center',
     alignItems: 'center',
-    marginBottom: spacing.lg,
-    overflow: 'hidden',
     borderRadius: radii.xl,
     padding: spacing.md,
   },
   captureBadge: {
     marginBottom: spacing.xs,
   },
-  flashOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.cardSurface,
+  captureActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  captureButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.leafGreen,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  captureButtonOutline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  previewWrap: {
+    alignItems: 'center',
+  },
+  previewImage: {
+    width: 140,
+    height: 140,
+    borderRadius: radii.xl,
+    borderWidth: 3,
+    borderColor: colors.sunflowerYellow,
+    backgroundColor: colors.softGreen,
+    marginBottom: spacing.sm,
+  },
+  previewActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  secondaryButton: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
   },
   fieldBlock: {
     marginBottom: spacing.lg,

@@ -68,10 +68,12 @@ export function BirdProfileScreen({ route, navigation }: Props) {
   const flockName = flocks.find((flock) => flock.id === bird.flockId)?.name ?? 'Unassigned';
 
   const detailRows: DetailRow[] = [
+    { label: 'Species', value: species.label },
     { label: 'Sex', value: bird.sex || 'Not recorded' },
     { label: bird.dateOfBirth ? 'Date of Birth' : 'Age', value: bird.dateOfBirth || bird.ageEstimate || 'Not recorded' },
     { label: 'Acquired', value: bird.acquisitionDate || 'Not recorded' },
     { label: 'Color', value: bird.color || 'Not recorded' },
+    { label: 'Tag / Band ID', value: bird.tagId || 'Not recorded' },
     { label: 'Weight', value: bird.weight != null ? `${bird.weight} ${bird.weightUnit ?? 'kg'}` : 'Not recorded' },
     { label: 'Flock', value: flockName },
   ];

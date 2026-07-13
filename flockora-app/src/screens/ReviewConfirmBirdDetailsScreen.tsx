@@ -82,6 +82,7 @@ export function ReviewConfirmBirdDetailsScreen({ navigation }: Props) {
         weightUnit: 'kg',
         notes: null,
         photoUri: bird.photo?.uri ?? null,
+        tagId: null,
         isActive: true,
         flockId: null,
       });

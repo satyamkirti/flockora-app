@@ -511,6 +511,7 @@ export const breedingRepository = {
           weightUnit: 'kg',
           notes: `Hatched from clutch #${hatchRecord.clutchId}.`,
           photoUri: null,
+          tagId: null,
           isActive: true,
           flockId: options.flockId,
         });

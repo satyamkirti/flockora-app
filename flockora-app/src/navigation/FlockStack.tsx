@@ -5,6 +5,7 @@ import {
   FlockHomeScreen,
   BirdProfileScreen,
   AddEditBirdScreen,
+  AddEditFlockScreen,
   HealthRecordDetailScreen,
   AddEditHealthRecordScreen,
   EggDashboardScreen,
@@ -33,6 +34,7 @@ export function FlockStack() {
       <Stack.Screen name="FlockHome" component={FlockHomeScreen} />
       <Stack.Screen name="BirdProfile" component={BirdProfileScreen} />
       <Stack.Screen name="AddEditBird" component={AddEditBirdScreen} />
+      <Stack.Screen name="AddEditFlock" component={AddEditFlockScreen} />
       <Stack.Screen name="HealthRecordDetail" component={HealthRecordDetailScreen} />
       <Stack.Screen name="AddEditHealthRecord" component={AddEditHealthRecordScreen} />
       <Stack.Screen name="EggDashboard" component={EggDashboardScreen} />

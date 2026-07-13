@@ -16,6 +16,7 @@ type BirdRow = {
   weightUnit: string | null;
   notes: string | null;
   photoUri: string | null;
+  tagId: string | null;
   isActive: number;
   flockId: number | null;
   createdAt: string;
@@ -59,8 +60,8 @@ export const birdRepository = {
     const now = new Date().toISOString();
     const result = await db.runAsync(
       `INSERT INTO birds
-        (name, species, breed, sex, dateOfBirth, ageEstimate, acquisitionDate, color, weight, weightUnit, notes, photoUri, isActive, flockId, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (name, species, breed, sex, dateOfBirth, ageEstimate, acquisitionDate, color, weight, weightUnit, notes, photoUri, tagId, isActive, flockId, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.name,
         input.species,
@@ -74,6 +75,7 @@ export const birdRepository = {
         input.weightUnit,
         input.notes,
         input.photoUri,
+        input.tagId,
         input.isActive ? 1 : 0,
         input.flockId,
         now,
@@ -92,7 +94,7 @@ export const birdRepository = {
     await db.runAsync(
       `UPDATE birds SET
         name = ?, species = ?, breed = ?, sex = ?, dateOfBirth = ?, ageEstimate = ?, acquisitionDate = ?,
-        color = ?, weight = ?, weightUnit = ?, notes = ?, photoUri = ?, isActive = ?, flockId = ?, updatedAt = ?
+        color = ?, weight = ?, weightUnit = ?, notes = ?, photoUri = ?, tagId = ?, isActive = ?, flockId = ?, updatedAt = ?
        WHERE id = ?`,
       [
         input.name,
@@ -107,6 +109,7 @@ export const birdRepository = {
         input.weightUnit,
         input.notes,
         input.photoUri,
+        input.tagId,
         input.isActive ? 1 : 0,
         input.flockId,
         now,

@@ -11,6 +11,7 @@ export * from './PersonalizedDashboardScreen';
 export * from './FlockHomeScreen';
 export * from './BirdProfileScreen';
 export * from './AddEditBirdScreen';
+export * from './AddEditFlockScreen';
 export * from './TaskDetailScreen';
 export * from './AddEditTaskScreen';
 export * from './AddEditHealthRecordScreen';

@@ -16,6 +16,7 @@ export type Bird = {
   weightUnit: WeightUnit | null;
   notes: string | null;
   photoUri: string | null;
+  tagId: string | null;
   isActive: boolean;
   flockId: number | null;
   createdAt: string;
@@ -35,6 +36,7 @@ export type BirdInput = {
   weightUnit: WeightUnit | null;
   notes: string | null;
   photoUri: string | null;
+  tagId: string | null;
   isActive: boolean;
   flockId: number | null;
 };
@@ -52,6 +54,7 @@ export const createEmptyBirdInput = (): BirdInput => ({
   weightUnit: 'kg',
   notes: null,
   photoUri: null,
+  tagId: null,
   isActive: true,
   flockId: null,
 });
