@@ -1,11 +1,32 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { CommonActions, useNavigation } from '@react-navigation/native';
 import { AppScreen, AppText, PrimaryButton } from '../components';
 import { colors, spacing } from '../theme';
 
 const options = ['Bird', 'Egg', 'Medicine', 'Feed', 'Health concern', 'Vet document', 'Hatch tray'];
 
+/**
+ * Only "Egg" and "Hatch tray" are wired to real destinations — they route into the existing,
+ * already-built Egg Production and Breeding/Hatching (Clutch) screens in the Flock tab. The
+ * remaining options (Bird, Medicine, Feed, Health concern, Vet document) are out of scope for
+ * this sprint and stay as inert placeholders, unchanged from before.
+ */
 export function CameraSheetScreen() {
+  const navigation = useNavigation();
+
+  const handlePress = (option: string) => {
+    if (option === 'Egg') {
+      navigation.dispatch(
+        CommonActions.navigate({ name: 'Flock', params: { screen: 'AddEditEggRecord', params: {} } })
+      );
+    } else if (option === 'Hatch tray') {
+      navigation.dispatch(
+        CommonActions.navigate({ name: 'Flock', params: { screen: 'AddEditClutch', params: {} } })
+      );
+    }
+  };
+
   return (
     <AppScreen>
       <View style={styles.container}>
@@ -15,7 +36,7 @@ export function CameraSheetScreen() {
         </AppText>
         <View style={styles.optionList}>
           {options.map((option) => (
-            <PrimaryButton key={option} label={option} style={styles.optionButton} />
+            <PrimaryButton key={option} label={option} onPress={() => handlePress(option)} style={styles.optionButton} />
           ))}
         </View>
       </View>

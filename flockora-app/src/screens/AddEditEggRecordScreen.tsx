@@ -31,6 +31,7 @@ import { colors, radii, spacing } from '../theme';
 type Props = NativeStackScreenProps<FlockStackParamList, 'AddEditEggRecord'>;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 function parseCount(text: string): number {
   const value = Number.parseInt(text, 10);
@@ -47,6 +48,7 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
 
   const [form, setForm] = useState<EggRecordInput>(createEmptyEggRecordInput());
   const [dateText, setDateText] = useState(form.date);
+  const [timeText, setTimeText] = useState(form.time ?? '');
   const [totalText, setTotalText] = useState('0');
   const [fertileText, setFertileText] = useState('0');
   const [crackedText, setCrackedText] = useState('0');
@@ -63,6 +65,7 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
         flockId: existingRecord.flockId,
         birdId: existingRecord.birdId,
         date: existingRecord.date,
+        time: existingRecord.time,
         totalEggs: existingRecord.totalEggs,
         fertileEggs: existingRecord.fertileEggs,
         crackedEggs: existingRecord.crackedEggs,
@@ -71,6 +74,7 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
         notes: existingRecord.notes,
       });
       setDateText(existingRecord.date);
+      setTimeText(existingRecord.time ?? '');
       setTotalText(String(existingRecord.totalEggs));
       setFertileText(String(existingRecord.fertileEggs));
       setCrackedText(String(existingRecord.crackedEggs));
@@ -90,10 +94,15 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
       Alert.alert('Invalid date', 'Please use YYYY-MM-DD for the date.');
       return;
     }
+    if (timeText.trim() && !TIME_PATTERN.test(timeText.trim())) {
+      Alert.alert('Invalid time', 'Please use HH:MM (24-hour) for the time, or leave it blank.');
+      return;
+    }
 
     const payload: EggRecordInput = {
       ...form,
       date: dateText.trim(),
+      time: timeText.trim() || null,
       totalEggs: parseCount(totalText),
       fertileEggs: parseCount(fertileText),
       crackedEggs: parseCount(crackedText),
@@ -139,8 +148,13 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
         keyboardVerticalOffset={16}
       >
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-          <FadeInUp>
-            <FormField label="Date" value={dateText} onChangeText={setDateText} placeholder="YYYY-MM-DD" />
+          <FadeInUp style={styles.countRow}>
+            <View style={styles.countInput}>
+              <FormField label="Date" value={dateText} onChangeText={setDateText} placeholder="YYYY-MM-DD" />
+            </View>
+            <View style={styles.countInput}>
+              <FormField label="Time" optional value={timeText} onChangeText={setTimeText} placeholder="HH:MM" />
+            </View>
           </FadeInUp>
 
           <View style={styles.fieldBlock}>
@@ -163,13 +177,28 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
             </Pressable>
           </View>
 
-          <FormField
-            label="Total Eggs"
-            value={totalText}
-            onChangeText={setTotalText}
-            placeholder="0"
-            keyboardType="number-pad"
-          />
+          <View style={styles.fieldBlock}>
+            <View style={styles.stepperRow}>
+              <Pressable
+                style={styles.stepButton}
+                onPress={() => setTotalText(String(Math.max(0, parseCount(totalText) - 1)))}
+              >
+                <Ionicons name="remove" size={20} color={colors.primaryText} />
+              </Pressable>
+              <View style={styles.stepperInput}>
+                <FormField
+                  label="Total Eggs"
+                  value={totalText}
+                  onChangeText={setTotalText}
+                  placeholder="0"
+                  keyboardType="number-pad"
+                />
+              </View>
+              <Pressable style={styles.stepButton} onPress={() => setTotalText(String(parseCount(totalText) + 1))}>
+                <Ionicons name="add" size={20} color={colors.primaryText} />
+              </Pressable>
+            </View>
+          </View>
 
           <View style={styles.countRow}>
             <View style={styles.countInput}>
@@ -297,6 +326,24 @@ const styles = StyleSheet.create({
   },
   countInput: {
     flex: 1,
+  },
+  stepperRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: spacing.sm,
+  },
+  stepperInput: {
+    flex: 1,
+  },
+  stepButton: {
+    width: 48,
+    height: 48,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.cardSurface,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   disabled: {
     opacity: 0.6,

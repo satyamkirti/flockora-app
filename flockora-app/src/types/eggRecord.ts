@@ -3,6 +3,7 @@ export type EggRecord = {
   flockId: number | null;
   birdId: number | null;
   date: string;
+  time: string | null;
   totalEggs: number;
   fertileEggs: number;
   crackedEggs: number;
@@ -17,6 +18,7 @@ export type EggRecordInput = {
   flockId: number | null;
   birdId: number | null;
   date: string;
+  time: string | null;
   totalEggs: number;
   fertileEggs: number;
   crackedEggs: number;
@@ -63,10 +65,16 @@ export type EggRecordFilters = {
   date: string;
 };
 
+const currentTimeValue = (): string => {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+};
+
 export const createEmptyEggRecordInput = (): EggRecordInput => ({
   flockId: null,
   birdId: null,
   date: new Date().toISOString().slice(0, 10),
+  time: currentTimeValue(),
   totalEggs: 0,
   fertileEggs: 0,
   crackedEggs: 0,

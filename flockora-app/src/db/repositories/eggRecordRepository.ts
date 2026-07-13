@@ -15,6 +15,7 @@ type EggRecordRow = {
   flockId: number | null;
   birdId: number | null;
   date: string;
+  time: string | null;
   totalEggs: number;
   fertileEggs: number;
   crackedEggs: number;
@@ -106,12 +107,13 @@ export const eggRecordRepository = {
     const now = new Date().toISOString();
     const result = await db.runAsync(
       `INSERT INTO egg_records
-        (flockId, birdId, date, totalEggs, fertileEggs, crackedEggs, dirtyEggs, doubleYolkEggs, notes, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (flockId, birdId, date, time, totalEggs, fertileEggs, crackedEggs, dirtyEggs, doubleYolkEggs, notes, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.flockId,
         input.birdId,
         input.date,
+        input.time,
         input.totalEggs,
         input.fertileEggs,
         input.crackedEggs,
@@ -133,13 +135,14 @@ export const eggRecordRepository = {
     const now = new Date().toISOString();
     await db.runAsync(
       `UPDATE egg_records SET
-        flockId = ?, birdId = ?, date = ?, totalEggs = ?, fertileEggs = ?, crackedEggs = ?,
+        flockId = ?, birdId = ?, date = ?, time = ?, totalEggs = ?, fertileEggs = ?, crackedEggs = ?,
         dirtyEggs = ?, doubleYolkEggs = ?, notes = ?, updatedAt = ?
        WHERE id = ?`,
       [
         input.flockId,
         input.birdId,
         input.date,
+        input.time,
         input.totalEggs,
         input.fertileEggs,
         input.crackedEggs,

@@ -1,6 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
-const DATABASE_VERSION = 7;
+const DATABASE_VERSION = 8;
 
 export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA foreign_keys = ON;');
@@ -264,6 +264,13 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_birds_tagId ON birds(tagId);
     `);
     currentVersion = 7;
+  }
+
+  if (currentVersion === 7) {
+    await db.execAsync(`
+      ALTER TABLE egg_records ADD COLUMN time TEXT;
+    `);
+    currentVersion = 8;
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

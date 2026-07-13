@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
 import {
@@ -10,6 +10,7 @@ import {
   SectionHeader,
   StatCard,
   BarChart,
+  EmptyState,
   FadeInUp,
 } from '../components';
 import {
@@ -17,14 +18,18 @@ import {
   useEggStatistics,
   useEggProductionSeries,
   useEggMonthlyTrend,
+  useEggHistory,
   useBirds,
   useFlocks,
 } from '../hooks';
 import { eggRecordRepository } from '../db/repositories';
 import { exportEggRecordsToCsv } from '../utils/eggExport';
 import { formatDueDate } from '../utils/taskSchedule';
+import { emptyEggRecordFilters } from '../types/eggRecord';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing, shadows } from '../theme';
+
+const RECENT_RECORDS_LIMIT = 5;
 
 type Props = NativeStackScreenProps<FlockStackParamList, 'EggDashboard'>;
 
@@ -35,6 +40,7 @@ export function EggDashboardScreen({ navigation }: Props) {
   const { points: last7Days } = useEggProductionSeries(7);
   const { points: last30Days } = useEggProductionSeries(30);
   const { points: monthlyTrend } = useEggMonthlyTrend(6);
+  const { records: recentRecords } = useEggHistory(emptyEggRecordFilters);
   const { flocks } = useFlocks();
   const { birds } = useBirds();
 
@@ -132,7 +138,41 @@ export function EggDashboardScreen({ navigation }: Props) {
           ))}
         </FadeInUp>
 
-        <FadeInUp delay={180} style={styles.actions}>
+        <SectionHeader title="Recent Collections" />
+        {recentRecords.length === 0 ? (
+          <FadeInUp delay={160}>
+            <EmptyState title="No collections yet" message="Log your first egg collection to see it here." />
+          </FadeInUp>
+        ) : (
+          <FadeInUp delay={160} style={styles.recentCard}>
+            {recentRecords.slice(0, RECENT_RECORDS_LIMIT).map((record, index) => {
+              const flockName = flocks.find((flock) => flock.id === record.flockId)?.name;
+              const birdName = birds.find((bird) => bird.id === record.birdId)?.name;
+              return (
+                <Pressable
+                  key={record.id}
+                  style={[styles.recentRow, index === Math.min(recentRecords.length, RECENT_RECORDS_LIMIT) - 1 && styles.recentRowLast]}
+                  onPress={() => navigation.navigate('AddEditEggRecord', { recordId: record.id })}
+                >
+                  <View style={styles.recentMain}>
+                    <AppText variant="cardTitle">
+                      {formatDueDate(record.date)}
+                      {record.time ? ` · ${record.time}` : ''}
+                    </AppText>
+                    <AppText variant="caption" color={colors.secondaryText}>
+                      {birdName ?? flockName ?? 'Unassigned'}
+                    </AppText>
+                  </View>
+                  <AppText variant="cardTitle" color={colors.leafGreen}>
+                    {record.totalEggs}
+                  </AppText>
+                </Pressable>
+              );
+            })}
+          </FadeInUp>
+        )}
+
+        <FadeInUp delay={200} style={styles.actions}>
           <PrimaryButton label="+ Log Eggs" onPress={() => navigation.navigate('AddEditEggRecord', {})} />
           <PrimaryButton
             label="View History"
@@ -192,6 +232,28 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
+  },
+  recentCard: {
+    backgroundColor: colors.cardSurface,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  recentRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  recentRowLast: {
+    borderBottomWidth: 0,
+  },
+  recentMain: {
+    flex: 1,
   },
   statRow: {
     flexDirection: 'row',

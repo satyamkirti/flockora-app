@@ -103,7 +103,8 @@ export function EggHistoryScreen({ navigation }: Props) {
                     onPress={() => navigation.navigate('AddEditEggRecord', { recordId: record.id })}
                   >
                     <AppText variant="cardTitle">
-                      {formatDueDate(record.date)} · {record.totalEggs} eggs
+                      {formatDueDate(record.date)}
+                      {record.time ? ` · ${record.time}` : ''} · {record.totalEggs} eggs
                     </AppText>
                     <AppText variant="caption" color={colors.secondaryText}>
                       {flockName ?? 'Unassigned'}
