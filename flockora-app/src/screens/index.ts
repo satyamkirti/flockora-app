@@ -36,3 +36,4 @@ export * from './AddEditHatchRecordScreen';
 export * from './CreateBirdsFromHatchScreen';
 export * from './ReportsScreen';
 export * from './BackupRestoreScreen';
+export * from './SettingsScreen';

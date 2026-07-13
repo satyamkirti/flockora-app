@@ -1,7 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MoreStackParamList } from './moreTypes';
-import { ReportsScreen, BackupRestoreScreen } from '../screens';
+import { ReportsScreen, BackupRestoreScreen, SettingsScreen } from '../screens';
 
 const Stack = createNativeStackNavigator<MoreStackParamList>();
 
@@ -10,6 +10,7 @@ export function MoreStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Reports" component={ReportsScreen} />
       <Stack.Screen name="BackupRestore" component={BackupRestoreScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   );
 }

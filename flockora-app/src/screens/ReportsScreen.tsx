@@ -98,7 +98,10 @@ export function ReportsScreen({ navigation }: Props) {
             A cross-flock view of everything you've logged.
           </AppText>
         </View>
-        <IconButton name="cloud-download-outline" onPress={() => navigation.navigate('BackupRestore')} />
+        <View style={styles.headerActions}>
+          <IconButton name="cloud-download-outline" onPress={() => navigation.navigate('BackupRestore')} />
+          <IconButton name="settings-outline" onPress={() => navigation.navigate('Settings')} />
+        </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -160,6 +163,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: spacing.md,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: spacing.xs,
   },
   subtitle: {
     marginTop: spacing.xs,
