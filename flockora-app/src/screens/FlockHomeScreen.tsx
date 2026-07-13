@@ -12,7 +12,7 @@ import {
   FlockManagerModal,
   FadeInUp,
 } from '../components';
-import { useBirds, useFlocks, useEggDashboard } from '../hooks';
+import { useBirds, useFlocks, useEggDashboard, useFeedDashboard } from '../hooks';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, shadows, spacing } from '../theme';
 
@@ -23,6 +23,7 @@ export function FlockHomeScreen({ navigation }: Props) {
   const [selectedFlockId, setSelectedFlockId] = useState<number | null>(null);
   const { birds, loading, refresh: refreshBirds } = useBirds(selectedFlockId);
   const { summary: eggSummary } = useEggDashboard();
+  const { summary: feedSummary } = useFeedDashboard();
   const [manageVisible, setManageVisible] = useState(false);
 
   const handleChanged = () => {
@@ -53,6 +54,21 @@ export function FlockHomeScreen({ navigation }: Props) {
           <AppText variant="cardTitle">Egg Production</AppText>
           <AppText variant="caption" color={colors.secondaryText}>
             {eggSummary.todayTotal} {eggSummary.todayTotal === 1 ? 'egg' : 'eggs'} today
+          </AppText>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={colors.mutedText} />
+      </Pressable>
+
+      <Pressable style={[styles.eggCard, shadows.card]} onPress={() => navigation.navigate('FeedInventory')}>
+        <View style={styles.eggIconBubble}>
+          <AppText style={styles.eggIcon}>🌾</AppText>
+        </View>
+        <View style={styles.eggCardText}>
+          <AppText variant="cardTitle">Feed & Inventory</AppText>
+          <AppText variant="caption" color={colors.secondaryText}>
+            {feedSummary.lowStockCount + feedSummary.outOfStockCount > 0
+              ? `${feedSummary.lowStockCount + feedSummary.outOfStockCount} item(s) need attention`
+              : 'Stock levels look good'}
           </AppText>
         </View>
         <Ionicons name="chevron-forward" size={20} color={colors.mutedText} />

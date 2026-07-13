@@ -10,6 +10,10 @@ import {
   EggDashboardScreen,
   AddEditEggRecordScreen,
   EggHistoryScreen,
+  FeedInventoryScreen,
+  AddEditFeedItemScreen,
+  LogFeedUsageScreen,
+  FeedHistoryScreen,
 } from '../screens';
 
 const Stack = createNativeStackNavigator<FlockStackParamList>();
@@ -25,6 +29,10 @@ export function FlockStack() {
       <Stack.Screen name="EggDashboard" component={EggDashboardScreen} />
       <Stack.Screen name="AddEditEggRecord" component={AddEditEggRecordScreen} />
       <Stack.Screen name="EggHistory" component={EggHistoryScreen} />
+      <Stack.Screen name="FeedInventory" component={FeedInventoryScreen} />
+      <Stack.Screen name="AddEditFeedItem" component={AddEditFeedItemScreen} />
+      <Stack.Screen name="LogFeedUsage" component={LogFeedUsageScreen} />
+      <Stack.Screen name="FeedHistory" component={FeedHistoryScreen} />
     </Stack.Navigator>
   );
 }

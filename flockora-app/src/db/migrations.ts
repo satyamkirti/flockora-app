@@ -1,6 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
-const DATABASE_VERSION = 4;
+const DATABASE_VERSION = 5;
 
 export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA foreign_keys = ON;');
@@ -129,6 +129,49 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_egg_records_birdId ON egg_records(birdId);
     `);
     currentVersion = 4;
+  }
+
+  if (currentVersion === 4) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS feed_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        feedType TEXT NOT NULL,
+        brand TEXT,
+        quantity REAL NOT NULL DEFAULT 0,
+        unit TEXT NOT NULL,
+        lowStockThreshold REAL,
+        costPerUnit REAL,
+        purchaseDate TEXT,
+        expiryDate TEXT,
+        notes TEXT,
+        notificationId TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_feed_items_feedType ON feed_items(feedType);
+      CREATE INDEX IF NOT EXISTS idx_feed_items_expiryDate ON feed_items(expiryDate);
+
+      CREATE TABLE IF NOT EXISTS feed_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        feedItemId INTEGER NOT NULL REFERENCES feed_items(id) ON DELETE CASCADE,
+        flockId INTEGER REFERENCES flocks(id) ON DELETE SET NULL,
+        birdId INTEGER REFERENCES birds(id) ON DELETE SET NULL,
+        quantityUsed REAL NOT NULL,
+        unit TEXT NOT NULL,
+        date TEXT NOT NULL,
+        notes TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_feed_logs_feedItemId ON feed_logs(feedItemId);
+      CREATE INDEX IF NOT EXISTS idx_feed_logs_flockId ON feed_logs(flockId);
+      CREATE INDEX IF NOT EXISTS idx_feed_logs_birdId ON feed_logs(birdId);
+      CREATE INDEX IF NOT EXISTS idx_feed_logs_date ON feed_logs(date);
+    `);
+    currentVersion = 5;
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

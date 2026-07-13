@@ -4,10 +4,19 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
 import { AppScreen, AppText, SectionHeader, StatCard, TaskRow, EmptyState, PrimaryButton, ProgressBar } from '../components';
-import { useTodayTasks, useTaskStats, useBirds, useFlocks, useHealthDashboardStats, useEggDashboard } from '../hooks';
+import {
+  useTodayTasks,
+  useTaskStats,
+  useBirds,
+  useFlocks,
+  useHealthDashboardStats,
+  useEggDashboard,
+  useFeedDashboard,
+} from '../hooks';
 import { taskRepository } from '../db/repositories';
 import { taskTypeByKey } from '../data/taskTypes';
 import { isTaskCompletedToday, isTaskOverdue, formatDueTime, getTimeOfDayGreeting } from '../utils/taskSchedule';
+import { formatQuantitiesByUnit } from '../utils/feedStock';
 import { Task } from '../types/task';
 import { TodayStackParamList } from '../navigation/todayTypes';
 import { colors, radii, spacing, shadows } from '../theme';
@@ -20,6 +29,7 @@ export function TodayScreen({ navigation }: Props) {
   const { stats, refresh: refreshStats } = useTaskStats();
   const { stats: healthStats } = useHealthDashboardStats();
   const { summary: eggSummary } = useEggDashboard();
+  const { summary: feedSummary } = useFeedDashboard();
   const { birds } = useBirds();
   const { flocks } = useFlocks();
 
@@ -60,6 +70,13 @@ export function TodayScreen({ navigation }: Props) {
     { title: 'Eggs This Week', value: String(eggSummary.weekTotal), accentColor: colors.leafGreen },
     { title: 'Eggs This Month', value: String(eggSummary.monthTotal), accentColor: colors.hatchOrange },
     { title: 'Avg Daily Eggs', value: eggSummary.averagePerDay.toFixed(1), accentColor: colors.waterBlue },
+  ];
+
+  const feedSummaryCards = [
+    { title: 'Low Stock', value: String(feedSummary.lowStockCount), accentColor: colors.sunflowerYellow },
+    { title: 'Out of Stock', value: String(feedSummary.outOfStockCount), accentColor: colors.alertCoral },
+    { title: 'Feed Used Today', value: formatQuantitiesByUnit(feedSummary.usedTodayByUnit), accentColor: colors.leafGreen },
+    { title: 'Expiring Soon', value: String(feedSummary.expiringSoonCount), accentColor: colors.hatchOrange },
   ];
 
   return (
@@ -143,6 +160,19 @@ export function TodayScreen({ navigation }: Props) {
         <SectionHeader title="Egg Production" />
         <View style={styles.summaryGrid}>
           {eggSummaryCards.map((card) => (
+            <StatCard
+              key={card.title}
+              title={card.title}
+              value={card.value}
+              accentColor={card.accentColor}
+              style={styles.statCard}
+            />
+          ))}
+        </View>
+
+        <SectionHeader title="Feed" />
+        <View style={styles.summaryGrid}>
+          {feedSummaryCards.map((card) => (
             <StatCard
               key={card.title}
               title={card.title}

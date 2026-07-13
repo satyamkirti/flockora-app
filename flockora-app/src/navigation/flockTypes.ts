@@ -7,4 +7,8 @@ export type FlockStackParamList = {
   EggDashboard: undefined;
   EggHistory: undefined;
   AddEditEggRecord: { recordId?: number };
+  FeedInventory: undefined;
+  AddEditFeedItem: { itemId?: number };
+  LogFeedUsage: { feedItemId?: number; logId?: number };
+  FeedHistory: undefined;
 };

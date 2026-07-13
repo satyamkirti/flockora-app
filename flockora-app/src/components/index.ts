@@ -22,3 +22,5 @@ export * from './TaskRow';
 export * from './BirdPickerModal';
 export * from './HealthTimelineRow';
 export * from './BarChart';
+export * from './FeedItemRow';
+export * from './FeedItemPickerModal';

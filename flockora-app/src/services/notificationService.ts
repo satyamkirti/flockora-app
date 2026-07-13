@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Task } from '../types/task';
 import { HealthRecord } from '../types/healthRecord';
+import { FeedItem } from '../types/feed';
 import { taskTypeByKey } from '../data/taskTypes';
 import { healthRecordTypeByKey } from '../data/healthRecordTypes';
 
@@ -117,4 +118,80 @@ export async function syncHealthReminder(
 ): Promise<string | null> {
   await cancelNotification(previousNotificationId);
   return scheduleHealthReminder(record);
+}
+
+const FEED_EXPIRY_WARNING_DAYS = 3;
+
+type SchedulableFeedExpiry = Pick<FeedItem, 'id' | 'name' | 'expiryDate'>;
+
+function buildFeedExpiryReminderDate(expiryDate: string): Date {
+  const expiry = new Date(expiryDate);
+  const reminderDate = new Date(expiry);
+  reminderDate.setDate(reminderDate.getDate() - FEED_EXPIRY_WARNING_DAYS);
+  reminderDate.setHours(9, 0, 0, 0);
+  return reminderDate;
+}
+
+export async function scheduleFeedExpiryReminder(item: SchedulableFeedExpiry): Promise<string | null> {
+  if (!item.expiryDate) {
+    return null;
+  }
+  const reminderDate = buildFeedExpiryReminderDate(item.expiryDate);
+  if (reminderDate.getTime() <= Date.now()) {
+    return null;
+  }
+  const granted = await ensureNotificationPermission();
+  if (!granted) {
+    return null;
+  }
+
+  return Notifications.scheduleNotificationAsync({
+    content: {
+      title: `${item.name} is expiring soon`,
+      body: `This feed expires on ${item.expiryDate}.`,
+      data: { feedItemId: item.id },
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: reminderDate,
+    },
+  });
+}
+
+export async function syncFeedExpiryReminder(
+  item: SchedulableFeedExpiry,
+  previousNotificationId: string | null
+): Promise<string | null> {
+  await cancelNotification(previousNotificationId);
+  return scheduleFeedExpiryReminder(item);
+}
+
+export async function notifyLowStock(item: Pick<FeedItem, 'id' | 'name' | 'quantity' | 'unit'>): Promise<void> {
+  const granted = await ensureNotificationPermission();
+  if (!granted) {
+    return;
+  }
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: `${item.name} is running low`,
+      body: `Only ${item.quantity} ${item.unit} left in stock.`,
+      data: { feedItemId: item.id },
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 1, repeats: false },
+  });
+}
+
+export async function notifyOutOfStock(item: Pick<FeedItem, 'id' | 'name'>): Promise<void> {
+  const granted = await ensureNotificationPermission();
+  if (!granted) {
+    return;
+  }
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: `${item.name} is out of stock`,
+      body: 'Restock soon to keep your flock fed.',
+      data: { feedItemId: item.id },
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 1, repeats: false },
+  });
 }

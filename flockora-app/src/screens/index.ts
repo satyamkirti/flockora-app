@@ -19,3 +19,7 @@ export * from './PulseHomeScreen';
 export * from './EggDashboardScreen';
 export * from './AddEditEggRecordScreen';
 export * from './EggHistoryScreen';
+export * from './FeedInventoryScreen';
+export * from './AddEditFeedItemScreen';
+export * from './LogFeedUsageScreen';
+export * from './FeedHistoryScreen';
