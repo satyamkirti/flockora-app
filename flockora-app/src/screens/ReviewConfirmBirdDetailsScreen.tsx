@@ -43,15 +43,25 @@ export function ReviewConfirmBirdDetailsScreen({ navigation }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bird.aiAnalysis]);
 
-  if (!bird.aiAnalysis) {
-    return null;
-  }
-
-  const rows: { key: FieldKey; label: string; field: AIField; currentValue: string }[] = [
-    { key: 'confirmedBreed', label: 'Breed', field: bird.aiAnalysis.breed, currentValue: bird.confirmedBreed },
-    { key: 'confirmedSex', label: 'Sex', field: bird.aiAnalysis.sex, currentValue: bird.confirmedSex },
-    { key: 'confirmedColor', label: 'Color & Markings', field: bird.aiAnalysis.color, currentValue: bird.confirmedColor },
-    { key: 'confirmedLifeStage', label: 'Life Stage', field: bird.aiAnalysis.lifeStage, currentValue: bird.confirmedLifeStage },
+  // aiAnalysis is null when the user skipped/couldn't complete AI analysis (see
+  // AIPhotoAnalysisLoadingScreen's "Enter Details Manually" path) — every field below still
+  // renders and remains editable, just without an AI-proposed starting value or confidence
+  // badge, preserving "AI prepares, human confirms" even when AI didn't prepare anything.
+  const rows: { key: FieldKey; label: string; field: AIField | null; currentValue: string }[] = [
+    { key: 'confirmedBreed', label: 'Breed', field: bird.aiAnalysis?.breed ?? null, currentValue: bird.confirmedBreed },
+    { key: 'confirmedSex', label: 'Sex', field: bird.aiAnalysis?.sex ?? null, currentValue: bird.confirmedSex },
+    {
+      key: 'confirmedColor',
+      label: 'Color & Markings',
+      field: bird.aiAnalysis?.color ?? null,
+      currentValue: bird.confirmedColor,
+    },
+    {
+      key: 'confirmedLifeStage',
+      label: 'Life Stage',
+      field: bird.aiAnalysis?.lifeStage ?? null,
+      currentValue: bird.confirmedLifeStage,
+    },
   ];
 
   const activeRow = rows.find((row) => row.key === editingField);
@@ -71,7 +81,7 @@ export function ReviewConfirmBirdDetailsScreen({ navigation }: Props) {
         weight: null,
         weightUnit: 'kg',
         notes: null,
-        photoUri: bird.photoCaptured ? 'captured' : null,
+        photoUri: bird.photo?.uri ?? null,
         isActive: true,
         flockId: null,
       });
@@ -93,7 +103,9 @@ export function ReviewConfirmBirdDetailsScreen({ navigation }: Props) {
             {bird.name || 'Your bird'}
           </AppText>
           <AppText variant="body" color={colors.secondaryText} align="center" style={styles.subtitle}>
-            Here's what Flockora noticed. Review each detail and correct anything that isn't quite right.
+            {bird.aiAnalysis
+              ? "Here's what Flockora noticed. Review each detail and correct anything that isn't quite right."
+              : "We couldn't analyze the photo automatically. Fill in what you know below — you can always update it later."}
           </AppText>
         </FadeInUp>
 
@@ -108,10 +120,10 @@ export function ReviewConfirmBirdDetailsScreen({ navigation }: Props) {
                 <AppText variant="caption" color={colors.mutedText}>
                   {row.label}
                 </AppText>
-                <AppText variant="cardTitle" style={styles.rowValue}>
-                  {row.currentValue}
+                <AppText variant="cardTitle" style={styles.rowValue} color={row.currentValue ? undefined : colors.mutedText}>
+                  {row.currentValue || 'Tap to add'}
                 </AppText>
-                <ConfidenceBadge level={row.field.confidence} />
+                {row.field ? <ConfidenceBadge level={row.field.confidence} /> : null}
               </View>
               <Ionicons name="pencil" size={18} color={colors.mutedText} />
             </Pressable>

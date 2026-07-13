@@ -29,9 +29,15 @@ export type AIAnalysisResult = {
   lifeStage: AIField;
 };
 
+export type CapturedPhoto = {
+  uri: string;
+  mimeType: string;
+  fileName: string;
+};
+
 export type BirdDraft = {
   name: string;
-  photoCaptured: boolean;
+  photo: CapturedPhoto | null;
   aiAnalysis: AIAnalysisResult | null;
   confirmedBreed: string;
   confirmedSex: string;
@@ -41,7 +47,7 @@ export type BirdDraft = {
 
 export const createEmptyBirdDraft = (): BirdDraft => ({
   name: '',
-  photoCaptured: false,
+  photo: null,
   aiAnalysis: null,
   confirmedBreed: '',
   confirmedSex: '',

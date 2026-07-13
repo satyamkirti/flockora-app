@@ -29,7 +29,15 @@
     "plugins": [
       "expo-font",
       "expo-sqlite",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Flockora uses your camera to take a photo of your bird so it can suggest breed, sex, color, and life stage details for you to confirm.",
+          "photosPermission": "Flockora uses your photo library so you can choose an existing photo of your bird.",
+          "microphonePermission": false
+        }
+      ]
     ]
   }
 }
