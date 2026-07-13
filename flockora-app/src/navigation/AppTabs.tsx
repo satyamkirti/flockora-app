@@ -1,11 +1,11 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { PlaceholderScreen } from '../screens/PlaceholderScreen';
 import { CameraSheetScreen } from '../screens/CameraSheetScreen';
 import { FlockStack } from './FlockStack';
 import { TodayStack } from './TodayStack';
 import { PulseStack } from './PulseStack';
+import { MoreStack } from './MoreStack';
 import { colors } from '../theme';
 
 const Tab = createBottomTabNavigator();
@@ -47,7 +47,7 @@ export function AppTabs() {
         }}
       />
       <Tab.Screen name="Pulse" component={PulseStack} />
-      <Tab.Screen name="More" component={() => <PlaceholderScreen title="More" />} />
+      <Tab.Screen name="More" component={MoreStack} />
     </Tab.Navigator>
   );
 }
