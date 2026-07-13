@@ -1,6 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
-const DATABASE_VERSION = 8;
+const DATABASE_VERSION = 9;
 
 export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA foreign_keys = ON;');
@@ -271,6 +271,48 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
       ALTER TABLE egg_records ADD COLUMN time TEXT;
     `);
     currentVersion = 8;
+  }
+
+  if (currentVersion === 8) {
+    await db.execAsync(`
+      CREATE TABLE health_records_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        birdId INTEGER REFERENCES birds(id) ON DELETE CASCADE,
+        flockId INTEGER REFERENCES flocks(id) ON DELETE SET NULL,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        notes TEXT,
+        medicine TEXT,
+        dosage TEXT,
+        startDate TEXT,
+        endDate TEXT,
+        time TEXT,
+        veterinarian TEXT,
+        cost REAL,
+        reminderDate TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        notificationId TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
+      INSERT INTO health_records_new
+        (id, birdId, flockId, type, title, notes, medicine, dosage, startDate, endDate, time, veterinarian, cost, reminderDate, status, notificationId, createdAt, updatedAt)
+      SELECT
+        id, birdId, NULL, type, title, notes, medicine, dosage, startDate, endDate, NULL, veterinarian, cost, reminderDate, status, notificationId, createdAt, updatedAt
+      FROM health_records;
+
+      DROP TABLE health_records;
+      ALTER TABLE health_records_new RENAME TO health_records;
+
+      CREATE INDEX IF NOT EXISTS idx_health_records_birdId ON health_records(birdId);
+      CREATE INDEX IF NOT EXISTS idx_health_records_flockId ON health_records(flockId);
+      CREATE INDEX IF NOT EXISTS idx_health_records_type ON health_records(type);
+      CREATE INDEX IF NOT EXISTS idx_health_records_status ON health_records(status);
+      CREATE INDEX IF NOT EXISTS idx_health_records_startDate ON health_records(startDate);
+      CREATE INDEX IF NOT EXISTS idx_health_records_reminderDate ON health_records(reminderDate);
+    `);
+    currentVersion = 9;
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

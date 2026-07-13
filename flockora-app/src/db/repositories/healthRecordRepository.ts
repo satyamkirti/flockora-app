@@ -12,7 +12,8 @@ import { startOfDay } from '../../utils/taskSchedule';
 
 type HealthRecordRow = {
   id: number;
-  birdId: number;
+  birdId: number | null;
+  flockId: number | null;
   type: string;
   title: string;
   notes: string | null;
@@ -20,6 +21,7 @@ type HealthRecordRow = {
   dosage: string | null;
   startDate: string | null;
   endDate: string | null;
+  time: string | null;
   veterinarian: string | null;
   cost: number | null;
   reminderDate: string | null;
@@ -56,10 +58,11 @@ export const healthRecordRepository = {
     const now = new Date().toISOString();
     const result = await db.runAsync(
       `INSERT INTO health_records
-        (birdId, type, title, notes, medicine, dosage, startDate, endDate, veterinarian, cost, reminderDate, status, notificationId, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
+        (birdId, flockId, type, title, notes, medicine, dosage, startDate, endDate, time, veterinarian, cost, reminderDate, status, notificationId, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
       [
         input.birdId,
+        input.flockId,
         input.type,
         input.title,
         input.notes,
@@ -67,6 +70,7 @@ export const healthRecordRepository = {
         input.dosage,
         input.startDate,
         input.endDate,
+        input.time,
         input.veterinarian,
         input.cost,
         input.reminderDate,
@@ -86,11 +90,12 @@ export const healthRecordRepository = {
     const now = new Date().toISOString();
     await db.runAsync(
       `UPDATE health_records SET
-        birdId = ?, type = ?, title = ?, notes = ?, medicine = ?, dosage = ?, startDate = ?, endDate = ?,
+        birdId = ?, flockId = ?, type = ?, title = ?, notes = ?, medicine = ?, dosage = ?, startDate = ?, endDate = ?, time = ?,
         veterinarian = ?, cost = ?, reminderDate = ?, status = ?, updatedAt = ?
        WHERE id = ?`,
       [
         input.birdId,
+        input.flockId,
         input.type,
         input.title,
         input.notes,
@@ -98,6 +103,7 @@ export const healthRecordRepository = {
         input.dosage,
         input.startDate,
         input.endDate,
+        input.time,
         input.veterinarian,
         input.cost,
         input.reminderDate,
@@ -205,6 +211,9 @@ export const healthRecordRepository = {
 
     if (filters.birdId != null) {
       records = records.filter((record) => record.birdId === filters.birdId);
+    }
+    if (filters.flockId != null) {
+      records = records.filter((record) => record.flockId === filters.flockId);
     }
     if (filters.type != null) {
       records = records.filter((record) => record.type === filters.type);

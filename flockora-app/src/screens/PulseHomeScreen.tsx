@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommonActions } from '@react-navigation/native';
-import { AppScreen, AppText, HealthTimelineRow, EmptyState, FadeInUp } from '../components';
-import { useHealthRecords, useBirds } from '../hooks';
+import { AppScreen, AppText, IconButton, HealthTimelineRow, EmptyState, FadeInUp } from '../components';
+import { useHealthRecords, useBirds, useFlocks } from '../hooks';
 import { healthRecordTypeOptions, healthRecordTypeByKey } from '../data/healthRecordTypes';
 import { formatDueDate } from '../utils/taskSchedule';
 import { HealthRecordFilters, HealthRecordStatus, HealthRecordType, emptyHealthRecordFilters } from '../types/healthRecord';
@@ -45,8 +45,10 @@ function FilterChips<T>({
 
 export function PulseHomeScreen({ navigation }: Props) {
   const { birds } = useBirds();
+  const { flocks } = useFlocks();
   const [searchText, setSearchText] = useState('');
   const [birdId, setBirdId] = useState<number | null>(null);
+  const [flockId, setFlockId] = useState<number | null>(null);
   const [type, setType] = useState<HealthRecordType | null>(null);
   const [status, setStatus] = useState<HealthRecordStatus | null>(null);
   const [dateText, setDateText] = useState('');
@@ -55,6 +57,7 @@ export function PulseHomeScreen({ navigation }: Props) {
     ...emptyHealthRecordFilters,
     searchText,
     birdId,
+    flockId,
     type,
     status,
     date: dateText,
@@ -64,6 +67,11 @@ export function PulseHomeScreen({ navigation }: Props) {
   const birdOptions: ChipOption<number | null>[] = [
     { key: 'all', label: 'All Birds', value: null },
     ...birds.map((bird) => ({ key: String(bird.id), label: bird.name, value: bird.id })),
+  ];
+
+  const flockOptions: ChipOption<number | null>[] = [
+    { key: 'all', label: 'All Flocks', value: null },
+    ...flocks.map((flock) => ({ key: String(flock.id), label: flock.name, value: flock.id })),
   ];
 
   const typeOptions: ChipOption<HealthRecordType | null>[] = [
@@ -77,22 +85,21 @@ export function PulseHomeScreen({ navigation }: Props) {
     { key: 'completed', label: 'Completed', value: 'completed' as HealthRecordStatus },
   ];
 
-  const handleOpenBird = (targetBirdId: number) => {
+  const handleOpenRecord = (recordId: number) => {
     navigation.getParent()?.dispatch(
       CommonActions.navigate({
         name: 'Flock',
-        params: { screen: 'BirdProfile', params: { birdId: targetBirdId } },
+        params: { screen: 'HealthRecordDetail', params: { recordId } },
       })
     );
   };
 
   return (
     <AppScreen>
-      <View style={styles.headerBlock}>
-        <AppText variant="display">Flock Health</AppText>
-        <AppText variant="body" color={colors.secondaryText} style={styles.subtitle}>
-          Search and filter every medical event across your flock.
-        </AppText>
+      <View style={styles.headerRow}>
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+        <AppText variant="sectionTitle">Search Care Records</AppText>
+        <View style={styles.headerSpacer} />
       </View>
 
       <TextInput
@@ -104,6 +111,7 @@ export function PulseHomeScreen({ navigation }: Props) {
       />
 
       <FilterChips options={birdOptions} selected={birdId} onSelect={setBirdId} />
+      <FilterChips options={flockOptions} selected={flockId} onSelect={setFlockId} />
       <FilterChips options={typeOptions} selected={type} onSelect={setType} />
       <FilterChips options={statusOptions} selected={status} onSelect={setStatus} />
 
@@ -126,7 +134,8 @@ export function PulseHomeScreen({ navigation }: Props) {
           <FadeInUp style={styles.resultsCard}>
             {records.map((record) => {
               const typeOption = healthRecordTypeByKey(record.type);
-              const birdName = birds.find((bird) => bird.id === record.birdId)?.name ?? 'Unknown bird';
+              const birdName = birds.find((bird) => bird.id === record.birdId)?.name;
+              const flockName = flocks.find((flock) => flock.id === record.flockId)?.name;
               return (
                 <HealthTimelineRow
                   key={record.id}
@@ -134,8 +143,8 @@ export function PulseHomeScreen({ navigation }: Props) {
                   title={record.title}
                   dateLabel={record.startDate ? formatDueDate(record.startDate) : 'No date'}
                   status={record.status}
-                  birdName={birdName}
-                  onPress={() => handleOpenBird(record.birdId)}
+                  birdName={birdName ?? flockName ?? 'Unassigned'}
+                  onPress={() => handleOpenRecord(record.id)}
                 />
               );
             })}
@@ -147,8 +156,14 @@ export function PulseHomeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  headerBlock: {
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: spacing.md,
+  },
+  headerSpacer: {
+    width: 44,
   },
   subtitle: {
     marginTop: spacing.xs,

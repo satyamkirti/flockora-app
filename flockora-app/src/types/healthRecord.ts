@@ -1,10 +1,19 @@
-export type HealthRecordType = 'illness' | 'treatment' | 'vaccination' | 'deworming' | 'injury' | 'checkup';
+export type HealthRecordType =
+  | 'illness'
+  | 'treatment'
+  | 'vaccination'
+  | 'deworming'
+  | 'injury'
+  | 'checkup'
+  | 'supplement'
+  | 'other';
 
 export type HealthRecordStatus = 'active' | 'completed';
 
 export type HealthRecord = {
   id: number;
-  birdId: number;
+  birdId: number | null;
+  flockId: number | null;
   type: HealthRecordType;
   title: string;
   notes: string | null;
@@ -12,6 +21,7 @@ export type HealthRecord = {
   dosage: string | null;
   startDate: string | null;
   endDate: string | null;
+  time: string | null;
   veterinarian: string | null;
   cost: number | null;
   reminderDate: string | null;
@@ -22,7 +32,8 @@ export type HealthRecord = {
 };
 
 export type HealthRecordInput = {
-  birdId: number;
+  birdId: number | null;
+  flockId: number | null;
   type: HealthRecordType;
   title: string;
   notes: string | null;
@@ -30,6 +41,7 @@ export type HealthRecordInput = {
   dosage: string | null;
   startDate: string | null;
   endDate: string | null;
+  time: string | null;
   veterinarian: string | null;
   cost: number | null;
   reminderDate: string | null;
@@ -53,13 +65,15 @@ export type HealthDashboardStats = {
 export type HealthRecordFilters = {
   searchText: string;
   birdId: number | null;
+  flockId: number | null;
   type: HealthRecordType | null;
   status: HealthRecordStatus | null;
   date: string;
 };
 
-export const createEmptyHealthRecordInput = (birdId: number): HealthRecordInput => ({
+export const createEmptyHealthRecordInput = (birdId: number | null): HealthRecordInput => ({
   birdId,
+  flockId: null,
   type: 'checkup',
   title: '',
   notes: null,
@@ -67,6 +81,7 @@ export const createEmptyHealthRecordInput = (birdId: number): HealthRecordInput 
   dosage: null,
   startDate: new Date().toISOString().slice(0, 10),
   endDate: null,
+  time: null,
   veterinarian: null,
   cost: null,
   reminderDate: null,
@@ -76,6 +91,7 @@ export const createEmptyHealthRecordInput = (birdId: number): HealthRecordInput 
 export const emptyHealthRecordFilters: HealthRecordFilters = {
   searchText: '',
   birdId: null,
+  flockId: null,
   type: null,
   status: null,
   date: '',

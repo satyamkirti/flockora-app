@@ -7,12 +7,14 @@ export type HealthRecordTypeOption = {
 };
 
 export const healthRecordTypeOptions: HealthRecordTypeOption[] = [
-  { key: 'illness', label: 'Illness', icon: '🤒' },
-  { key: 'treatment', label: 'Treatment', icon: '🩹' },
   { key: 'vaccination', label: 'Vaccination', icon: '💉' },
+  { key: 'treatment', label: 'Medication', icon: '💊' },
   { key: 'deworming', label: 'Deworming', icon: '🪱' },
-  { key: 'injury', label: 'Injury', icon: '🚑' },
-  { key: 'checkup', label: 'Checkup', icon: '🩺' },
+  { key: 'supplement', label: 'Supplement', icon: '🌿' },
+  { key: 'checkup', label: 'Health Check', icon: '🩺' },
+  { key: 'injury', label: 'Injury Care', icon: '🚑' },
+  { key: 'other', label: 'Other', icon: '📋' },
+  { key: 'illness', label: 'Illness', icon: '🤒' },
 ];
 
 export const healthRecordTypeByKey = (key: HealthRecordType): HealthRecordTypeOption =>

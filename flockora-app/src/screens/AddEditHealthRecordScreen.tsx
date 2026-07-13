@@ -21,9 +21,10 @@ import {
   FormField,
   SelectableCard,
   BirdPickerModal,
+  FlockManagerModal,
   FadeInUp,
 } from '../components';
-import { useHealthRecord, useBirds } from '../hooks';
+import { useHealthRecord, useBirds, useFlocks } from '../hooks';
 import { healthRecordRepository } from '../db/repositories';
 import { syncHealthReminder } from '../services/notificationService';
 import { healthRecordTypeOptions } from '../data/healthRecordTypes';
@@ -34,26 +35,40 @@ import { colors, radii, spacing } from '../theme';
 type Props = NativeStackScreenProps<FlockStackParamList, 'AddEditHealthRecord'>;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_PATTERN = /^\d{1,2}:\d{2}$/;
 
 export function AddEditHealthRecordScreen({ route, navigation }: Props) {
-  const { birdId: routeBirdId, recordId } = route.params;
+  const { birdId: routeBirdId, flockId: routeFlockId, recordId } = route.params;
   const isEditing = recordId != null;
   const db = useSQLiteContext();
   const { record: existingRecord, loading: loadingRecord } = useHealthRecord(recordId);
   const { birds } = useBirds();
+  const { flocks, refresh: refreshFlocks } = useFlocks();
 
-  const [form, setForm] = useState<HealthRecordInput>(createEmptyHealthRecordInput(routeBirdId));
+  const [form, setForm] = useState<HealthRecordInput>(
+    createEmptyHealthRecordInput(routeBirdId ?? null)
+  );
   const [costText, setCostText] = useState('');
+  const [timeText, setTimeText] = useState('');
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderDateText, setReminderDateText] = useState('');
   const [birdModalVisible, setBirdModalVisible] = useState(false);
+  const [flockModalVisible, setFlockModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hydrated, setHydrated] = useState(!isEditing);
+
+  useEffect(() => {
+    if (!isEditing && routeFlockId != null) {
+      setForm((current) => ({ ...current, flockId: routeFlockId }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (isEditing && existingRecord && !hydrated) {
       setForm({
         birdId: existingRecord.birdId,
+        flockId: existingRecord.flockId,
         type: existingRecord.type,
         title: existingRecord.title,
         notes: existingRecord.notes,
@@ -61,12 +76,14 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
         dosage: existingRecord.dosage,
         startDate: existingRecord.startDate,
         endDate: existingRecord.endDate,
+        time: existingRecord.time,
         veterinarian: existingRecord.veterinarian,
         cost: existingRecord.cost,
         reminderDate: existingRecord.reminderDate,
         status: existingRecord.status,
       });
       setCostText(existingRecord.cost != null ? String(existingRecord.cost) : '');
+      setTimeText(existingRecord.time ?? '');
       setReminderEnabled(Boolean(existingRecord.reminderDate));
       setReminderDateText(existingRecord.reminderDate ? existingRecord.reminderDate.slice(0, 10) : '');
       setHydrated(true);
@@ -75,15 +92,21 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
 
   const update = (patch: Partial<HealthRecordInput>) => setForm((current) => ({ ...current, ...patch }));
 
-  const birdName = birds.find((bird) => bird.id === form.birdId)?.name ?? 'Select a bird';
+  const birdName = birds.find((bird) => bird.id === form.birdId)?.name ?? 'No Bird';
+  const flockName = flocks.find((flock) => flock.id === form.flockId)?.name ?? 'No Flock';
 
   const handleSave = async () => {
-    if (!form.birdId) {
-      Alert.alert('Bird required', 'Please select a bird for this health record.');
+    if (form.birdId == null && form.flockId == null) {
+      Alert.alert('Bird or flock required', 'Please select a bird or a flock for this care record.');
       return;
     }
     if (!form.title.trim()) {
-      Alert.alert('Title required', 'Please describe the disease or reason for this record.');
+      Alert.alert('Title required', 'Please describe the reason for this care record.');
+      return;
+    }
+
+    if (timeText.trim() && !TIME_PATTERN.test(timeText.trim())) {
+      Alert.alert('Invalid time', 'Please use HH:MM for the time.');
       return;
     }
 
@@ -111,6 +134,7 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
       dosage: form.dosage?.trim() || null,
       startDate: form.startDate?.trim() || null,
       endDate: form.endDate?.trim() || null,
+      time: timeText.trim() || null,
       veterinarian: form.veterinarian?.trim() || null,
       cost: parsedCost != null && !Number.isNaN(parsedCost) ? parsedCost : null,
       reminderDate,
@@ -132,7 +156,7 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
         navigation.replace('HealthRecordDetail', { recordId: created.id });
       }
     } catch (error) {
-      Alert.alert('Something went wrong', 'Could not save this health record. Please try again.');
+      Alert.alert('Something went wrong', 'Could not save this care record. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -150,7 +174,7 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
     <AppScreen>
       <View style={styles.headerRow}>
         <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
-        <AppText variant="sectionTitle">{isEditing ? 'Edit Health Record' : 'Add Health Record'}</AppText>
+        <AppText variant="sectionTitle">{isEditing ? 'Edit Care Record' : 'Add Care Record'}</AppText>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -162,7 +186,7 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <FadeInUp style={styles.fieldBlock}>
             <AppText variant="cardTitle" style={styles.label}>
-              Record Type
+              Care Type
             </AppText>
             <View style={styles.typeGrid}>
               {healthRecordTypeOptions.map((option) => (
@@ -188,8 +212,18 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
             </Pressable>
           </View>
 
+          <View style={styles.fieldBlock}>
+            <AppText variant="cardTitle" style={styles.label}>
+              Flock
+            </AppText>
+            <Pressable style={styles.pickerField} onPress={() => setFlockModalVisible(true)}>
+              <AppText variant="body">{flockName}</AppText>
+              <Ionicons name="chevron-forward" size={18} color={colors.mutedText} />
+            </Pressable>
+          </View>
+
           <FormField
-            label="Disease / Reason"
+            label="Reason"
             value={form.title}
             onChangeText={(text) => update({ title: text })}
             placeholder="e.g. Respiratory infection"
@@ -221,16 +255,18 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
                 placeholder="YYYY-MM-DD"
               />
             </View>
-            <View style={styles.dateInput}>
-              <FormField
-                label="End Date"
-                optional
-                value={form.endDate ?? ''}
-                onChangeText={(text) => update({ endDate: text })}
-                placeholder="YYYY-MM-DD"
-              />
+            <View style={styles.timeInput}>
+              <FormField label="Time" optional value={timeText} onChangeText={setTimeText} placeholder="HH:MM" />
             </View>
           </View>
+
+          <FormField
+            label="End Date"
+            optional
+            value={form.endDate ?? ''}
+            onChangeText={(text) => update({ endDate: text })}
+            placeholder="YYYY-MM-DD"
+          />
 
           <FormField
             label="Veterinarian"
@@ -285,7 +321,7 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
       </KeyboardAvoidingView>
 
       <PrimaryButton
-        label={saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Add Health Record'}
+        label={saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Add Care Record'}
         onPress={handleSave}
         style={saving ? styles.disabled : undefined}
       />
@@ -295,11 +331,17 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
         onClose={() => setBirdModalVisible(false)}
         birds={birds}
         selectedBirdId={form.birdId}
-        onSelect={(birdId) => {
-          if (birdId != null) {
-            update({ birdId });
-          }
-        }}
+        onSelect={(birdId) => update({ birdId })}
+      />
+
+      <FlockManagerModal
+        visible={flockModalVisible}
+        onClose={() => setFlockModalVisible(false)}
+        flocks={flocks}
+        onChanged={refreshFlocks}
+        selectable
+        selectedFlockId={form.flockId}
+        onSelect={(flockId) => update({ flockId })}
       />
     </AppScreen>
   );
@@ -355,6 +397,9 @@ const styles = StyleSheet.create({
   },
   dateInput: {
     flex: 1,
+  },
+  timeInput: {
+    width: 120,
   },
   notificationRow: {
     flexDirection: 'row',

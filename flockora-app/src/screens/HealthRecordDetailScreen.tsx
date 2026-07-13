@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-na
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
 import { AppScreen, AppText, PrimaryButton, IconButton, StatusPill, FadeInUp } from '../components';
-import { useHealthRecord, useBirds } from '../hooks';
+import { useHealthRecord, useBirds, useFlocks } from '../hooks';
 import { healthRecordRepository } from '../db/repositories';
 import { cancelNotification } from '../services/notificationService';
 import { healthRecordTypeByKey } from '../data/healthRecordTypes';
@@ -20,6 +20,7 @@ export function HealthRecordDetailScreen({ route, navigation }: Props) {
   const db = useSQLiteContext();
   const { record, loading, refresh } = useHealthRecord(recordId);
   const { birds } = useBirds();
+  const { flocks } = useFlocks();
 
   if (loading) {
     return (
@@ -43,12 +44,15 @@ export function HealthRecordDetailScreen({ route, navigation }: Props) {
   }
 
   const typeOption = healthRecordTypeByKey(record.type);
-  const birdName = birds.find((bird) => bird.id === record.birdId)?.name ?? 'Unknown bird';
+  const birdName = birds.find((bird) => bird.id === record.birdId)?.name ?? null;
+  const flockName = flocks.find((flock) => flock.id === record.flockId)?.name ?? null;
   const isActive = record.status === 'active';
 
   const detailRows: DetailRow[] = [
-    { label: 'Bird', value: birdName },
+    { label: 'Bird', value: birdName ?? 'Not assigned' },
+    { label: 'Flock', value: flockName ?? 'Not assigned' },
     { label: 'Start Date', value: record.startDate ? formatDueDate(record.startDate) : 'Not recorded' },
+    { label: 'Time', value: record.time ?? 'Not recorded' },
     { label: 'End Date', value: record.endDate ? formatDueDate(record.endDate) : 'Not recorded' },
     { label: 'Medicine', value: record.medicine ?? 'Not recorded' },
     { label: 'Dosage', value: record.dosage ?? 'Not recorded' },
@@ -83,7 +87,13 @@ export function HealthRecordDetailScreen({ route, navigation }: Props) {
         <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
         <IconButton
           name="pencil"
-          onPress={() => navigation.navigate('AddEditHealthRecord', { birdId: record.birdId, recordId: record.id })}
+          onPress={() =>
+            navigation.navigate('AddEditHealthRecord', {
+              birdId: record.birdId,
+              flockId: record.flockId,
+              recordId: record.id,
+            })
+          }
         />
       </View>
 
