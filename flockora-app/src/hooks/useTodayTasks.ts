@@ -6,13 +6,21 @@ import { Task } from '../types/task';
 
 export function useTodayTasks() {
   const db = useSQLiteContext();
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [overdueTasks, setOverdueTasks] = useState<Task[]>([]);
+  const [todayTasks, setTodayTasks] = useState<Task[]>([]);
+  const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    const data = await taskRepository.getTodayTasks(db);
-    setTasks(data);
+    const [overdue, today, upcoming] = await Promise.all([
+      taskRepository.getOverdueTasks(db),
+      taskRepository.getTodayTasks(db),
+      taskRepository.getUpcomingTasks(db),
+    ]);
+    setOverdueTasks(overdue);
+    setTodayTasks(today);
+    setUpcomingTasks(upcoming);
     setLoading(false);
   }, [db]);
 
@@ -22,5 +30,5 @@ export function useTodayTasks() {
     }, [refresh])
   );
 
-  return { tasks, loading, refresh };
+  return { overdueTasks, todayTasks, upcomingTasks, loading, refresh };
 }

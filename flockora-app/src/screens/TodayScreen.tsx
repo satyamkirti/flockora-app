@@ -16,7 +16,14 @@ import {
 } from '../hooks';
 import { taskRepository } from '../db/repositories';
 import { taskTypeByKey } from '../data/taskTypes';
-import { isTaskCompletedToday, isTaskOverdue, formatDueTime, getTimeOfDayGreeting } from '../utils/taskSchedule';
+import {
+  isTaskCompletedToday,
+  isTaskOverdue,
+  formatDueTime,
+  formatDueDateTime,
+  taskScheduleLabel,
+  getTimeOfDayGreeting,
+} from '../utils/taskSchedule';
 import { formatQuantitiesByUnit } from '../utils/feedStock';
 import { Task } from '../types/task';
 import { TodayStackParamList } from '../navigation/todayTypes';
@@ -26,7 +33,7 @@ type Props = NativeStackScreenProps<TodayStackParamList, 'TodayHome'>;
 
 export function TodayScreen({ navigation }: Props) {
   const db = useSQLiteContext();
-  const { tasks, loading, refresh: refreshTasks } = useTodayTasks();
+  const { overdueTasks, todayTasks, upcomingTasks, loading, refresh: refreshTasks } = useTodayTasks();
   const { stats, refresh: refreshStats } = useTaskStats();
   const { stats: healthStats } = useHealthDashboardStats();
   const { summary: eggSummary } = useEggDashboard();
@@ -81,6 +88,28 @@ export function TodayScreen({ navigation }: Props) {
     { title: 'Expiring Soon', value: String(feedSummary.expiringSoonCount), accentColor: colors.hatchOrange },
   ];
 
+  const renderTaskRow = (task: Task, dueLabel: string) => {
+    const typeOption = taskTypeByKey(task.type);
+    const birdName = birds.find((bird) => bird.id === task.birdId)?.name;
+    const flockName = flocks.find((flock) => flock.id === task.flockId)?.name;
+    return (
+      <TaskRow
+        key={task.id}
+        icon={typeOption.icon}
+        title={task.title}
+        dueTimeLabel={dueLabel}
+        subjectLabel={birdName ?? flockName ?? null}
+        completed={isTaskCompletedToday(task)}
+        overdue={isTaskOverdue(task)}
+        onToggle={() => handleToggle(task)}
+        onPress={() => navigation.navigate('TaskDetail', { taskId: task.id })}
+      />
+    );
+  };
+
+  const hasNoTasksAtAll = overdueTasks.length === 0 && todayTasks.length === 0 && upcomingTasks.length === 0;
+  const allCaughtUpToday = overdueTasks.length === 0 && todayTasks.length > 0 && stats.pendingToday === 0;
+
   const breedingSummaryCards = [
     { title: 'Active Clutches', value: String(breedingSummary.activeClutches), accentColor: colors.leafGreen },
     { title: 'Eggs Incubating', value: String(breedingSummary.eggsIncubating), accentColor: colors.sunflowerYellow },
@@ -128,29 +157,51 @@ export function TodayScreen({ navigation }: Props) {
         <SectionHeader title="Today's Tasks" />
         {loading ? (
           <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
-        ) : tasks.length === 0 ? (
-          <EmptyState title="No tasks today" message="Add your first care task to start your daily routine." />
+        ) : hasNoTasksAtAll ? (
+          <EmptyState title="No tasks yet" message="Add your first care task to start your daily routine." />
         ) : (
-          <View style={styles.taskList}>
-            {tasks.map((task) => {
-              const typeOption = taskTypeByKey(task.type);
-              const birdName = birds.find((bird) => bird.id === task.birdId)?.name;
-              const flockName = flocks.find((flock) => flock.id === task.flockId)?.name;
-              return (
-                <TaskRow
-                  key={task.id}
-                  icon={typeOption.icon}
-                  title={task.title}
-                  dueTimeLabel={formatDueTime(task.dueDate)}
-                  subjectLabel={birdName ?? flockName ?? null}
-                  completed={isTaskCompletedToday(task)}
-                  overdue={isTaskOverdue(task)}
-                  onToggle={() => handleToggle(task)}
-                  onPress={() => navigation.navigate('TaskDetail', { taskId: task.id })}
-                />
-              );
-            })}
-          </View>
+          <>
+            {overdueTasks.length > 0 ? (
+              <View style={styles.taskList}>
+                <View style={styles.groupHeader}>
+                  <Ionicons name="alert-circle" size={16} color={colors.alertCoral} />
+                  <AppText variant="cardTitle" color={colors.alertCoral}>
+                    Overdue ({overdueTasks.length})
+                  </AppText>
+                </View>
+                {overdueTasks.map((task) => renderTaskRow(task, formatDueDateTime(task.dueDate)))}
+              </View>
+            ) : null}
+
+            <View style={[styles.taskList, overdueTasks.length > 0 && styles.taskListSpaced]}>
+              <View style={styles.groupHeader}>
+                <AppText variant="cardTitle">Due Today</AppText>
+              </View>
+              {todayTasks.length === 0 ? (
+                <AppText variant="body" color={colors.secondaryText} style={styles.groupEmptyText}>
+                  Nothing due today.
+                </AppText>
+              ) : null}
+              {allCaughtUpToday ? (
+                <View style={styles.celebrateRow}>
+                  <AppText style={styles.celebrateEmoji}>🎉</AppText>
+                  <AppText variant="body" color={colors.leafGreen}>
+                    All caught up for today!
+                  </AppText>
+                </View>
+              ) : null}
+              {todayTasks.map((task) => renderTaskRow(task, formatDueTime(task.dueDate)))}
+            </View>
+
+            {upcomingTasks.length > 0 ? (
+              <View style={[styles.taskList, styles.taskListSpaced]}>
+                <View style={styles.groupHeader}>
+                  <AppText variant="cardTitle">Upcoming</AppText>
+                </View>
+                {upcomingTasks.map((task) => renderTaskRow(task, taskScheduleLabel(task)))}
+              </View>
+            ) : null}
+          </>
         )}
 
         <SectionHeader title="Flock Health" />
@@ -260,8 +311,30 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardSurface,
     borderRadius: radii.xl,
     paddingHorizontal: spacing.md,
+    paddingBottom: spacing.xs,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  taskListSpaced: {
+    marginTop: spacing.md,
+  },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingTop: spacing.md,
+  },
+  groupEmptyText: {
+    paddingVertical: spacing.md,
+  },
+  celebrateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingBottom: spacing.md,
+  },
+  celebrateEmoji: {
+    fontSize: 18,
   },
   loader: {
     marginTop: spacing.xl,

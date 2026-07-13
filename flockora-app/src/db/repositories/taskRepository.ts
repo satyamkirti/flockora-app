@@ -135,6 +135,15 @@ export const taskRepository = {
     return tasks.filter((task) => isTaskDueToday(task, today));
   },
 
+  async getOverdueTasks(db: SQLiteDatabase): Promise<Task[]> {
+    const rows = await db.getAllAsync<TaskRow>(
+      "SELECT * FROM tasks WHERE repeatType = 'none' AND completed = 0 ORDER BY dueDate ASC"
+    );
+    const tasks = rows.map(mapRow);
+    const today = new Date();
+    return tasks.filter((task) => isTaskOverdue(task, today));
+  },
+
   async getUpcomingTasks(db: SQLiteDatabase, days = 14): Promise<Task[]> {
     const rows = await db.getAllAsync<TaskRow>(
       "SELECT * FROM tasks WHERE repeatType = 'none' AND completed = 0 ORDER BY dueDate ASC"

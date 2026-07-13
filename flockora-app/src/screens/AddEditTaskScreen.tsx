@@ -28,8 +28,8 @@ import {
 import { useTask, useBirds, useFlocks } from '../hooks';
 import { taskRepository } from '../db/repositories';
 import { syncTaskNotification } from '../services/notificationService';
-import { taskTypeOptions } from '../data/taskTypes';
-import { RepeatType, TaskInput, createEmptyTaskInput } from '../types/task';
+import { taskTypeByKey, taskTypeOptions } from '../data/taskTypes';
+import { RepeatType, TaskInput, TaskType, createEmptyTaskInput } from '../types/task';
 import { parseDateTimeInputs, toDateInputValue, toTimeInputValue } from '../utils/taskSchedule';
 import { TodayStackParamList } from '../navigation/todayTypes';
 import { colors, radii, spacing } from '../theme';
@@ -63,13 +63,30 @@ export function AddEditTaskScreen({ route, navigation }: Props) {
   const { flocks, refresh: refreshFlocks } = useFlocks();
 
   const defaultDueDate = nextHalfHour(new Date());
-  const [form, setForm] = useState<TaskInput>(createEmptyTaskInput());
+  const [form, setForm] = useState<TaskInput>(() => ({
+    ...createEmptyTaskInput(),
+    title: taskTypeByKey('feed').label,
+  }));
   const [dateText, setDateText] = useState(toDateInputValue(defaultDueDate));
   const [timeText, setTimeText] = useState(toTimeInputValue(defaultDueDate));
   const [birdModalVisible, setBirdModalVisible] = useState(false);
   const [flockModalVisible, setFlockModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hydrated, setHydrated] = useState(!isEditing);
+  const [titleTouched, setTitleTouched] = useState(isEditing);
+
+  const quickDateOptions = React.useMemo(() => {
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const nextWeek = new Date();
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    return [
+      { label: 'Today', value: toDateInputValue(today) },
+      { label: 'Tomorrow', value: toDateInputValue(tomorrow) },
+      { label: 'Next Week', value: toDateInputValue(nextWeek) },
+    ];
+  }, []);
 
   useEffect(() => {
     if (isEditing && existingTask && !hydrated) {
@@ -92,16 +109,20 @@ export function AddEditTaskScreen({ route, navigation }: Props) {
 
   const update = (patch: Partial<TaskInput>) => setForm((current) => ({ ...current, ...patch }));
 
+  const handleTypeSelect = (key: TaskType) => {
+    setForm((current) => ({
+      ...current,
+      type: key,
+      title: !isEditing && !titleTouched ? taskTypeByKey(key).label : current.title,
+    }));
+  };
+
   const birdName = birds.find((bird) => bird.id === form.birdId)?.name ?? 'No Bird';
   const flockName = flocks.find((flock) => flock.id === form.flockId)?.name ?? 'No Flock';
 
   const handleSave = async () => {
-    if (!form.title.trim()) {
-      Alert.alert('Title required', 'Please give this task a title.');
-      return;
-    }
-
-    const dueDate = parseDateTimeInputs(dateText, timeText);
+    const effectiveTimeText = timeText.trim() || toTimeInputValue(defaultDueDate);
+    const dueDate = parseDateTimeInputs(dateText, effectiveTimeText);
     if (!dueDate) {
       Alert.alert('Invalid date or time', 'Please use YYYY-MM-DD for date and HH:MM for time.');
       return;
@@ -109,7 +130,7 @@ export function AddEditTaskScreen({ route, navigation }: Props) {
 
     const payload: TaskInput = {
       ...form,
-      title: form.title.trim(),
+      title: form.title.trim() || taskTypeByKey(form.type).label,
       description: form.description?.trim() || null,
       dueDate: dueDate.toISOString(),
     };
@@ -174,7 +195,7 @@ export function AddEditTaskScreen({ route, navigation }: Props) {
                     icon={option.icon}
                     label={option.label}
                     selected={form.type === option.key}
-                    onPress={() => update({ type: option.key })}
+                    onPress={() => handleTypeSelect(option.key)}
                   />
                 </View>
               ))}
@@ -183,8 +204,12 @@ export function AddEditTaskScreen({ route, navigation }: Props) {
 
           <FormField
             label="Title"
+            optional
             value={form.title}
-            onChangeText={(text) => update({ title: text })}
+            onChangeText={(text) => {
+              setTitleTouched(true);
+              update({ title: text });
+            }}
             placeholder="e.g. Give Daisy her medicine"
           />
 
@@ -217,12 +242,34 @@ export function AddEditTaskScreen({ route, navigation }: Props) {
             </Pressable>
           </View>
 
+          <View style={styles.fieldBlock}>
+            <AppText variant="cardTitle" style={styles.label}>
+              Due Date
+            </AppText>
+            <View style={styles.quickDateRow}>
+              {quickDateOptions.map((option) => {
+                const selected = dateText === option.value;
+                return (
+                  <Pressable
+                    key={option.label}
+                    onPress={() => setDateText(option.value)}
+                    style={[styles.quickDateChip, selected && styles.quickDateChipSelected]}
+                  >
+                    <AppText variant="caption" color={selected ? colors.cardSurface : colors.primaryText}>
+                      {option.label}
+                    </AppText>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
           <View style={styles.dateRow}>
             <View style={styles.dateInput}>
               <FormField label="Date" value={dateText} onChangeText={setDateText} placeholder="YYYY-MM-DD" />
             </View>
             <View style={styles.timeInput}>
-              <FormField label="Time" value={timeText} onChangeText={setTimeText} placeholder="HH:MM" />
+              <FormField label="Time" optional value={timeText} onChangeText={setTimeText} placeholder="HH:MM" />
             </View>
           </View>
 
@@ -324,6 +371,22 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
+  },
+  quickDateRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  quickDateChip: {
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: 999,
+    backgroundColor: colors.cardSurface,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  quickDateChipSelected: {
+    backgroundColor: colors.leafGreen,
+    borderColor: colors.leafGreen,
   },
   dateRow: {
     flexDirection: 'row',

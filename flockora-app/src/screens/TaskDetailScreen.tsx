@@ -14,18 +14,11 @@ import { useTask, useBirds, useFlocks } from '../hooks';
 import { taskRepository } from '../db/repositories';
 import { cancelNotification } from '../services/notificationService';
 import { taskTypeByKey } from '../data/taskTypes';
-import { isTaskCompletedToday, isTaskOverdue, formatDueDate, formatDueTime } from '../utils/taskSchedule';
+import { isTaskCompletedToday, isTaskOverdue, formatDueDate, formatDueTime, repeatLabel } from '../utils/taskSchedule';
 import { TodayStackParamList } from '../navigation/todayTypes';
 import { colors, radii, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<TodayStackParamList, 'TaskDetail'>;
-
-const repeatLabels: Record<string, string> = {
-  none: 'Does not repeat',
-  daily: 'Repeats daily',
-  weekly: 'Repeats weekly',
-  monthly: 'Repeats monthly',
-};
 
 type DetailRow = { label: string; value: string };
 
@@ -65,7 +58,7 @@ export function TaskDetailScreen({ route, navigation }: Props) {
 
   const detailRows: DetailRow[] = [
     { label: 'Due', value: `${formatDueDate(task.dueDate)} at ${formatDueTime(task.dueDate)}` },
-    { label: 'Repeat', value: repeatLabels[task.repeatType] ?? 'Does not repeat' },
+    { label: 'Repeat', value: repeatLabel(task.repeatType) },
     { label: 'Bird', value: birdName ?? 'Not assigned' },
     { label: 'Flock', value: flockName ?? 'Not assigned' },
     { label: 'Reminder', value: task.notificationEnabled ? 'On' : 'Off' },

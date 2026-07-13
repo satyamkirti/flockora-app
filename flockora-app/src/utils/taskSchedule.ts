@@ -55,6 +55,28 @@ export function formatDueDate(dueDate: string): string {
   return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(dueDate));
 }
 
+export function formatDueDateTime(dueDate: string): string {
+  return `${formatDueDate(dueDate)} · ${formatDueTime(dueDate)}`;
+}
+
+const repeatCadenceLabels: Record<Task['repeatType'], string> = {
+  none: 'Does not repeat',
+  daily: 'Repeats daily',
+  weekly: 'Repeats weekly',
+  monthly: 'Repeats monthly',
+};
+
+export function repeatLabel(repeatType: Task['repeatType']): string {
+  return repeatCadenceLabels[repeatType] ?? repeatCadenceLabels.none;
+}
+
+export function taskScheduleLabel(task: Pick<Task, 'dueDate' | 'repeatType'>): string {
+  if (task.repeatType === 'none') {
+    return formatDueDateTime(task.dueDate);
+  }
+  return `${repeatLabel(task.repeatType)} · ${formatDueTime(task.dueDate)}`;
+}
+
 export function getTimeOfDayGreeting(referenceDate: Date = new Date()): string {
   const hour = referenceDate.getHours();
   if (hour < 12) return 'Good morning';
