@@ -1,6 +1,6 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
-const DATABASE_VERSION = 5;
+const DATABASE_VERSION = 6;
 
 export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA foreign_keys = ON;');
@@ -172,6 +172,85 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase): Promise<void> {
       CREATE INDEX IF NOT EXISTS idx_feed_logs_date ON feed_logs(date);
     `);
     currentVersion = 5;
+  }
+
+  if (currentVersion === 5) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS breeding_pairs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        maleBirdId INTEGER NOT NULL REFERENCES birds(id) ON DELETE CASCADE,
+        femaleBirdId INTEGER NOT NULL REFERENCES birds(id) ON DELETE CASCADE,
+        pairName TEXT,
+        pairedDate TEXT NOT NULL,
+        separatedDate TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        notes TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_breeding_pairs_maleBirdId ON breeding_pairs(maleBirdId);
+      CREATE INDEX IF NOT EXISTS idx_breeding_pairs_femaleBirdId ON breeding_pairs(femaleBirdId);
+      CREATE INDEX IF NOT EXISTS idx_breeding_pairs_status ON breeding_pairs(status);
+
+      CREATE TABLE IF NOT EXISTS clutches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        breedingPairId INTEGER REFERENCES breeding_pairs(id) ON DELETE SET NULL,
+        flockId INTEGER REFERENCES flocks(id) ON DELETE SET NULL,
+        clutchName TEXT,
+        laidDate TEXT NOT NULL,
+        totalEggs INTEGER NOT NULL DEFAULT 0,
+        incubationType TEXT NOT NULL DEFAULT 'natural',
+        incubatorName TEXT,
+        incubationStartDate TEXT,
+        expectedHatchDate TEXT,
+        actualHatchDate TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        notes TEXT,
+        candlingNotificationId TEXT,
+        hatchExpectedNotificationId TEXT,
+        hatchDueNotificationId TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_clutches_breedingPairId ON clutches(breedingPairId);
+      CREATE INDEX IF NOT EXISTS idx_clutches_flockId ON clutches(flockId);
+      CREATE INDEX IF NOT EXISTS idx_clutches_status ON clutches(status);
+      CREATE INDEX IF NOT EXISTS idx_clutches_expectedHatchDate ON clutches(expectedHatchDate);
+
+      CREATE TABLE IF NOT EXISTS candling_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        clutchId INTEGER NOT NULL REFERENCES clutches(id) ON DELETE CASCADE,
+        date TEXT NOT NULL,
+        fertileEggs INTEGER NOT NULL DEFAULT 0,
+        infertileEggs INTEGER NOT NULL DEFAULT 0,
+        uncertainEggs INTEGER NOT NULL DEFAULT 0,
+        deadEmbryos INTEGER NOT NULL DEFAULT 0,
+        notes TEXT,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_candling_records_clutchId ON candling_records(clutchId);
+      CREATE INDEX IF NOT EXISTS idx_candling_records_date ON candling_records(date);
+
+      CREATE TABLE IF NOT EXISTS hatch_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        clutchId INTEGER NOT NULL REFERENCES clutches(id) ON DELETE CASCADE,
+        hatchedEggs INTEGER NOT NULL DEFAULT 0,
+        failedEggs INTEGER NOT NULL DEFAULT 0,
+        assistedHatches INTEGER NOT NULL DEFAULT 0,
+        hatchDate TEXT NOT NULL,
+        notes TEXT,
+        birdsCreated INTEGER NOT NULL DEFAULT 0,
+        createdAt TEXT NOT NULL,
+        updatedAt TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_hatch_records_clutchId ON hatch_records(clutchId);
+    `);
+    currentVersion = 6;
   }
 
   await db.execAsync(`PRAGMA user_version = ${DATABASE_VERSION}`);

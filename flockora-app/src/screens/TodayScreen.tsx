@@ -12,6 +12,7 @@ import {
   useHealthDashboardStats,
   useEggDashboard,
   useFeedDashboard,
+  useBreedingDashboard,
 } from '../hooks';
 import { taskRepository } from '../db/repositories';
 import { taskTypeByKey } from '../data/taskTypes';
@@ -30,6 +31,7 @@ export function TodayScreen({ navigation }: Props) {
   const { stats: healthStats } = useHealthDashboardStats();
   const { summary: eggSummary } = useEggDashboard();
   const { summary: feedSummary } = useFeedDashboard();
+  const { summary: breedingSummary } = useBreedingDashboard();
   const { birds } = useBirds();
   const { flocks } = useFlocks();
 
@@ -77,6 +79,13 @@ export function TodayScreen({ navigation }: Props) {
     { title: 'Out of Stock', value: String(feedSummary.outOfStockCount), accentColor: colors.alertCoral },
     { title: 'Feed Used Today', value: formatQuantitiesByUnit(feedSummary.usedTodayByUnit), accentColor: colors.leafGreen },
     { title: 'Expiring Soon', value: String(feedSummary.expiringSoonCount), accentColor: colors.hatchOrange },
+  ];
+
+  const breedingSummaryCards = [
+    { title: 'Active Clutches', value: String(breedingSummary.activeClutches), accentColor: colors.leafGreen },
+    { title: 'Eggs Incubating', value: String(breedingSummary.eggsIncubating), accentColor: colors.sunflowerYellow },
+    { title: 'Hatches Due Soon', value: String(breedingSummary.hatchesDueSoon), accentColor: colors.waterBlue },
+    { title: 'Overdue Hatches', value: String(breedingSummary.overdueHatches), accentColor: colors.alertCoral },
   ];
 
   return (
@@ -173,6 +182,19 @@ export function TodayScreen({ navigation }: Props) {
         <SectionHeader title="Feed" />
         <View style={styles.summaryGrid}>
           {feedSummaryCards.map((card) => (
+            <StatCard
+              key={card.title}
+              title={card.title}
+              value={card.value}
+              accentColor={card.accentColor}
+              style={styles.statCard}
+            />
+          ))}
+        </View>
+
+        <SectionHeader title="Breeding" />
+        <View style={styles.summaryGrid}>
+          {breedingSummaryCards.map((card) => (
             <StatCard
               key={card.title}
               title={card.title}

@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { Task } from '../types/task';
 import { HealthRecord } from '../types/healthRecord';
 import { FeedItem } from '../types/feed';
+import { Clutch } from '../types/breeding';
 import { taskTypeByKey } from '../data/taskTypes';
 import { healthRecordTypeByKey } from '../data/healthRecordTypes';
 
@@ -194,4 +195,117 @@ export async function notifyOutOfStock(item: Pick<FeedItem, 'id' | 'name'>): Pro
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 1, repeats: false },
   });
+}
+
+type SchedulableClutchCandling = Pick<Clutch, 'id' | 'clutchName' | 'incubationStartDate'> & {
+  incubationPeriodDays: number;
+};
+
+function buildCandlingReminderDate(incubationStartDate: string, incubationPeriodDays: number): Date {
+  const start = new Date(incubationStartDate);
+  const reminderDate = new Date(start);
+  reminderDate.setDate(reminderDate.getDate() + Math.floor(incubationPeriodDays / 2));
+  reminderDate.setHours(9, 0, 0, 0);
+  return reminderDate;
+}
+
+export async function scheduleCandlingReminder(clutch: SchedulableClutchCandling): Promise<string | null> {
+  if (!clutch.incubationStartDate) {
+    return null;
+  }
+  const reminderDate = buildCandlingReminderDate(clutch.incubationStartDate, clutch.incubationPeriodDays);
+  if (reminderDate.getTime() <= Date.now()) {
+    return null;
+  }
+  const granted = await ensureNotificationPermission();
+  if (!granted) {
+    return null;
+  }
+
+  return Notifications.scheduleNotificationAsync({
+    content: {
+      title: `Time to candle ${clutch.clutchName || 'your clutch'}`,
+      body: 'Check egg development partway through incubation.',
+      data: { clutchId: clutch.id, reminderType: 'candling' },
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: reminderDate },
+  });
+}
+
+export async function syncCandlingReminder(
+  clutch: SchedulableClutchCandling,
+  previousNotificationId: string | null
+): Promise<string | null> {
+  await cancelNotification(previousNotificationId);
+  return scheduleCandlingReminder(clutch);
+}
+
+const HATCH_EXPECTED_WARNING_DAYS = 2;
+
+type SchedulableClutchHatch = Pick<Clutch, 'id' | 'clutchName' | 'expectedHatchDate'>;
+
+export async function scheduleHatchExpectedReminder(clutch: SchedulableClutchHatch): Promise<string | null> {
+  if (!clutch.expectedHatchDate) {
+    return null;
+  }
+  const expected = new Date(clutch.expectedHatchDate);
+  const reminderDate = new Date(expected);
+  reminderDate.setDate(reminderDate.getDate() - HATCH_EXPECTED_WARNING_DAYS);
+  reminderDate.setHours(9, 0, 0, 0);
+  if (reminderDate.getTime() <= Date.now()) {
+    return null;
+  }
+  const granted = await ensureNotificationPermission();
+  if (!granted) {
+    return null;
+  }
+
+  return Notifications.scheduleNotificationAsync({
+    content: {
+      title: `${clutch.clutchName || 'Your clutch'} is hatching soon`,
+      body: `Expected hatch in ${HATCH_EXPECTED_WARNING_DAYS} days — get ready.`,
+      data: { clutchId: clutch.id, reminderType: 'hatch_expected' },
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: reminderDate },
+  });
+}
+
+export async function syncHatchExpectedReminder(
+  clutch: SchedulableClutchHatch,
+  previousNotificationId: string | null
+): Promise<string | null> {
+  await cancelNotification(previousNotificationId);
+  return scheduleHatchExpectedReminder(clutch);
+}
+
+export async function scheduleHatchDueReminder(clutch: SchedulableClutchHatch): Promise<string | null> {
+  if (!clutch.expectedHatchDate) {
+    return null;
+  }
+  const dueDate = new Date(clutch.expectedHatchDate);
+  dueDate.setHours(9, 0, 0, 0);
+  if (dueDate.getTime() <= Date.now()) {
+    return null;
+  }
+  const granted = await ensureNotificationPermission();
+  if (!granted) {
+    return null;
+  }
+
+  return Notifications.scheduleNotificationAsync({
+    content: {
+      title: `${clutch.clutchName || 'Your clutch'} hatch is due today`,
+      body: 'Check your incubator or nest for new hatchlings.',
+      data: { clutchId: clutch.id, reminderType: 'hatch_due' },
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: dueDate },
+  });
+}
+
+export async function syncHatchDueReminder(
+  clutch: SchedulableClutchHatch,
+  previousNotificationId: string | null
+): Promise<string | null> {
+  await cancelNotification(previousNotificationId);
+  return scheduleHatchDueReminder(clutch);
 }

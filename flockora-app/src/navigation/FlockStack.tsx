@@ -14,6 +14,15 @@ import {
   AddEditFeedItemScreen,
   LogFeedUsageScreen,
   FeedHistoryScreen,
+  BreedingHubScreen,
+  BreedingPairListScreen,
+  AddEditBreedingPairScreen,
+  ClutchHistoryScreen,
+  AddEditClutchScreen,
+  ClutchDetailScreen,
+  AddEditCandlingRecordScreen,
+  AddEditHatchRecordScreen,
+  CreateBirdsFromHatchScreen,
 } from '../screens';
 
 const Stack = createNativeStackNavigator<FlockStackParamList>();
@@ -33,6 +42,15 @@ export function FlockStack() {
       <Stack.Screen name="AddEditFeedItem" component={AddEditFeedItemScreen} />
       <Stack.Screen name="LogFeedUsage" component={LogFeedUsageScreen} />
       <Stack.Screen name="FeedHistory" component={FeedHistoryScreen} />
+      <Stack.Screen name="BreedingHub" component={BreedingHubScreen} />
+      <Stack.Screen name="BreedingPairList" component={BreedingPairListScreen} />
+      <Stack.Screen name="AddEditBreedingPair" component={AddEditBreedingPairScreen} />
+      <Stack.Screen name="ClutchHistory" component={ClutchHistoryScreen} />
+      <Stack.Screen name="AddEditClutch" component={AddEditClutchScreen} />
+      <Stack.Screen name="ClutchDetail" component={ClutchDetailScreen} />
+      <Stack.Screen name="AddEditCandlingRecord" component={AddEditCandlingRecordScreen} />
+      <Stack.Screen name="AddEditHatchRecord" component={AddEditHatchRecordScreen} />
+      <Stack.Screen name="CreateBirdsFromHatch" component={CreateBirdsFromHatchScreen} />
     </Stack.Navigator>
   );
 }

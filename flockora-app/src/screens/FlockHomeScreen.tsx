@@ -12,7 +12,7 @@ import {
   FlockManagerModal,
   FadeInUp,
 } from '../components';
-import { useBirds, useFlocks, useEggDashboard, useFeedDashboard } from '../hooks';
+import { useBirds, useFlocks, useEggDashboard, useFeedDashboard, useBreedingDashboard } from '../hooks';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, shadows, spacing } from '../theme';
 
@@ -24,6 +24,7 @@ export function FlockHomeScreen({ navigation }: Props) {
   const { birds, loading, refresh: refreshBirds } = useBirds(selectedFlockId);
   const { summary: eggSummary } = useEggDashboard();
   const { summary: feedSummary } = useFeedDashboard();
+  const { summary: breedingSummary } = useBreedingDashboard();
   const [manageVisible, setManageVisible] = useState(false);
 
   const handleChanged = () => {
@@ -69,6 +70,21 @@ export function FlockHomeScreen({ navigation }: Props) {
             {feedSummary.lowStockCount + feedSummary.outOfStockCount > 0
               ? `${feedSummary.lowStockCount + feedSummary.outOfStockCount} item(s) need attention`
               : 'Stock levels look good'}
+          </AppText>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={colors.mutedText} />
+      </Pressable>
+
+      <Pressable style={[styles.eggCard, shadows.card]} onPress={() => navigation.navigate('BreedingHub')}>
+        <View style={styles.eggIconBubble}>
+          <AppText style={styles.eggIcon}>🧬</AppText>
+        </View>
+        <View style={styles.eggCardText}>
+          <AppText variant="cardTitle">Breeding & Hatching</AppText>
+          <AppText variant="caption" color={colors.secondaryText}>
+            {breedingSummary.activeClutches > 0
+              ? `${breedingSummary.activeClutches} clutch(es) incubating`
+              : 'No active clutches'}
           </AppText>
         </View>
         <Ionicons name="chevron-forward" size={20} color={colors.mutedText} />

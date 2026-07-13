@@ -11,4 +11,13 @@ export type FlockStackParamList = {
   AddEditFeedItem: { itemId?: number };
   LogFeedUsage: { feedItemId?: number; logId?: number };
   FeedHistory: undefined;
+  BreedingHub: undefined;
+  BreedingPairList: undefined;
+  AddEditBreedingPair: { pairId?: number };
+  ClutchHistory: undefined;
+  AddEditClutch: { clutchId?: number };
+  ClutchDetail: { clutchId: number };
+  AddEditCandlingRecord: { clutchId: number; recordId?: number };
+  AddEditHatchRecord: { clutchId: number };
+  CreateBirdsFromHatch: { hatchRecordId: number };
 };
