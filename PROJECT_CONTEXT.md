@@ -1,0 +1,326 @@
+# Flockora — Project Context
+
+**Purpose of this document:** Permanent project memory and handover document for any AI coding agent or developer working on Flockora in the future. This document reflects the codebase as it actually exists, verified by direct inspection, not by assumption or prior conversation history.
+
+**Last verified:** 2026-07-13, against commit `18d25dd` on branch `main`, updated for Phase 3 Sprint 3.1 (secure AI backend foundation).
+
+---
+
+## 1. Project Overview
+
+**Flockora** is a mobile-first flock care, hatching, breeding, and bird management app for backyard poultry keepers and hobby breeders. Tagline: *"Care. Hatch. Breed. Protect."*
+
+- **Core purpose:** Replace notebooks/spreadsheets for people who keep and breed backyard birds (chickens, quail, ducks, turkeys, geese, guinea fowl, pheasants, peafowl) with a warm, simple, camera-and-voice-first mobile app.
+- **Target users:** Western (US/UK/Canada/Australia) backyard poultry keepers with mixed flocks, hobby breeders, small breeders outgrowing spreadsheets, households sharing bird care, and people who hatch birds at home. Explicitly **not** targeted at large industrial poultry operations.
+- **Main product concept:** Four pillars — **Today** (what needs attention now), **Care** (daily flock stewardship: birds, eggs, feed, health), **Hatch** (incubation, candling, hatch tracking), **Breed** (pairings, lineage, fertility/hatch performance) — plus a **Protect** pillar for health awareness. Full philosophy, rules, and design language are defined in [`PRODUCT_CONSTITUTION.md`](PRODUCT_CONSTITUTION.md) at the repo root — **read that file first**, it is the authoritative product spec this codebase implements phase by phase.
+- **Guiding UX principle (constitution §2):** "Less typing. More understanding." AI prepares, the human confirms, the system calculates — data is never silently upgraded from AI-proposed to verified fact.
+
+## 2. Current Tech Stack
+
+- **Frontend:** React Native 0.81.5 + Expo SDK 54 (`~54.0.34`), managed workflow, TypeScript 5.9 (`strict: true`), React 19.1.
+- **Navigation:** React Navigation v7 — `@react-navigation/native`, `@react-navigation/bottom-tabs`, `@react-navigation/native-stack`.
+- **Database:** `expo-sqlite ~16.0.10`, local on-device only (class-based `SQLiteProvider` / `useSQLiteContext` API). **No backend/cloud database exists yet.**
+- **Backend:** As of Phase 3 Sprint 3.1, a minimal Node.js/Express/TypeScript backend now exists at [`flockora-backend/`](flockora-backend/) — see §14 for full detail. It is a **foundation-only service**: it exposes one endpoint (`POST /api/v1/analyze-bird`) backed by a fully mocked AI provider, is **not called by the mobile client yet**, is not deployed anywhere, and holds no real secrets. The constitution (§15) names Supabase/Supabase Auth/Supabase Storage as the intended future primary backend; this Express service is specifically the AI-request gateway named in `SECURITY.md` Rule 4, not a replacement for that broader plan. None of `@supabase/*` appears anywhere in either `package.json`.
+- **Authentication:** **None implemented anywhere in the system** — neither the mobile client nor the new backend. No login/signup screens, no auth state, no user accounts, no session/token logic. Both the app and the backend are effectively single-tenant today; the backend's rate limiting is IP-based only as a direct consequence (see §14.3).
+- **Hosting/deployment:** Not configured for either the client or the new backend. No EAS config for the client; no deployment target (Render/Railway/Fly/Cloud Run/etc.) chosen yet for the backend. `expo-doctor` and `expo export` remain the client's local validation gates; `tsc --noEmit` / `npm run build` / a local start-and-curl smoke test are the backend's.
+- **AI services:** **None integrated with a real provider anywhere.** The onboarding "AI photo analysis" flow ([`AIPhotoAnalysisLoadingScreen.tsx`](flockora-app/src/screens/AIPhotoAnalysisLoadingScreen.tsx)) is still fully mocked client-side exactly as before — it calls `getMockAIAnalysis(speciesKey)` from [`src/data/onboardingData.ts`](flockora-app/src/data/onboardingData.ts) and has **not** been wired to the new backend in this sprint. The new backend's `/api/v1/analyze-bird` endpoint is also mocked (`MockAIProvider`, see §14.2) — no Gemini/OpenAI/Claude key or call exists anywhere in the repository. The constitution names Gemini multimodal API as the intended future provider (§15); the backend's provider abstraction (§14.2) is what a future sprint will implement it behind.
+- **Notifications:** `expo-notifications ~0.32.17`, fully implemented and real (local scheduled notifications only, no push infrastructure).
+- **File export/sharing:** `expo-file-system ~19.0.23` (new `File`/`Paths` class API) + `expo-sharing ~14.0.8`, used for CSV export.
+- **Fonts:** `@expo-google-fonts/nunito` (Nunito Sans family per constitution §11), loaded via `expo-font`.
+- **Icons:** `@expo/vector-icons` (Ionicons).
+- **Subscriptions:** Not integrated. Constitution (§15) names RevenueCat as the intended future provider; no trace of it in the codebase.
+
+## 3. Project Architecture
+
+Flockora follows a layered architecture, deliberately separating UI from data access and business logic (per constitution §15, "avoid giant components, avoid duplicated business logic inside UI screens").
+
+The repository root now contains two independent projects: `flockora-app/` (the Expo mobile client, detailed below) and, as of Phase 3 Sprint 3.1, `flockora-backend/` (a minimal Node/Express service — see §14). They are not a monorepo with shared tooling, just two sibling directories in one git repository; the client has no dependency on the backend today (it doesn't call it yet).
+
+```
+flockora-app/
+├── App.tsx                  — app entry: font loading, SQLiteProvider + migration hook, notification handler
+├── index.ts                 — Expo entry point (registers App.tsx)
+├── app.json                 — Expo config (plugins: expo-font, expo-sqlite, expo-notifications)
+├── src/
+│   ├── db/
+│   │   ├── migrations.ts    — single versioned migration file (see §4)
+│   │   └── repositories/    — one file per domain; plain objects of async functions taking `db` as first arg
+│   ├── types/                — one file per domain: plain TypeScript types + `createEmptyXInput()` factories
+│   ├── hooks/                 — one hook per data shape; useSQLiteContext + useState + useFocusEffect-based refresh
+│   ├── screens/               — one file per screen, grouped conceptually by feature but flat in the filesystem
+│   ├── components/            — shared, reusable UI primitives and feature-specific rows/modals
+│   ├── navigation/             — one param-list `types.ts` file per stack + one `XStack.tsx` navigator per stack
+│   ├── context/                — React Context providers (currently just onboarding)
+│   ├── data/                   — static reference data/config tables (species options, task types, incubation periods, mock AI data)
+│   ├── utils/                   — pure calculation/formatting helpers, no side effects
+│   ├── services/                 — cross-cutting service modules (currently just notificationService.ts)
+│   └── theme/                    — design tokens (colors, spacing, radii, shadows, typography)
+```
+
+### Navigation structure
+
+- **`RootNavigator`** (native-stack, no header) — wraps everything in `OnboardingProvider`, and sequences: `Welcome → BirdTypeSelection → PurposeSelection → AddFirstBird → AIPhotoAnalysisLoading → ReviewConfirmBirdDetails → PersonalizedDashboard → Main`. `Main` renders `AppTabs`.
+- **`AppTabs`** (bottom-tabs, 5 tabs per constitution §13 — "maximum five primary bottom navigation actions"):
+  - **Today** → `TodayStack` → `TodayScreen`, `TaskDetailScreen`, `AddEditTaskScreen`
+  - **Flock** → `FlockStack` (the largest stack; hosts Bird, Egg, Feed, and Breeding feature hubs — see §5)
+  - **Camera/Add** → `CameraSheetScreen` directly (not a stack) — **UI-only placeholder**, see §6
+  - **Pulse** → `PulseStack` → `PulseHomeScreen` (cross-flock health record search/filter)
+  - **More** → inline `PlaceholderScreen` — **not implemented**, see §6
+- Cross-tab navigation (e.g. jumping from a Pulse health record to that bird's profile in the Flock tab) uses `navigation.getParent()?.dispatch(CommonActions.navigate(...))` rather than duplicating detail screens across stacks (see [`PulseHomeScreen.tsx:80-87`](flockora-app/src/screens/PulseHomeScreen.tsx)).
+
+### Key architectural files
+
+| File | Purpose |
+|---|---|
+| [`App.tsx`](flockora-app/App.tsx) | Loads Nunito fonts, sets the global notification handler, wraps the app in `SQLiteProvider` (runs `migrateDbIfNeeded` on init via Suspense) |
+| [`src/db/migrations.ts`](flockora-app/src/db/migrations.ts) | Single source of DB schema truth — see §4 |
+| [`src/theme/index.ts`](flockora-app/src/theme/index.ts) | All design tokens: colors match constitution §10 exactly, spacing/radii/shadows/typography scales |
+| [`src/navigation/*Types.ts`](flockora-app/src/navigation) | One `XStackParamList` per stack, consumed by both the navigator and every screen's `NativeStackScreenProps<X, 'ScreenName'>` |
+| [`src/context/OnboardingContext.tsx`](flockora-app/src/context/OnboardingContext.tsx) | Holds in-memory onboarding draft state (species, purposes, bird draft) until the first bird + flock are persisted to SQLite at the end of onboarding |
+| [`src/services/notificationService.ts`](flockora-app/src/services/notificationService.ts) | Every local-notification scheduling function in the app lives here (task reminders, health reminders, feed expiry/low-stock/out-of-stock, candling/hatch reminders) |
+
+## 4. Database and Data Structure
+
+Single local SQLite database, file name `flockora.db`, managed entirely through [`src/db/migrations.ts`](flockora-app/src/db/migrations.ts). **No cloud sync, no server-side database exists.**
+
+- **Migration pattern:** one file, a module-level `DATABASE_VERSION` constant (currently **6**), and sequential `if (currentVersion === N) { ...; currentVersion = N+1; }` blocks run against `PRAGMA user_version`. Each block is idempotent (`CREATE TABLE IF NOT EXISTS`). `PRAGMA foreign_keys = ON` is set unconditionally on every app start, and `PRAGMA journal_mode = WAL` was set during the v0→v1 migration.
+- **To add a new table/column:** bump `DATABASE_VERSION`, append a new `if (currentVersion === 6) { ...; currentVersion = 7; }` block — never edit prior blocks (they may already have run against real user devices, even though this app has no production users yet).
+
+### Tables (as of version 6)
+
+| Table | Key columns | Notes |
+|---|---|---|
+| `flocks` | `id, name, createdAt, updatedAt` | Simple named groupings of birds |
+| `birds` | `id, name, species, breed, sex, dateOfBirth, ageEstimate, acquisitionDate, color, weight, weightUnit, notes, photoUri, isActive, flockId, createdAt, updatedAt` | `flockId` → `flocks(id)` `ON DELETE SET NULL`. `isActive` used to soft-retire birds rather than delete (constitution §17: "Bird records should normally be archived rather than permanently deleted") |
+| `tasks` | `id, birdId, flockId, type, title, description, dueDate, repeatType, completed, completedAt, notificationEnabled, notificationId, createdAt, updatedAt` | `birdId` → `birds(id)` `ON DELETE CASCADE`; `flockId` `ON DELETE SET NULL` |
+| `health_records` | `id, birdId, type, title, notes, medicine, dosage, startDate, endDate, veterinarian, cost, reminderDate, status, notificationId, createdAt, updatedAt` | `birdId` `ON DELETE CASCADE` (health history is bird-specific, not preserved past bird deletion) |
+| `egg_records` | `id, flockId, birdId, date, totalEggs, fertileEggs, crackedEggs, dirtyEggs, doubleYolkEggs, notes, createdAt, updatedAt` | Both FKs `ON DELETE SET NULL` — production history is preserved even if the flock/bird is later removed |
+| `feed_items` | `id, name, feedType, brand, quantity, unit, lowStockThreshold, costPerUnit, purchaseDate, expiryDate, notes, notificationId, createdAt, updatedAt` | Inventory items |
+| `feed_logs` | `id, feedItemId, flockId, birdId, quantityUsed, unit, date, notes, createdAt, updatedAt` | `feedItemId` `ON DELETE CASCADE`; `flockId`/`birdId` `ON DELETE SET NULL` |
+| `breeding_pairs` | `id, maleBirdId, femaleBirdId, pairName, pairedDate, separatedDate, status, notes, createdAt, updatedAt` | Both bird FKs `ON DELETE CASCADE` — a pair record can't outlive either bird |
+| `clutches` | `id, breedingPairId, flockId, clutchName, laidDate, totalEggs, incubationType, incubatorName, incubationStartDate, expectedHatchDate, actualHatchDate, status, notes, candlingNotificationId, hatchExpectedNotificationId, hatchDueNotificationId, createdAt, updatedAt` | `breedingPairId`/`flockId` `ON DELETE SET NULL` — hatch/candling history intentionally outlives the pair or flock |
+| `candling_records` | `id, clutchId, date, fertileEggs, infertileEggs, uncertainEggs, deadEmbryos, notes, createdAt, updatedAt` | `clutchId` `ON DELETE CASCADE` |
+| `hatch_records` | `id, clutchId, hatchedEggs, failedEggs, assistedHatches, hatchDate, notes, birdsCreated, createdAt, updatedAt` | `clutchId` `ON DELETE CASCADE`; `birdsCreated` is a 0/1 guard flag preventing double bird-creation from one hatch record |
+
+Indexes exist on essentially every foreign key and every date/status column used for filtering (see migration file for the exhaustive list).
+
+### Local storage usage beyond SQLite
+
+- No `AsyncStorage`/`SecureStore` usage found anywhere in `src/`.
+- CSV export ([`src/utils/eggExport.ts`](flockora-app/src/utils/eggExport.ts)) writes a temporary file to `Paths.cache` via the new `expo-file-system` `File` class, then hands it to `expo-sharing` — the file is not a persistent data store, just an export artifact.
+
+## 5. Implemented Features
+
+Everything below is wired to real SQLite persistence, has a working UI, and (where notifications are relevant) real `expo-notifications` scheduling — not mock data.
+
+### 5.1 Onboarding flow
+First-run sequence collecting the user's first bird and establishing initial state, ending in a bottom-tab `Main` app.
+- Files: `WelcomeScreen`, `BirdTypeSelectionScreen`, `PurposeSelectionScreen`, `AddFirstBirdScreen`, `AIPhotoAnalysisLoadingScreen` (mocked — see §6), `ReviewConfirmBirdDetailsScreen`, `PersonalizedDashboardScreen`, `OnboardingContext`.
+- Logic: species/purpose selection populate `OnboardingContext`; the "AI analysis" step is a timed mock; the review step lets the user confirm/edit every AI-proposed field before it is persisted — this is the concrete implementation of the constitution's "AI proposes, human confirms" rule (§8) for the one place AI currently touches the app.
+
+### 5.2 Bird & Flock management (`FlockStack` root)
+- Files: `FlockHomeScreen`, `BirdProfileScreen`, `AddEditBirdScreen`, `birdRepository.ts`, `flockRepository.ts`, `useBirds`/`useBird`/`useFlocks` hooks, `BirdListRow`, `FlockManagerModal`, `BirdPickerModal`.
+- Create/edit/soft-deactivate birds, assign to flocks, manage flocks (create/rename/delete) via `FlockManagerModal`. Flock chip filter on the home list.
+
+### 5.3 Daily Care / Tasks (`TodayStack`)
+- Files: `TodayScreen`, `TaskDetailScreen`, `AddEditTaskScreen`, `taskRepository.ts`, `useTodayTasks`/`useTask`/`useTaskStats`, `taskTypes.ts`, `taskSchedule.ts` utils, `TaskRow`.
+- Recurring/one-off care tasks per bird or flock, with `repeatType` (`none`/`daily`/`weekly`/`monthly`) driving `expo-notifications` trigger construction (`buildTaskTrigger` in `notificationService.ts`). Today dashboard shows today's tasks with completion toggling (`completeTask`/`reopenTask`).
+
+### 5.4 Bird Health (`PulseStack` + `FlockStack`)
+- Files: `AddEditHealthRecordScreen`, `HealthRecordDetailScreen`, `PulseHomeScreen`, `healthRecordRepository.ts`, `healthRecordTypes.ts`, `useHealthRecord(s)`/`useHealthStats`/`useHealthDashboardStats`/`useBirdHealthHistory`, `HealthTimelineRow`.
+- Per-bird health record timeline (medication, vet visits, observations) with optional reminder date → single scheduled notification. `PulseHomeScreen` is a cross-flock searchable/filterable health record view (search text, bird, type, status, date), independent of the per-bird timeline shown on `BirdProfileScreen`.
+
+### 5.5 Egg Production (`FlockStack`)
+- Files: `EggDashboardScreen`, `AddEditEggRecordScreen`, `EggHistoryScreen`, `eggRecordRepository.ts`, `useEggRecord`/`useEggHistory`/`useEggDashboard`/`useEggStatistics`/`useEggProductionSeries`, `BarChart`, `eggExport.ts`.
+- Daily egg logging (total/fertile/cracked/dirty/double-yolk) per flock or bird, dashboard with today/week/month/average stats, a bar chart of production over time, and CSV export via `expo-sharing`.
+
+### 5.6 Feed & Inventory Management (`FlockStack`)
+- Files: `FeedInventoryScreen`, `AddEditFeedItemScreen`, `LogFeedUsageScreen`, `FeedHistoryScreen`, `feedRepository.ts`, `feedTypes.ts`, `feedStock.ts`, `useFeedItem(s)`/`useFeedLog`/`useFeedHistory`/`useFeedStatistics`/`useFeedDashboard`, `FeedItemRow`, `FeedItemPickerModal`.
+- Feed inventory items with stock quantity, low-stock threshold, expiry date; usage logging decrements stock transactionally. Notifications: expiry warning (fixed days before, via `scheduleFeedExpiryReminder`), immediate low-stock/out-of-stock alerts (`notifyLowStock`/`notifyOutOfStock`, fired via a 1-second `TIME_INTERVAL` trigger rather than `DATE`, functioning as an immediate local alert).
+
+### 5.7 Breeding & Hatching Management (`FlockStack`)
+The most recently built and largest feature module.
+- Files: `BreedingHubScreen`, `BreedingPairListScreen`, `AddEditBreedingPairScreen`, `ClutchHistoryScreen`, `AddEditClutchScreen`, `ClutchDetailScreen`, `AddEditCandlingRecordScreen`, `AddEditHatchRecordScreen`, `CreateBirdsFromHatchScreen`, `breedingRepository.ts`, `breeding.ts` types, `incubationPeriods.ts`, `birdSex.ts`, `breedingCalc.ts`, 9 hooks (see `src/hooks/index.ts`), `BreedingPairRow`, `ClutchRow`, `BreedingPairPickerModal`.
+- **Breeding pairs:** male/female bird pairing with same-bird and confident-sex-mismatch validation (`SameBirdPairingError`, `InvalidSexPairingError` in `breedingRepository.ts`); sex compatibility checked via `classifyBirdSex()` (bounded term list, degrades to "unknown" non-blocking warning rather than hard-blocking on ambiguous data).
+- **Clutches:** egg batches linked optionally to a breeding pair and/or flock, natural or incubator-based, with a derived (never stored) `IncubationPhase` — `incubating | due_soon | hatch_due | overdue | completed` — computed from dates via `getIncubationPhase()`. Expected hatch date can be suggested from `incubationPeriods.ts` (species → days table) but is always manually editable.
+- **Candling:** per-session fertile/infertile/uncertain/dead-embryo counts, validated against the clutch's `totalEggs` both client-side and repository-side (`CandlingCountExceedsClutchError`). Reducing a clutch's `totalEggs` after candling/hatch records exist is blocked below the recorded sums (`ClutchTotalReductionError`).
+- **Hatch records:** one hatch record per clutch (`saveHatchRecord` is create-or-update by `clutchId`), computing hatch rate, fertility rate, and hatchability-of-fertile-eggs, all guarded against divide-by-zero via `safePercent()`.
+- **Hatch → bird creation:** `createBirdsFromHatch()` runs inside `db.withTransactionAsync`, reuses `birdRepository.create` for each new bird, and is guarded by the `hatch_records.birdsCreated` flag to prevent duplicate creation (`DuplicateBirdCreationError`).
+- **Notifications:** candling reminder (midpoint of incubation), hatch-expected reminder (N days before), hatch-due reminder (on the day) — all in `notificationService.ts`, all reconciled (cancel-then-reschedule) on every clutch save via `setClutchNotificationIds`, and proactively cancelled when a hatch is actually recorded.
+- **Dashboard integration:** compact 4-card section on `TodayScreen` (`useBreedingDashboard`) and an entry card on `FlockHomeScreen` linking to the full `BreedingHubScreen`.
+
+### 5.8 Shared UI component library
+`AppScreen`, `AppText` (variant-based typography), `PrimaryButton`, `IconButton`, `FormField`, `SegmentedControl`, `SelectableCard`, `StatusPill`, `StatCard`, `SectionHeader`, `EmptyState`, `FadeInUp` (entrance animation), `ProgressBar`/`BarChart` (percentage-height technique), `ConfidenceBadge` (renders the constitution's HIGH/LIKELY/UNSURE states), `EditableFieldModal`, `BirdPhotoBadge`, plus feature-specific rows/pickers (`BirdListRow`, `TaskRow`, `HealthTimelineRow`, `FeedItemRow`, `BreedingPairRow`, `ClutchRow`) and modal pickers (`BirdPickerModal`, `FlockManagerModal`, `FeedItemPickerModal`, `BreedingPairPickerModal`).
+
+## 6. Partially Implemented Features
+
+- **AI photo analysis (onboarding):** UI flow is complete and functional, but the "AI" is a hardcoded per-species lookup table (`getMockAIAnalysis` in `onboardingData.ts`) with a fixed-timer fake loading screen — **no camera capture, no image upload, no real model call**. See [`AIPhotoAnalysisLoadingScreen.tsx`](flockora-app/src/screens/AIPhotoAnalysisLoadingScreen.tsx).
+- **Camera / Add tab (`CameraSheetScreen`):** Renders a title, subtitle, and a list of `PrimaryButton`s for 7 capture targets (Bird, Egg, Medicine, Feed, Health concern, Vet document, Hatch tray) named directly from constitution §5 — **none of the buttons have an `onPress` handler**. No actual camera integration (no `expo-camera`/`expo-image-picker` dependency present in `package.json`). This is a visual placeholder only.
+- **"More" tab:** Renders the generic `PlaceholderScreen` with just a title. No settings, no account, no export/reports hub exists yet despite being named in constitution §14 ("Reports and exports", "Subscription system").
+- **Voice-first logging (constitution §6):** No code exists for this anywhere — no speech-to-text dependency, no voice UI. Entirely unbuilt.
+
+## 7. Pending Features / Development Roadmap
+
+### Confirmed pending work
+Per constitution §14 ("Core Product Areas") and §15 (intended stack), the following are named as intended scope but have zero implementation:
+- Real camera-based bird/egg/medicine/feed/health-concern/vet-document capture and AI analysis (Gemini multimodal API) — the backend gateway this will route through now exists in foundation form (§14), but no real provider, no client wiring, and no camera capture exist yet
+- Voice-assisted logging
+- Health Guide / Symptom Navigator (curated health-topic content library)
+- Family care / multi-user coordination
+- Sitter / Away Mode
+- Smart notifications beyond what's built (sunrise/sunset-aware coop reminders, weather context)
+- Reports and exports beyond the one CSV export (egg production) that exists today
+- Subscription system (RevenueCat)
+- Supabase backend integration (auth, storage, sync) — the app is currently 100% local-only with no multi-device or cloud story at all
+- Species rules engine as a dedicated layer (constitution §16) — currently species-specific logic (e.g. incubation periods) lives in small dedicated files (`incubationPeriods.ts`) rather than a unified rules engine, which is a reasonable incremental step but not the full vision described
+
+### Possible future ideas (mentioned in constitution, not committed work)
+- Bird Passport concept (referenced in §14, no dedicated screen/concept exists yet distinct from `BirdProfileScreen`)
+- Batch comparison for hatches (§3.3)
+- Lineage/pedigree/generations/traits tracking (§3.4) — breeding pairs and clutches exist, but no multi-generation lineage graph or pedigree view
+
+## 8. Important Technical Decisions
+
+- **Local-only SQLite, no backend, built phase-by-phase:** Directly follows constitution §19 ("The application should not be built all at once... developed phase by phase") and §15's explicit instruction not to integrate external services until told to. Each git commit corresponds to one "Sprint" of `PRODUCT_CONSTITUTION.md`-driven work (see `git log`).
+- **Repository pattern with `db` as first parameter:** Every repository function takes `SQLiteDatabase` explicitly rather than importing a singleton — keeps data access testable and avoids hidden global state. Reason inferred from consistent pattern across all 7 repository files; not separately documented in-repo.
+- **FK delete-behavior split (CASCADE vs SET NULL):** Consistently reasoned in migration comments-equivalent structure (see §4 table) — CASCADE for genuinely dependent child records, SET NULL for records that should survive their parent's deletion to preserve historical data, directly implementing constitution §17 ("Breeding and hatch lineage must preserve historical relationships").
+- **Derived state never stored:** Incubation phase, task overdue/completed-today status, and similar UI states are computed on read from stored dates rather than persisted as columns — avoids state going stale. Pattern is consistent across `taskSchedule.ts` and `breedingCalc.ts`.
+- **One shared `notificationService.ts` file, extended per module rather than duplicated:** All local notification scheduling logic lives in a single file, growing by one `scheduleXReminder`/`syncXReminder` pair per feature. Reason: keeps `expo-notifications` trigger-construction logic (a real source of subtle bugs across trigger types) in one auditable place.
+- **`SQLiteProvider` with `useSuspense` + `Suspense` fallback in `App.tsx`:** Chosen (per expo-sqlite's current API) over manually managing a loading boolean; matches the new class-based expo-sqlite API for SDK 54.
+- **Sex classification via bounded term list, not free-text NLP (`birdSex.ts`):** `classifyBirdSex()` matches against a small, code-verified list of terms actually produced elsewhere in the app (`Hen`, `Female`, `Gander`, `Male`, `Unknown`, etc.) rather than attempting general natural-language parsing, and degrades to a non-blocking "unknown" rather than erroring — reduces false-positive validation blocks on ambiguous data entry.
+- **`expo-file-system`'s new `File`/`Directory`/`Paths` class API used for CSV export**, not the legacy path-string API — matches SDK 54's current API surface.
+
+## 9. Important Product and UI Behaviour
+
+- **Feature-hub navigation pattern:** Every major feature (Egg, Feed, Breeding) follows the same shape — an entry card on `FlockHomeScreen` → a dedicated hub screen with its own stats/quick-actions → Add/Edit forms and History/Detail screens, all registered as additional routes inside the existing `FlockStack` (never a new bottom tab, per constitution §13's 5-tab limit). `TodayScreen` gets a compact 4-card "preview" summary section per module — visually and functionally distinct from (shallower than) the module's own full hub screen.
+- **Confidence states (constitution §4/§8):** `HIGH`/`LIKELY`/`UNSURE` are a first-class type (`ConfidenceLevel` in `src/types/onboarding.ts`) rendered via the `ConfidenceBadge` component, currently only exercised by the mocked onboarding AI-analysis flow.
+- **Today dashboard (`TodayScreen`):** Single scrollable screen combining: today's task progress bar + task list, then stacked summary-card sections for Flock Health, Egg Production, Feed, and Breeding — each section pulls from its own `useXDashboard`/`useXDashboardStats` hook, all independent, all refreshing via `useFocusEffect`.
+- **Filtered-list hooks pattern:** Hooks that take filter objects (e.g. `useHealthRecords(filters)`, `useClutches(filters)`) use a plain `useEffect` keyed on primitive filter fields (not the filters object reference) to avoid stale-closure/reference-equality refresh bugs, in addition to `useFocusEffect` for on-navigation-return refresh.
+- **Error handling convention:** Business-rule violations are custom typed `Error` subclasses thrown from repositories (e.g. `InsufficientStockError`, `SameBirdPairingError`, `InvalidSexPairingError`, `CandlingCountExceedsClutchError`, `ClutchTotalReductionError`, `DuplicateBirdCreationError`), caught specifically in the calling screen and shown as a friendly `Alert`, rather than generic try/catch-and-log.
+- **Notification reconciliation:** Every editable entity with a scheduled reminder uses a cancel-then-reschedule pattern (`syncXReminder(entity, previousNotificationId)`) on every save, so stale notifications never accumulate when due dates/settings change.
+
+## 10. Known Issues and Technical Debt
+
+- **Camera/Add tab and "More" tab are non-functional placeholders** — see §6. Any future agent should not assume these are "broken," they were never wired up.
+- **Onboarding "AI" is entirely mocked** — see §6. If a future task involves "fixing" AI photo analysis, understand there is no real integration to fix; it needs to be built from scratch (camera capture + image upload + real API call), not debugged.
+- **No automated test suite exists** — no `__tests__` directories, no Jest/Detox config, nothing in `package.json`'s `devDependencies` beyond `@types/react` and `typescript`. Quality gates historically used for this project are `tsc --noEmit`, `expo-doctor`, `expo export`, and a manual unused-import sweep (`tsc --noEmit --noUnusedLocals --noUnusedParameters`) — not unit/integration tests.
+- **5 pre-existing unused-import/variable lint findings**, none introduced by recent breeding work, never cleaned up (low priority, cosmetic): unused `radii` in `FloatingCameraButton.tsx`, unused `spacing` in `IconButton.tsx`, unused `colors` in `SectionHeader.tsx`, unused `radii` in `StatusPill.tsx`, unused `Platform` in `theme/index.ts`.
+- **No `.env` or secrets files found in the repo** (client or backend) — nothing to leak, but also confirms no API keys are configured yet for any external service (consistent with §2/§14: the new backend exists but holds no real secrets or provider integration).
+- **Backend has no automated test suite either** — validated this sprint via `tsc --noEmit`, a local build, and manual `curl` smoke tests (documented in §14.5), not unit/integration tests. Same gap as the client (see above).
+- **`AGENTS.md` at the repo root instructs any agent to read Expo SDK 54's versioned docs before writing code** — a live instruction, not stale debt; worth honoring for any future work touching Expo APIs.
+
+## 11. Environment and Configuration
+
+### Client (`flockora-app/`)
+- **Environment variables:** None found in use anywhere in the codebase (no `process.env.*` references located in `src/`). No `.env` file exists.
+- **Configuration files:**
+  - `flockora-app/app.json` — Expo app config (name/slug/orientation/icons/splash/plugins: `expo-font`, `expo-sqlite`, `expo-notifications`)
+  - `flockora-app/tsconfig.json` — extends `expo/tsconfig.base`, `strict: true`
+  - `flockora-app/package.json` — dependencies/scripts (see §2)
+  - `flockora-app/CLAUDE.md` → references `@AGENTS.md`
+  - `flockora-app/AGENTS.md` — instructs reading Expo SDK 54 versioned docs before coding
+- **Development commands** (run from `flockora-app/`):
+  - `npm start` — `expo start`
+  - `npm run android` / `npm run ios` / `npm run web` — platform-specific dev servers
+  - `npm run typecheck` — `tsc --noEmit`
+- **Validation commands historically used before every commit** (not in `package.json` scripts, run ad hoc):
+  - `npx tsc --noEmit` — type check
+  - `npx tsc --noEmit --noUnusedLocals --noUnusedParameters` — unused-import/variable sweep
+  - `npx expo-doctor` — Expo project health check
+  - `npx expo export` — production bundle export sanity check
+- **Deployment:** Not configured — no EAS build profiles, no store listings.
+
+### Backend (`flockora-backend/`) — added Phase 3 Sprint 3.1
+- **Environment variables (names only — see `flockora-backend/.env.example`, no real values ever committed):** `PORT`, `NODE_ENV`, `AI_PROVIDER` (only `"mock"` valid today), `MAX_UPLOAD_MB`, `RATE_LIMIT_WINDOW_MINUTES`, `RATE_LIMIT_MAX_REQUESTS`, `REQUEST_TIMEOUT_MS`, `ALLOWED_ORIGINS`. Validated at startup via a `zod` schema in `src/config/env.ts`; the process exits with a names-only error if anything required is missing or invalid.
+- **Configuration files:** `flockora-backend/package.json`, `flockora-backend/tsconfig.json`, `flockora-backend/.gitignore` (excludes `.env`, `.env.*`, `node_modules/`, `dist/`), `flockora-backend/.env.example` (template, no secrets).
+- **Development commands** (run from `flockora-backend/`):
+  - `npm run dev` — `tsx watch src/index.ts`
+  - `npm run build` — `tsc` (outputs to `dist/`)
+  - `npm start` — `node dist/index.js` (runs the built output)
+  - `npm run typecheck` — `tsc --noEmit`
+- **Deployment:** Not configured — no hosting platform chosen yet; runs locally only.
+
+### Shared
+- Root `PRODUCT_CONSTITUTION.md` — the authoritative product spec (applies to the whole product, not just the client)
+- **Git remote:** `https://github.com/satyamkirti/flockora-app.git`, branch `main`. Git identity locally configured as `satyamkirti` / `satyam.kirti@gmail.com`. Both `flockora-app/` and `flockora-backend/` live in this single repository.
+
+## 12. Safe Development Instructions for Future AI Agents
+
+1. **Read [`PRODUCT_CONSTITUTION.md`](PRODUCT_CONSTITUTION.md) first**, then this file, before starting any new work.
+2. **Review the relevant existing code** (repository, hooks, screens, navigation types for the feature area) before making changes — don't assume structure from memory or from this document alone; re-verify against the live codebase, since it will keep changing.
+3. **Do not rebuild completed features unnecessarily.** Sections §5 of this document lists what's genuinely done — reuse it.
+4. **Do not overwrite working functionality without understanding dependencies** — e.g. `notificationService.ts`, the shared component library, and the repository pattern are relied upon by every feature module; changing their shape has wide blast radius.
+5. **Preserve existing architecture** (repository pattern, one-hook-per-data-shape, versioned single-file migrations, feature-hub navigation) **unless a change is specifically required and explained.**
+6. **Make small, controlled changes** scoped to the requested phase/sprint — per constitution §19, "do not add major unrequested features."
+7. **Test changes before marking work complete.** At minimum: `tsc --noEmit`, `expo-doctor`, `expo export`, and the unused-import sweep. For UI changes, actually run the app and exercise the feature — type-checking is not feature verification.
+8. **Update this file (`PROJECT_CONTEXT.md`) after major features or architectural changes** — keep §5 (Implemented), §6 (Partial), §7 (Pending), and §10 (Known Issues) current.
+9. **Never store secrets in this file.** If environment variables are introduced in the future, document them by name only in §11.
+10. **When something in this document conflicts with the actual code, trust the code** — this file is a snapshot, verified as of the date at the top; it decays over time.
+
+## 13. Current Project Status
+
+- **Development stage:** Phase 2 (7 feature sprints, local-only client) is complete. Phase 3 has begun: Sprint 3.1 (Secure AI Backend Foundation) is complete — see §14 for full detail.
+- **What is completed (Phase 2, client):** See §5 in full. In one line — a fully local, notification-enabled poultry care app covering birds, flocks, daily tasks, health records, egg production (with CSV export), feed inventory, and breeding/hatching/incubation tracking, all built on a consistent repository/hook/screen architecture.
+- **What is completed (Phase 3):** A standalone backend service (`flockora-backend/`) exists with a mocked `/api/v1/analyze-bird` endpoint, full request validation/rate-limiting/timeout/error-handling architecture, and a provider abstraction ready for a real AI provider. It is **not yet called by the mobile client** and holds **no real AI provider or secret**. See §14.
+- **What is currently being worked on:** Nothing in-flight — Sprint 3.1 is complete, quality-gated, and committed. The repository is in a clean, stable state.
+- **Recommended next development step:** Per `SECURITY.md`, real AI integration (wiring a real provider like Gemini behind the backend's provider abstraction, plus per-user/global usage controls) is the natural next step, but per `SECURITY.md` Rule 11, adding authentication (a prerequisite for real per-user rate limiting per Rule 7) should be considered first or alongside it — the backend currently has no user identity to key quotas on. Wiring the mobile client's onboarding flow to call the new backend (still with the mock provider) is a smaller, lower-risk intermediate step that could go first to validate the full client→backend path before any real provider or billing risk is introduced. **This is a suggestion, not a decision — confirm direction with the product owner before starting a new phase**, per constitution §19's phase-by-phase development rule, and per `SECURITY.md` Rule 15, real AI integration or auth each require a fresh security audit before shipping.
+
+## 14. Backend — Secure AI Gateway (Phase 3 Sprint 3.1)
+
+### 14.1 Why this exists
+
+`SECURITY.md` Rules 3–5 require that no paid AI provider (Gemini/OpenAI/Claude/etc.) is ever called directly from the mobile client with a secret key, and that all such requests are proxied through a backend holding the secret server-side. This backend is that gateway. It was built **before** any real provider integration specifically so the request/response architecture, validation, and abuse-protection scaffolding could be established and reviewed while the security stakes were still zero (no real key, no billing risk, no real user data in transit).
+
+### 14.2 Architecture
+
+```
+Flockora App (Expo/RN)  ── HTTPS (not yet wired up) ──▶  Flockora Backend API  ──▶  AI Provider (not yet integrated)
+```
+
+- **Location:** [`flockora-backend/`](flockora-backend/) — a sibling directory to `flockora-app/` in the same repository, not a separate repo.
+- **Stack:** Node.js + TypeScript (`strict: true`) + Express 4, `zod` for schema validation, `multer` (v2.x) for multipart file handling, `helmet` for security headers, `express-rate-limit` for rate limiting, `dotenv` for local env loading.
+- **Entry point:** [`src/index.ts`](flockora-backend/src/index.ts) starts the server; [`src/app.ts`](flockora-backend/src/app.ts) assembles the Express app and defines middleware order (security headers → CORS → request ID → timeout guard → body size limits → routes → 404 handler → centralized error handler, in that order — the error handler must be last per Express convention).
+- **Provider abstraction** ([`src/providers/`](flockora-backend/src/providers/)): `AIProvider` is the interface every provider implements (`analyzeBird(input): Promise<AnalyzeBirdResult>`). `MockAIProvider` is the only implementation that exists today — deterministic, offline, per-species canned responses, no network call, no file bytes retained. `providerFactory.ts` selects the active provider from the `AI_PROVIDER` env var (only `"mock"` is a valid value right now — the zod schema in `src/config/env.ts` will reject anything else at startup). **Adding a real provider (e.g. `GeminiProvider`) in a future sprint means adding one new file plus one new `case` in `providerFactory.ts` and one new enum value in `env.ts` — nothing in `src/routes/` or the mobile client's contract needs to change.**
+- **Response shape** deliberately mirrors the client's existing `AIAnalysisResult` type (`flockora-app/src/types/onboarding.ts`: `breed`/`sex`/`color`/`lifeStage`, each `{ value, confidence: 'HIGH'|'LIKELY'|'UNSURE' }`) so that wiring the client to this backend later is a data-source swap, not a UI/type rework.
+
+### 14.3 Endpoint structure
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/health` | Liveness check, no auth, returns `{ status: 'ok' }` |
+| `POST` | `/api/v1/analyze-bird` | The only AI-facing endpoint. `multipart/form-data`: `photo` (file, required, JPEG/PNG/WEBP only, size-capped via `MAX_UPLOAD_MB`), `speciesHint` (string, optional, validated against the 8-species enum). Returns `{ requestId, provider, result }` on success. |
+
+Every response — success or error — includes an `X-Request-Id` header and a matching `requestId` field in the JSON body, generated per-request server-side (`src/middleware/requestId.ts`), for traceability without needing to log anything sensitive.
+
+### 14.4 Security boundary
+
+- The mobile client **cannot** call an AI provider directly today — it has no AI provider code of any kind, mocked or real, and makes zero network calls (unchanged from before this sprint).
+- The backend **cannot** call a real AI provider today either — only `MockAIProvider` exists; no provider SDK, no API key, no network call to any external AI service exists anywhere in `flockora-backend/`.
+- No secret of any kind exists in this codebase. `flockora-backend/.env.example` documents variable *names* only (`PORT`, `NODE_ENV`, `AI_PROVIDER`, `MAX_UPLOAD_MB`, rate-limit/timeout/CORS settings) — no values that could be mistaken for real secrets, and it explicitly documents that future provider keys must never be added to this file with real values (per `SECURITY.md` Rules 1, 2, 5).
+- `flockora-backend/.gitignore` excludes `.env`, `.env.*` (with an explicit `!.env.example` exception), `node_modules/`, and `dist/` — verified via `git add --dry-run` that none of these are staged.
+- **Rate limiting is IP-based only** (`express-rate-limit`, applied to `/api/v1/analyze-bird`), because no authentication exists anywhere in Flockora yet — there is no user identity to key a per-user quota on. This is explicitly documented as incomplete against `SECURITY.md` Rule 7 (see §14.5) — it is not a substitute for per-user/global usage controls, which are required before a real, billable provider is connected.
+- Logging (`src/utils/logger.ts`) is type-constrained to a fixed, narrow field set (`requestId`, `route`, `statusCode`, `provider`, `mimeType`, `sizeBytes`, `code`) — there is no code path by which a request body, uploaded file, header value, or future auth token could be logged. Verified by manual review of every `logger.*` call site and by running the server locally and inspecting actual log output.
+
+### 14.5 Mocked provider status — what's real vs. simulated
+
+| Aspect | Status |
+|---|---|
+| HTTP server, routing, middleware chain | **Real** — genuinely running, tested locally (start, `/health`, valid upload, invalid MIME, invalid species hint, oversized file, 404, missing file) |
+| Request validation (MIME allowlist, size limit, species enum) | **Real** — enforced by `multer` + `zod`, verified to reject bad input with correct 400/413-equivalent responses |
+| Rate limiting | **Real mechanism, incomplete policy** — actual `express-rate-limit` middleware is active and returns `RateLimit-*` headers and 429s, but is IP-only (see §14.4) |
+| Request timeout | **Real mechanism, untested under real latency** — the middleware is wired and would fire, but the mock provider resolves near-instantly, so this path has not been exercised end-to-end against genuine slow-provider latency |
+| Centralized error handling | **Real** — verified for validation errors, multer errors, and the 404 path |
+| AI analysis result | **Fully simulated** — `MockAIProvider` returns a hardcoded lookup table keyed by `speciesHint`, defaulting to `chicken`. No image is actually analyzed; the uploaded file's *bytes* are validated (type/size) but never inspected for content. |
+| Environment variable validation | **Real** — `src/config/env.ts` uses a `zod` schema and calls `process.exit(1)` with a safe (names-only) error message if required vars are missing/invalid; verified by the app failing to start against a malformed `.env` during manual testing |
+
+### 14.6 Remaining work before real AI integration
+
+Explicitly not done in this sprint, required before `MockAIProvider` is replaced with a real provider:
+
+1. **A real `AIProvider` implementation** (e.g. `GeminiProvider`) calling an actual AI API, with its secret key injected only via the deployment platform's environment/secrets store (`SECURITY.md` Rule 5) — never committed, never in `.env.example` with a real value.
+2. **Per-user usage quotas** (`SECURITY.md` Rule 7) — requires an authentication system to exist first (nothing in Flockora has user identity today); the current IP-based rate limiter is not a substitute.
+3. **A global usage ceiling / circuit breaker** (`SECURITY.md` Rule 7) to cap total spend/volume across all users.
+4. **Deployment** — no hosting platform has been chosen or configured for this backend yet; it currently only runs locally.
+5. **Client integration** — the mobile app's onboarding flow still calls `getMockAIAnalysis()` locally and has not been changed to call this backend at all (with either the mock or a future real provider). Wiring the client to this backend (with the mock provider) is a reasonable *next* step and does not itself require a real provider or secret.
+6. **A fresh, dedicated security audit** (`SECURITY.md` Rule 15) — mandatory immediately after real AI integration, and separately if authentication is added first.
+7. **Deeper abuse protections** appropriate to a live, billable endpoint — e.g. request signing/attestation from the mobile client, image-content sanity checks, and CAPTCHA-equivalent protections if abuse patterns emerge — none of which are meaningful to design until a real provider and real traffic exist.

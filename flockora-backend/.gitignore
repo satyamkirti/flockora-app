@@ -1,0 +1,10 @@
+node_modules/
+dist/
+
+# Secrets — never commit real env files. Only .env.example (no real values) is tracked.
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store
