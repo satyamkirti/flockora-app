@@ -27,6 +27,7 @@ export type HealthRecord = {
   reminderDate: string | null;
   status: HealthRecordStatus;
   notificationId: string | null;
+  documentUri: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -46,6 +47,7 @@ export type HealthRecordInput = {
   cost: number | null;
   reminderDate: string | null;
   status: HealthRecordStatus;
+  documentUri: string | null;
 };
 
 export type BirdHealthStats = {
@@ -86,6 +88,7 @@ export const createEmptyHealthRecordInput = (birdId: number | null): HealthRecor
   cost: null,
   reminderDate: null,
   status: 'active',
+  documentUri: null,
 });
 
 export const emptyHealthRecordFilters: HealthRecordFilters = {

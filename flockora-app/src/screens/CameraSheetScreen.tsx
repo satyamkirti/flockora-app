@@ -8,9 +8,9 @@ const options = ['Bird', 'Egg', 'Medicine', 'Feed', 'Health concern', 'Vet docum
 
 /**
  * Every option routes into an existing, already-built screen in the Flock tab — none of these
- * capture targets have their own persistence or UI; they just jump straight to the create form
- * that already exists for that record type. "Vet document" has no corresponding record type
- * anywhere in the app (no file/attachment storage exists) and stays an inert placeholder.
+ * capture targets have their own persistence or UI beyond that destination screen; they just
+ * jump straight to the create form that already exists for that record type. "Vet document"
+ * opens the Care Record form's own document/photo attachment (added alongside this wiring).
  */
 export function CameraSheetScreen() {
   const navigation = useNavigation();
@@ -38,6 +38,13 @@ export function CameraSheetScreen() {
     } else if (option === 'Health concern') {
       navigation.dispatch(
         CommonActions.navigate({ name: 'Flock', params: { screen: 'AddEditHealthRecord', params: {} } })
+      );
+    } else if (option === 'Vet document') {
+      navigation.dispatch(
+        CommonActions.navigate({
+          name: 'Flock',
+          params: { screen: 'AddEditHealthRecord', params: { presetType: 'other' } },
+        })
       );
     } else if (option === 'Hatch tray') {
       navigation.dispatch(

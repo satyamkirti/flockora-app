@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -28,6 +30,7 @@ import { useHealthRecord, useBirds, useFlocks } from '../hooks';
 import { healthRecordRepository } from '../db/repositories';
 import { syncHealthReminder } from '../services/notificationService';
 import { healthRecordTypeOptions } from '../data/healthRecordTypes';
+import { captureFromCamera, pickFromGallery, PickPhotoOutcome } from '../services/imagePickerService';
 import { HealthRecordInput, createEmptyHealthRecordInput } from '../types/healthRecord';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
@@ -36,6 +39,24 @@ type Props = NativeStackScreenProps<FlockStackParamList, 'AddEditHealthRecord'>;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{1,2}:\d{2}$/;
+
+function showDocumentPermissionDeniedAlert(kind: 'camera' | 'gallery', canAskAgain: boolean, onUseOther: () => void) {
+  const otherLabel = kind === 'camera' ? 'Choose from Gallery' : 'Take a Photo';
+  const message =
+    kind === 'camera'
+      ? 'Flockora needs camera access to attach a document photo.'
+      : 'Flockora needs photo library access to attach a document photo.';
+
+  const buttons: { text: string; onPress?: () => void; style?: 'cancel' | 'default' }[] = [
+    { text: otherLabel, onPress: onUseOther },
+  ];
+  if (canAskAgain === false) {
+    buttons.push({ text: 'Open Settings', onPress: () => Linking.openSettings() });
+  }
+  buttons.push({ text: 'Cancel', style: 'cancel' });
+
+  Alert.alert('Permission needed', message, buttons);
+}
 
 export function AddEditHealthRecordScreen({ route, navigation }: Props) {
   const { birdId: routeBirdId, flockId: routeFlockId, recordId, presetType } = route.params;
@@ -56,6 +77,7 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
   const [flockModalVisible, setFlockModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hydrated, setHydrated] = useState(!isEditing);
+  const [isPickingDocument, setIsPickingDocument] = useState(false);
 
   useEffect(() => {
     if (!isEditing && routeFlockId != null) {
@@ -84,6 +106,7 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
         cost: existingRecord.cost,
         reminderDate: existingRecord.reminderDate,
         status: existingRecord.status,
+        documentUri: existingRecord.documentUri,
       });
       setCostText(existingRecord.cost != null ? String(existingRecord.cost) : '');
       setTimeText(existingRecord.time ?? '');
@@ -94,6 +117,38 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
   }, [isEditing, existingRecord, hydrated]);
 
   const update = (patch: Partial<HealthRecordInput>) => setForm((current) => ({ ...current, ...patch }));
+
+  const handleDocumentPhotoOutcome = (outcome: PickPhotoOutcome, kind: 'camera' | 'gallery') => {
+    if (outcome.status === 'success') {
+      update({ documentUri: outcome.photo.uri });
+      return;
+    }
+    if (outcome.status === 'permission_denied') {
+      showDocumentPermissionDeniedAlert(kind, outcome.canAskAgain, () =>
+        kind === 'camera' ? handleChooseDocumentFromGallery() : handleTakeDocumentPhoto()
+      );
+    }
+  };
+
+  const handleTakeDocumentPhoto = async () => {
+    if (isPickingDocument) return;
+    setIsPickingDocument(true);
+    try {
+      handleDocumentPhotoOutcome(await captureFromCamera(), 'camera');
+    } finally {
+      setIsPickingDocument(false);
+    }
+  };
+
+  const handleChooseDocumentFromGallery = async () => {
+    if (isPickingDocument) return;
+    setIsPickingDocument(true);
+    try {
+      handleDocumentPhotoOutcome(await pickFromGallery(), 'gallery');
+    } finally {
+      setIsPickingDocument(false);
+    }
+  };
 
   const birdName = birds.find((bird) => bird.id === form.birdId)?.name ?? 'No Bird';
   const flockName = flocks.find((flock) => flock.id === form.flockId)?.name ?? 'No Flock';
@@ -297,6 +352,72 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
             placeholder="Any extra detail worth remembering"
           />
 
+          <View style={styles.fieldBlock}>
+            <AppText variant="cardTitle" style={styles.label}>
+              Document / Photo
+            </AppText>
+            <AppText variant="caption" color={colors.secondaryText} style={styles.documentHint}>
+              Attach a photo of a vet document, receipt, or the bird's condition (optional)
+            </AppText>
+            {form.documentUri ? (
+              <View style={styles.documentPreviewWrap}>
+                <Image source={{ uri: form.documentUri }} style={styles.documentPreview} />
+                <View style={styles.documentActions}>
+                  <Pressable
+                    style={styles.documentActionButton}
+                    onPress={handleTakeDocumentPhoto}
+                    disabled={isPickingDocument}
+                  >
+                    <AppText variant="caption" color={colors.secondaryText}>
+                      Retake
+                    </AppText>
+                  </Pressable>
+                  <Pressable
+                    style={styles.documentActionButton}
+                    onPress={handleChooseDocumentFromGallery}
+                    disabled={isPickingDocument}
+                  >
+                    <AppText variant="caption" color={colors.secondaryText}>
+                      Choose Another
+                    </AppText>
+                  </Pressable>
+                  <Pressable
+                    style={styles.documentActionButton}
+                    onPress={() => update({ documentUri: null })}
+                    disabled={isPickingDocument}
+                  >
+                    <AppText variant="caption" color={colors.alertCoral}>
+                      Remove
+                    </AppText>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.documentButtonsRow}>
+                <Pressable
+                  style={styles.captureButton}
+                  onPress={handleTakeDocumentPhoto}
+                  disabled={isPickingDocument}
+                >
+                  <Ionicons name="camera-outline" size={16} color={colors.cardSurface} />
+                  <AppText variant="caption" color={colors.cardSurface}>
+                    Take Photo
+                  </AppText>
+                </Pressable>
+                <Pressable
+                  style={styles.captureButtonOutline}
+                  onPress={handleChooseDocumentFromGallery}
+                  disabled={isPickingDocument}
+                >
+                  <Ionicons name="images-outline" size={16} color={colors.primaryText} />
+                  <AppText variant="caption" color={colors.primaryText}>
+                    Choose from Gallery
+                  </AppText>
+                </Pressable>
+              </View>
+            )}
+          </View>
+
           <View style={styles.notificationRow}>
             <View style={styles.notificationText}>
               <AppText variant="cardTitle">Reminder</AppText>
@@ -403,6 +524,52 @@ const styles = StyleSheet.create({
   },
   timeInput: {
     width: 120,
+  },
+  documentHint: {
+    marginBottom: spacing.sm,
+  },
+  documentButtonsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  captureButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.leafGreen,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  captureButtonOutline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  documentPreviewWrap: {
+    gap: spacing.sm,
+  },
+  documentPreview: {
+    width: '100%',
+    height: 160,
+    borderRadius: radii.md,
+    backgroundColor: colors.border,
+  },
+  documentActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  documentActionButton: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   notificationRow: {
     flexDirection: 'row',

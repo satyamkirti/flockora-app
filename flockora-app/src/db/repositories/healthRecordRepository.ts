@@ -27,6 +27,7 @@ type HealthRecordRow = {
   reminderDate: string | null;
   status: string;
   notificationId: string | null;
+  documentUri: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -58,8 +59,8 @@ export const healthRecordRepository = {
     const now = new Date().toISOString();
     const result = await db.runAsync(
       `INSERT INTO health_records
-        (birdId, flockId, type, title, notes, medicine, dosage, startDate, endDate, time, veterinarian, cost, reminderDate, status, notificationId, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
+        (birdId, flockId, type, title, notes, medicine, dosage, startDate, endDate, time, veterinarian, cost, reminderDate, status, notificationId, documentUri, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)`,
       [
         input.birdId,
         input.flockId,
@@ -75,6 +76,7 @@ export const healthRecordRepository = {
         input.cost,
         input.reminderDate,
         input.status,
+        input.documentUri,
         now,
         now,
       ]
@@ -91,7 +93,7 @@ export const healthRecordRepository = {
     await db.runAsync(
       `UPDATE health_records SET
         birdId = ?, flockId = ?, type = ?, title = ?, notes = ?, medicine = ?, dosage = ?, startDate = ?, endDate = ?, time = ?,
-        veterinarian = ?, cost = ?, reminderDate = ?, status = ?, updatedAt = ?
+        veterinarian = ?, cost = ?, reminderDate = ?, status = ?, documentUri = ?, updatedAt = ?
        WHERE id = ?`,
       [
         input.birdId,
@@ -108,6 +110,7 @@ export const healthRecordRepository = {
         input.cost,
         input.reminderDate,
         input.status,
+        input.documentUri,
         now,
         id,
       ]

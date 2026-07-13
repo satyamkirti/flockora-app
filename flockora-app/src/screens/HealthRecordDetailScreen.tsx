@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
 import { AppScreen, AppText, PrimaryButton, IconButton, StatusPill, FadeInUp } from '../components';
@@ -120,6 +120,15 @@ export function HealthRecordDetailScreen({ route, navigation }: Props) {
           </FadeInUp>
         ) : null}
 
+        {record.documentUri ? (
+          <FadeInUp delay={90} style={styles.notesCard}>
+            <AppText variant="cardTitle" style={styles.notesLabel}>
+              Document / Photo
+            </AppText>
+            <Image source={{ uri: record.documentUri }} style={styles.documentImage} />
+          </FadeInUp>
+        ) : null}
+
         <FadeInUp delay={120} style={styles.card}>
           {detailRows.map((row, index) => (
             <View key={row.label} style={[styles.row, index === detailRows.length - 1 && styles.rowLast]}>
@@ -187,6 +196,12 @@ const styles = StyleSheet.create({
   },
   notesLabel: {
     marginBottom: spacing.xs,
+  },
+  documentImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: radii.md,
+    backgroundColor: colors.border,
   },
   card: {
     backgroundColor: colors.cardSurface,
