@@ -38,7 +38,7 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^\d{1,2}:\d{2}$/;
 
 export function AddEditHealthRecordScreen({ route, navigation }: Props) {
-  const { birdId: routeBirdId, flockId: routeFlockId, recordId } = route.params;
+  const { birdId: routeBirdId, flockId: routeFlockId, recordId, presetType } = route.params;
   const isEditing = recordId != null;
   const db = useSQLiteContext();
   const { record: existingRecord, loading: loadingRecord } = useHealthRecord(recordId);
@@ -60,6 +60,9 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
   useEffect(() => {
     if (!isEditing && routeFlockId != null) {
       setForm((current) => ({ ...current, flockId: routeFlockId }));
+    }
+    if (!isEditing && presetType != null) {
+      setForm((current) => ({ ...current, type: presetType }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

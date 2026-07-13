@@ -1,10 +1,17 @@
+import { HealthRecordType } from '../types/healthRecord';
+
 export type FlockStackParamList = {
   FlockHome: undefined;
   BirdProfile: { birdId: number };
   AddEditBird: { birdId?: number };
   AddEditFlock: { flockId?: number };
   HealthRecordDetail: { recordId: number };
-  AddEditHealthRecord: { birdId?: number | null; flockId?: number | null; recordId?: number };
+  AddEditHealthRecord: {
+    birdId?: number | null;
+    flockId?: number | null;
+    recordId?: number;
+    presetType?: HealthRecordType;
+  };
   EggDashboard: undefined;
   EggHistory: undefined;
   AddEditEggRecord: { recordId?: number };

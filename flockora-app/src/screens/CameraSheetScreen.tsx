@@ -7,18 +7,37 @@ import { colors, spacing } from '../theme';
 const options = ['Bird', 'Egg', 'Medicine', 'Feed', 'Health concern', 'Vet document', 'Hatch tray'];
 
 /**
- * Only "Egg" and "Hatch tray" are wired to real destinations — they route into the existing,
- * already-built Egg Production and Breeding/Hatching (Clutch) screens in the Flock tab. The
- * remaining options (Bird, Medicine, Feed, Health concern, Vet document) are out of scope for
- * this sprint and stay as inert placeholders, unchanged from before.
+ * Every option routes into an existing, already-built screen in the Flock tab — none of these
+ * capture targets have their own persistence or UI; they just jump straight to the create form
+ * that already exists for that record type. "Vet document" has no corresponding record type
+ * anywhere in the app (no file/attachment storage exists) and stays an inert placeholder.
  */
 export function CameraSheetScreen() {
   const navigation = useNavigation();
 
   const handlePress = (option: string) => {
-    if (option === 'Egg') {
+    if (option === 'Bird') {
+      navigation.dispatch(
+        CommonActions.navigate({ name: 'Flock', params: { screen: 'AddEditBird', params: {} } })
+      );
+    } else if (option === 'Egg') {
       navigation.dispatch(
         CommonActions.navigate({ name: 'Flock', params: { screen: 'AddEditEggRecord', params: {} } })
+      );
+    } else if (option === 'Medicine') {
+      navigation.dispatch(
+        CommonActions.navigate({
+          name: 'Flock',
+          params: { screen: 'AddEditHealthRecord', params: { presetType: 'treatment' } },
+        })
+      );
+    } else if (option === 'Feed') {
+      navigation.dispatch(
+        CommonActions.navigate({ name: 'Flock', params: { screen: 'LogFeedUsage', params: {} } })
+      );
+    } else if (option === 'Health concern') {
+      navigation.dispatch(
+        CommonActions.navigate({ name: 'Flock', params: { screen: 'AddEditHealthRecord', params: {} } })
       );
     } else if (option === 'Hatch tray') {
       navigation.dispatch(
