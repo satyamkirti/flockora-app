@@ -5,15 +5,22 @@ import { colors, spacing } from '../theme';
 
 type StatusPillProps = {
   label: string;
-  tone?: 'success' | 'warning' | 'neutral';
+  tone?: 'success' | 'warning' | 'neutral' | 'danger';
 };
 
+const toneStyles = {
+  success: 'success',
+  warning: 'warning',
+  neutral: 'neutral',
+  danger: 'danger',
+} as const;
+
 export function StatusPill({ label, tone = 'neutral' }: StatusPillProps) {
-  const style = tone === 'success' ? styles.success : tone === 'warning' ? styles.warning : styles.neutral;
+  const style = styles[toneStyles[tone]];
 
   return (
-    <View style={[styles.pill, style]}>
-      <AppText variant="caption" color={tone === 'warning' ? colors.primaryText : colors.primaryText}>
+    <View style={[styles.pill, style]} accessibilityRole="text" accessibilityLabel={label}>
+      <AppText variant="caption" color={colors.primaryText}>
         {label}
       </AppText>
     </View>
@@ -35,5 +42,8 @@ const styles = StyleSheet.create({
   },
   neutral: {
     backgroundColor: colors.warmCream,
+  },
+  danger: {
+    backgroundColor: colors.dangerBackground,
   },
 });

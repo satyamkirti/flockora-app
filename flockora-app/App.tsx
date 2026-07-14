@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useFonts, Nunito_400Regular, Nunito_600SemiBold, Nunito_700Bold, Nunito_800ExtraBold } from '@expo-google-fonts/nunito';
@@ -7,6 +7,7 @@ import { SQLiteProvider } from 'expo-sqlite';
 import * as Notifications from 'expo-notifications';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { migrateDbIfNeeded } from './src/db/migrations';
+import { registerNotificationCategories } from './src/services/notificationNavigation';
 import { colors } from './src/theme';
 
 Notifications.setNotificationHandler({
@@ -33,6 +34,10 @@ export default function App() {
     Nunito_700Bold,
     Nunito_800ExtraBold,
   });
+
+  useEffect(() => {
+    registerNotificationCategories();
+  }, []);
 
   if (!fontsLoaded) {
     return <LoadingScreen />;

@@ -14,7 +14,6 @@ import {
   useFeedDashboard,
   useBreedingDashboard,
 } from '../hooks';
-import { taskRepository } from '../db/repositories';
 import { taskTypeByKey } from '../data/taskTypes';
 import {
   isTaskCompletedToday,
@@ -24,6 +23,7 @@ import {
   taskScheduleLabel,
   getTimeOfDayGreeting,
 } from '../utils/taskSchedule';
+import { toggleTaskCompletion } from '../utils/taskActions';
 import { formatQuantitiesByUnit } from '../utils/feedStock';
 import { Task } from '../types/task';
 import { TodayStackParamList } from '../navigation/todayTypes';
@@ -43,11 +43,7 @@ export function TodayScreen({ navigation }: Props) {
   const { flocks } = useFlocks();
 
   const handleToggle = async (task: Task) => {
-    if (isTaskCompletedToday(task)) {
-      await taskRepository.reopenTask(db, task.id);
-    } else {
-      await taskRepository.completeTask(db, task.id);
-    }
+    await toggleTaskCompletion(db, task);
     refreshTasks();
     refreshStats();
   };

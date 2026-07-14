@@ -17,7 +17,8 @@ import {
   FadeInUp,
 } from '../components';
 import { useBird, useFlocks, useHealthStats, useBirdHealthHistory } from '../hooks';
-import { birdRepository } from '../db/repositories';
+import { birdRepository, taskRepository, healthRecordRepository } from '../db/repositories';
+import { cancelNotification } from '../services/notificationService';
 import { speciesByKey } from '../data/onboardingData';
 import { healthRecordTypeByKey } from '../data/healthRecordTypes';
 import { formatDueDate } from '../utils/taskSchedule';
@@ -98,6 +99,13 @@ export function BirdProfileScreen({ route, navigation }: Props) {
 
   const handleDelete = () => {
     confirmDestructive('Delete bird', `Remove ${bird.name} from your flock? This can't be undone.`, async () => {
+      // tasks.birdId and health_records.birdId cascade-delete with the bird at the SQL level;
+      // cancel their OS notifications first so none are left orphaned pointing at deleted records.
+      const [taskNotificationIds, healthNotificationIds] = await Promise.all([
+        taskRepository.getNotificationIdsByBird(db, bird.id),
+        healthRecordRepository.getNotificationIdsByBird(db, bird.id),
+      ]);
+      await Promise.all([...taskNotificationIds, ...healthNotificationIds].map(cancelNotification));
       await birdRepository.remove(db, bird.id);
       navigation.goBack();
     });

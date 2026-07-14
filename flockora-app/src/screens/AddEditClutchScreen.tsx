@@ -21,19 +21,26 @@ import {
   FlockManagerModal,
   BreedingPairPickerModal,
   ScreenHeader,
+  NotificationPreviewCard,
 } from '../components';
+import { NotificationPreviewRow } from '../components/NotificationPreviewCard';
 import { useClutch, useBreedingPairs, useBirds, useFlocks } from '../hooks';
 import { breedingRepository, ClutchTotalReductionError } from '../db/repositories';
 import {
+  buildCandlingReminderDate,
+  buildHatchExpectedReminderDate,
+  buildHatchDueReminderDate,
+  cancelNotification,
   syncCandlingReminder,
   syncHatchExpectedReminder,
   syncHatchDueReminder,
   warnIfNotificationPermissionMissing,
+  NOTIFICATION_CATEGORIES,
 } from '../services/notificationService';
 import { deriveClutchSpecies } from '../utils/breedingCalc';
 import { getIncubationPeriodDays } from '../data/incubationPeriods';
 import { speciesByKey } from '../data/onboardingData';
-import { toDateInputValue } from '../utils/taskSchedule';
+import { parseLocalDateString, toDateInputValue } from '../utils/taskSchedule';
 import { isValidDateString } from '../utils/formValidation';
 import { ClutchInput, ClutchStatus, IncubationType, createEmptyClutchInput } from '../types/breeding';
 import { FlockStackParamList } from '../navigation/flockTypes';
@@ -120,8 +127,7 @@ export function AddEditClutchScreen({ route, navigation }: Props) {
       return;
     }
     const days = suggestedDays ?? 21;
-    const start = new Date(incubationStartDateText.trim());
-    const suggested = new Date(start);
+    const suggested = parseLocalDateString(incubationStartDateText.trim());
     suggested.setDate(suggested.getDate() + days);
     setExpectedHatchDateText(toDateInputValue(suggested));
   };
@@ -163,26 +169,43 @@ export function AddEditClutchScreen({ route, navigation }: Props) {
         savedClutch = await breedingRepository.createClutch(db, payload);
       }
 
-      const incubationPeriodDays = derivedSpecies ? getIncubationPeriodDays(derivedSpecies) : 21;
-      const candlingId = await syncCandlingReminder(
-        { ...savedClutch, incubationPeriodDays },
-        existingClutch?.candlingNotificationId ?? null
-      );
-      const hatchExpectedId = await syncHatchExpectedReminder(
-        savedClutch,
-        existingClutch?.hatchExpectedNotificationId ?? null
-      );
-      const hatchDueId = await syncHatchDueReminder(savedClutch, existingClutch?.hatchDueNotificationId ?? null);
-      await breedingRepository.setClutchNotificationIds(db, savedClutch.id, {
-        candling: candlingId,
-        hatchExpected: hatchExpectedId,
-        hatchDue: hatchDueId,
-      });
+      // A clutch that's already hatched/failed/cancelled should never re-acquire a candling or
+      // hatch reminder just because its dates got edited afterward.
+      const clutchIsResolved = savedClutch.status !== 'active' || Boolean(savedClutch.actualHatchDate);
 
-      const missingCandling = Boolean(savedClutch.incubationStartDate) && !candlingId;
-      const missingHatchExpected = Boolean(savedClutch.expectedHatchDate) && !hatchExpectedId;
-      const missingHatchDue = Boolean(savedClutch.expectedHatchDate) && !hatchDueId;
-      await warnIfNotificationPermissionMissing(missingCandling || missingHatchExpected || missingHatchDue);
+      if (clutchIsResolved) {
+        await Promise.all([
+          cancelNotification(existingClutch?.candlingNotificationId ?? null),
+          cancelNotification(existingClutch?.hatchExpectedNotificationId ?? null),
+          cancelNotification(existingClutch?.hatchDueNotificationId ?? null),
+        ]);
+        await breedingRepository.setClutchNotificationIds(db, savedClutch.id, {
+          candling: null,
+          hatchExpected: null,
+          hatchDue: null,
+        });
+      } else {
+        const incubationPeriodDays = derivedSpecies ? getIncubationPeriodDays(derivedSpecies) : 21;
+        const candlingId = await syncCandlingReminder(
+          { ...savedClutch, incubationPeriodDays },
+          existingClutch?.candlingNotificationId ?? null
+        );
+        const hatchExpectedId = await syncHatchExpectedReminder(
+          savedClutch,
+          existingClutch?.hatchExpectedNotificationId ?? null
+        );
+        const hatchDueId = await syncHatchDueReminder(savedClutch, existingClutch?.hatchDueNotificationId ?? null);
+        await breedingRepository.setClutchNotificationIds(db, savedClutch.id, {
+          candling: candlingId,
+          hatchExpected: hatchExpectedId,
+          hatchDue: hatchDueId,
+        });
+
+        const missingCandling = Boolean(savedClutch.incubationStartDate) && !candlingId;
+        const missingHatchExpected = Boolean(savedClutch.expectedHatchDate) && !hatchExpectedId;
+        const missingHatchDue = Boolean(savedClutch.expectedHatchDate) && !hatchDueId;
+        await warnIfNotificationPermissionMissing(missingCandling || missingHatchExpected || missingHatchDue);
+      }
 
       navigation.goBack();
     } catch (error) {
@@ -195,6 +218,71 @@ export function AddEditClutchScreen({ route, navigation }: Props) {
       setSaving(false);
     }
   };
+
+  const previewClutchNameLower = form.clutchName?.trim() || 'your clutch';
+  const previewClutchNameUpper = form.clutchName?.trim() || 'Your clutch';
+  const previewIsResolved = form.status !== 'active' || Boolean(actualHatchDateText.trim());
+  const previewIncubationPeriodDays = suggestedDays ?? 21;
+
+  function buildPreviewRow(
+    key: string,
+    label: string,
+    dateText: string,
+    build: (dateText: string) => Date,
+    testTitle: string,
+    testBody: string,
+    reminderType: 'candling' | 'hatch_expected' | 'hatch_due'
+  ): NotificationPreviewRow {
+    const validDate = dateText.trim() && isValidDateString(dateText.trim()) ? dateText.trim() : null;
+    const scheduledDate = validDate ? build(validDate) : null;
+    const isPast = scheduledDate != null && scheduledDate.getTime() <= Date.now();
+    const disabledReason = previewIsResolved
+      ? 'This clutch is no longer active'
+      : !validDate
+      ? 'Enter a date to schedule this reminder'
+      : 'This date has already passed';
+
+    return {
+      key,
+      label,
+      scheduledDate: previewIsResolved || isPast ? null : scheduledDate,
+      disabledReason,
+      testTitle,
+      testBody,
+      categoryIdentifier: NOTIFICATION_CATEGORIES.breeding,
+      testData: { type: 'clutch', category: 'Breeding Reminder', clutchId: clutchId ?? 0, reminderType },
+    };
+  }
+
+  const previewRows: NotificationPreviewRow[] = [
+    buildPreviewRow(
+      'candling',
+      'Candling Reminder',
+      incubationStartDateText,
+      (date) => buildCandlingReminderDate(date, previewIncubationPeriodDays),
+      `Time to candle ${previewClutchNameLower}`,
+      'Check egg development partway through incubation.',
+      'candling'
+    ),
+    buildPreviewRow(
+      'hatch-expected',
+      'Hatch-Expected Reminder',
+      expectedHatchDateText,
+      buildHatchExpectedReminderDate,
+      `${previewClutchNameUpper} is hatching soon`,
+      'Expected hatch in 2 days — get ready.',
+      'hatch_expected'
+    ),
+    buildPreviewRow(
+      'hatch-due',
+      'Hatch-Due Reminder',
+      expectedHatchDateText,
+      buildHatchDueReminderDate,
+      `${previewClutchNameUpper} hatch is due today`,
+      'Check your incubator or nest for new hatchlings.',
+      'hatch_due'
+    ),
+  ];
 
   if (isEditing && loadingClutch && !hydrated) {
     return (
@@ -300,6 +388,8 @@ export function AddEditClutchScreen({ route, navigation }: Props) {
                 : 'Suggest hatch date from start date (21 days)'}
             </AppText>
           </Pressable>
+
+          <NotificationPreviewCard rows={previewRows} />
 
           <FormField
             label="Actual Hatch Date"

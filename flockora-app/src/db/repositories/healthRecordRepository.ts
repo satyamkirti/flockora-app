@@ -126,6 +126,17 @@ export const healthRecordRepository = {
     await db.runAsync('DELETE FROM health_records WHERE id = ?', [id]);
   },
 
+  /** Notification ids for a bird's health records — used to cancel them before a hard bird
+   * delete, since `health_records.birdId` is `ON DELETE CASCADE` and would otherwise orphan
+   * their OS notifications. */
+  async getNotificationIdsByBird(db: SQLiteDatabase, birdId: number): Promise<string[]> {
+    const rows = await db.getAllAsync<{ notificationId: string }>(
+      'SELECT notificationId FROM health_records WHERE birdId = ? AND notificationId IS NOT NULL',
+      [birdId]
+    );
+    return rows.map((row) => row.notificationId);
+  },
+
   async setNotificationId(db: SQLiteDatabase, id: number, notificationId: string | null): Promise<void> {
     await db.runAsync('UPDATE health_records SET notificationId = ? WHERE id = ?', [notificationId, id]);
   },

@@ -25,11 +25,16 @@ import {
   FlockManagerModal,
   FadeInUp,
   ScreenHeader,
+  NotificationPreviewCard,
 } from '../components';
 import { useHealthRecord, useBirds, useFlocks } from '../hooks';
 import { healthRecordRepository } from '../db/repositories';
-import { syncHealthReminder, warnIfNotificationPermissionMissing } from '../services/notificationService';
-import { healthRecordTypeOptions } from '../data/healthRecordTypes';
+import {
+  NOTIFICATION_CATEGORIES,
+  syncHealthReminder,
+  warnIfNotificationPermissionMissing,
+} from '../services/notificationService';
+import { healthRecordTypeByKey, healthRecordTypeOptions } from '../data/healthRecordTypes';
 import { captureFromCamera, pickFromGallery, PickPhotoOutcome } from '../services/imagePickerService';
 import { HealthRecordInput, createEmptyHealthRecordInput } from '../types/healthRecord';
 import { isValidDateString, isValidTimeString } from '../utils/formValidation';
@@ -219,6 +224,20 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
       setSaving(false);
     }
   };
+
+  const previewTitle = form.title.trim() || healthRecordTypeByKey(form.type).label;
+  const previewBody = form.notes?.trim() || healthRecordTypeByKey(form.type).label;
+  const previewParsedDate = reminderDateText.trim() && isValidDateString(reminderDateText.trim())
+    ? new Date(`${reminderDateText.trim()}T09:00:00`)
+    : null;
+  const previewScheduledDate = !reminderEnabled || !previewParsedDate || previewParsedDate.getTime() <= Date.now()
+    ? null
+    : previewParsedDate;
+  const previewDisabledReason = !reminderEnabled
+    ? 'Reminder is off'
+    : !previewParsedDate
+    ? 'Enter a valid reminder date'
+    : 'This date has already passed';
 
   if (isEditing && loadingRecord && !hydrated) {
     return (
@@ -437,6 +456,21 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
               placeholder="YYYY-MM-DD"
             />
           ) : null}
+
+          <NotificationPreviewCard
+            rows={[
+              {
+                key: 'health',
+                label: 'Health Reminder',
+                scheduledDate: previewScheduledDate,
+                disabledReason: previewDisabledReason,
+                testTitle: previewTitle,
+                testBody: previewBody,
+                categoryIdentifier: NOTIFICATION_CATEGORIES.health,
+                testData: { type: 'healthRecord', category: 'Health Reminder', recordId: recordId ?? 0 },
+              },
+            ]}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
 

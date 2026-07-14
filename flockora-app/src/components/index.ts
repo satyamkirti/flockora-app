@@ -29,3 +29,4 @@ export * from './FeedItemPickerModal';
 export * from './BreedingPairRow';
 export * from './ClutchRow';
 export * from './BreedingPairPickerModal';
+export * from './NotificationPreviewCard';

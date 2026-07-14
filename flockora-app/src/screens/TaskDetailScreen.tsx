@@ -16,6 +16,7 @@ import { taskRepository } from '../db/repositories';
 import { cancelNotification } from '../services/notificationService';
 import { taskTypeByKey } from '../data/taskTypes';
 import { isTaskCompletedToday, isTaskOverdue, formatDueDate, formatDueTime, repeatLabel } from '../utils/taskSchedule';
+import { toggleTaskCompletion } from '../utils/taskActions';
 import { confirmDestructive } from '../utils/confirmDestructive';
 import { TodayStackParamList } from '../navigation/todayTypes';
 import { colors, radii, spacing } from '../theme';
@@ -67,11 +68,7 @@ export function TaskDetailScreen({ route, navigation }: Props) {
   ];
 
   const handleToggleComplete = async () => {
-    if (doneToday) {
-      await taskRepository.reopenTask(db, task.id);
-    } else {
-      await taskRepository.completeTask(db, task.id);
-    }
+    await toggleTaskCompletion(db, task);
     refresh();
   };
 

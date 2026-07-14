@@ -15,6 +15,7 @@ import {
 } from '../components';
 import { useFeedItems, useFeedStatistics } from '../hooks';
 import { feedRepository } from '../db/repositories';
+import { cancelNotification } from '../services/notificationService';
 import { feedTypeByKey } from '../data/feedTypes';
 import { getFeedExpiryState, getFeedStockState, formatQuantitiesByUnit } from '../utils/feedStock';
 import { confirmDestructive } from '../utils/confirmDestructive';
@@ -40,6 +41,7 @@ export function FeedInventoryScreen({ navigation }: Props) {
 
   const handleDelete = (item: FeedItem) => {
     confirmDestructive('Delete feed', `Delete "${item.name}"? Its usage history will also be removed.`, async () => {
+      await cancelNotification(item.notificationId);
       await feedRepository.deleteFeedItem(db, item.id);
       refresh();
     });

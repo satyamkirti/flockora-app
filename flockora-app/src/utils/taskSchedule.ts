@@ -77,6 +77,48 @@ export function taskScheduleLabel(task: Pick<Task, 'dueDate' | 'repeatType'>): s
   return `${repeatLabel(task.repeatType)} · ${formatDueTime(task.dueDate)}`;
 }
 
+/**
+ * Estimates when a task's notification will next fire, for display in a preview card — mirrors
+ * (without duplicating) the calendar semantics of `buildTaskTrigger` in notificationService.ts:
+ * DAILY/WEEKLY/MONTHLY triggers are OS wall-clock/calendar-based, so "next occurrence" is
+ * computed relative to now rather than reading a single stored instant.
+ */
+export function computeNextTaskOccurrence(
+  due: Date,
+  repeatType: Task['repeatType'],
+  now: Date = new Date()
+): Date | null {
+  if (repeatType === 'none') {
+    return due > now ? due : null;
+  }
+
+  const result = new Date(now);
+  result.setHours(due.getHours(), due.getMinutes(), 0, 0);
+
+  if (repeatType === 'daily') {
+    if (result <= now) {
+      result.setDate(result.getDate() + 1);
+    }
+    return result;
+  }
+
+  if (repeatType === 'weekly') {
+    const targetDay = due.getDay();
+    while (result.getDay() !== targetDay || result <= now) {
+      result.setDate(result.getDate() + 1);
+    }
+    return result;
+  }
+
+  const targetDate = due.getDate();
+  result.setDate(targetDate);
+  if (result <= now) {
+    result.setMonth(result.getMonth() + 1);
+    result.setDate(targetDate);
+  }
+  return result;
+}
+
 export function getTimeOfDayGreeting(referenceDate: Date = new Date()): string {
   const hour = referenceDate.getHours();
   if (hour < 12) return 'Good morning';
@@ -95,6 +137,16 @@ export function toTimeInputValue(date: Date): string {
   const hour = String(date.getHours()).padStart(2, '0');
   const minute = String(date.getMinutes()).padStart(2, '0');
   return `${hour}:${minute}`;
+}
+
+/**
+ * Parses a bare `YYYY-MM-DD` string into a Date using local year/month/day components,
+ * unlike `new Date(dateString)` which parses bare dates as UTC midnight — a real bug for any
+ * negative-UTC-offset user once `.setHours()`/`.setDate()` are applied downstream.
+ */
+export function parseLocalDateString(dateString: string, hour = 0, minute = 0): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day, hour, minute, 0, 0);
 }
 
 export function parseDateTimeInputs(dateText: string, timeText: string): Date | null {

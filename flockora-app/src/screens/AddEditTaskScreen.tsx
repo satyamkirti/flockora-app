@@ -24,13 +24,23 @@ import {
   FlockManagerModal,
   FadeInUp,
   ScreenHeader,
+  NotificationPreviewCard,
 } from '../components';
 import { useTask, useBirds, useFlocks } from '../hooks';
 import { taskRepository } from '../db/repositories';
-import { syncTaskNotification, warnIfNotificationPermissionMissing } from '../services/notificationService';
+import {
+  NOTIFICATION_CATEGORIES,
+  syncTaskNotification,
+  warnIfNotificationPermissionMissing,
+} from '../services/notificationService';
 import { taskTypeByKey, taskTypeOptions } from '../data/taskTypes';
 import { RepeatType, TaskInput, TaskType, createEmptyTaskInput } from '../types/task';
-import { parseDateTimeInputs, toDateInputValue, toTimeInputValue } from '../utils/taskSchedule';
+import {
+  computeNextTaskOccurrence,
+  parseDateTimeInputs,
+  toDateInputValue,
+  toTimeInputValue,
+} from '../utils/taskSchedule';
 import { TodayStackParamList } from '../navigation/todayTypes';
 import { colors, radii, spacing } from '../theme';
 
@@ -119,6 +129,18 @@ export function AddEditTaskScreen({ route, navigation }: Props) {
 
   const birdName = birds.find((bird) => bird.id === form.birdId)?.name ?? 'No Bird';
   const flockName = flocks.find((flock) => flock.id === form.flockId)?.name ?? 'No Flock';
+
+  const previewTitle = form.title.trim() || taskTypeByKey(form.type).label;
+  const previewBody = form.description?.trim() || taskTypeByKey(form.type).label;
+  const previewDueDate = parseDateTimeInputs(dateText, timeText.trim() || toTimeInputValue(defaultDueDate));
+  const previewScheduledDate = !form.notificationEnabled || !previewDueDate
+    ? null
+    : computeNextTaskOccurrence(previewDueDate, form.repeatType);
+  const previewDisabledReason = !form.notificationEnabled
+    ? 'Reminder is off'
+    : !previewDueDate
+    ? 'Enter a valid date and time'
+    : 'This date has already passed';
 
   const handleSave = async () => {
     const effectiveTimeText = timeText.trim() || toTimeInputValue(defaultDueDate);
@@ -291,6 +313,21 @@ export function AddEditTaskScreen({ route, navigation }: Props) {
               thumbColor={colors.cardSurface}
             />
           </View>
+
+          <NotificationPreviewCard
+            rows={[
+              {
+                key: 'task',
+                label: 'Task Reminder',
+                scheduledDate: previewScheduledDate,
+                disabledReason: previewDisabledReason,
+                testTitle: previewTitle,
+                testBody: previewBody,
+                categoryIdentifier: NOTIFICATION_CATEGORIES.task,
+                testData: { type: 'task', category: 'Task Reminder', taskId: taskId ?? 0 },
+              },
+            ]}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
 

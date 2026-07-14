@@ -97,6 +97,16 @@ export const taskRepository = {
     await db.runAsync('DELETE FROM tasks WHERE id = ?', [id]);
   },
 
+  /** Notification ids for a bird's tasks — used to cancel them before a hard bird delete, since
+   * `tasks.birdId` is `ON DELETE CASCADE` and would otherwise orphan their OS notifications. */
+  async getNotificationIdsByBird(db: SQLiteDatabase, birdId: number): Promise<string[]> {
+    const rows = await db.getAllAsync<{ notificationId: string }>(
+      'SELECT notificationId FROM tasks WHERE birdId = ? AND notificationId IS NOT NULL',
+      [birdId]
+    );
+    return rows.map((row) => row.notificationId);
+  },
+
   async completeTask(db: SQLiteDatabase, id: number): Promise<Task> {
     const now = new Date().toISOString();
     await db.runAsync('UPDATE tasks SET completed = 1, completedAt = ?, updatedAt = ? WHERE id = ?', [

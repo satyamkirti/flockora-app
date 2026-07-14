@@ -2,10 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
-import { AppScreen, AppText, PrimaryButton, FormField, SelectableCard, FadeInUp, ScreenHeader } from '../components';
+import {
+  AppScreen,
+  AppText,
+  PrimaryButton,
+  FormField,
+  SelectableCard,
+  FadeInUp,
+  ScreenHeader,
+  NotificationPreviewCard,
+} from '../components';
 import { useFeedItem } from '../hooks';
 import { feedRepository } from '../db/repositories';
-import { syncFeedExpiryReminder, warnIfNotificationPermissionMissing } from '../services/notificationService';
+import {
+  NOTIFICATION_CATEGORIES,
+  buildFeedExpiryReminderDate,
+  syncFeedExpiryReminder,
+  warnIfNotificationPermissionMissing,
+} from '../services/notificationService';
 import { feedTypeOptions } from '../data/feedTypes';
 import { FeedItemInput, createEmptyFeedItemInput } from '../types/feed';
 import { isValidDateString } from '../utils/formValidation';
@@ -116,6 +130,13 @@ export function AddEditFeedItemScreen({ route, navigation }: Props) {
       setSaving(false);
     }
   };
+
+  const previewExpiryDate = expiryDateText.trim() && isValidDateString(expiryDateText.trim()) ? expiryDateText.trim() : null;
+  const previewScheduledDate = previewExpiryDate ? buildFeedExpiryReminderDate(previewExpiryDate) : null;
+  const previewIsPast = previewScheduledDate != null && previewScheduledDate.getTime() <= Date.now();
+  const previewDisabledReason = !previewExpiryDate
+    ? 'Enter an expiry date to schedule a reminder'
+    : 'This reminder date has already passed';
 
   if (isEditing && loadingItem && !hydrated) {
     return (
@@ -234,6 +255,21 @@ export function AddEditFeedItemScreen({ route, navigation }: Props) {
             value={form.notes ?? ''}
             onChangeText={(text) => update({ notes: text })}
             placeholder="Anything worth remembering about this feed"
+          />
+
+          <NotificationPreviewCard
+            rows={[
+              {
+                key: 'feed-expiry',
+                label: 'Expiry Reminder',
+                scheduledDate: previewIsPast ? null : previewScheduledDate,
+                disabledReason: previewDisabledReason,
+                testTitle: `${form.name.trim() || 'This feed'} is expiring soon`,
+                testBody: previewExpiryDate ? `This feed expires on ${previewExpiryDate}.` : 'This feed is expiring soon.',
+                categoryIdentifier: NOTIFICATION_CATEGORIES.feed,
+                testData: { type: 'feedItem', category: 'Feed Alert', feedItemId: itemId ?? 0 },
+              },
+            ]}
           />
         </ScrollView>
       </KeyboardAvoidingView>
