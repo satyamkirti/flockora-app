@@ -263,12 +263,11 @@ export const breedingRepository = {
     await db.runAsync('DELETE FROM breeding_pairs WHERE id = ?', [id]);
   },
 
-  async getClutchCountForPair(db: SQLiteDatabase, pairId: number): Promise<number> {
-    const row = await db.getFirstAsync<{ count: number }>(
-      'SELECT COUNT(*) as count FROM clutches WHERE breedingPairId = ?',
-      [pairId]
+  async getClutchCountsByPairId(db: SQLiteDatabase): Promise<Record<number, number>> {
+    const rows = await db.getAllAsync<{ breedingPairId: number; count: number }>(
+      'SELECT breedingPairId, COUNT(*) as count FROM clutches WHERE breedingPairId IS NOT NULL GROUP BY breedingPairId'
     );
-    return row?.count ?? 0;
+    return Object.fromEntries(rows.map((row) => [row.breedingPairId, row.count]));
   },
 
   listClutches: listClutchesRaw,
@@ -529,6 +528,22 @@ export const breedingRepository = {
     const totalClutches = clutches.length;
     const totalEggsIncubated = clutches.reduce((sum, clutch) => sum + clutch.totalEggs, 0);
 
+    // Single aggregate query (via ROW_NUMBER) for each clutch's latest candling record, and a
+    // single bulk query for hatch records — replaces what was previously two queries per clutch.
+    const latestCandlingRows = await db.getAllAsync<{ clutchId: number; fertileEggs: number }>(
+      `SELECT clutchId, fertileEggs FROM (
+         SELECT clutchId, fertileEggs,
+                ROW_NUMBER() OVER (PARTITION BY clutchId ORDER BY date DESC, createdAt DESC) AS rn
+         FROM candling_records
+       ) WHERE rn = 1`
+    );
+    const latestFertileByClutchId = new Map(latestCandlingRows.map((row) => [row.clutchId, row.fertileEggs]));
+
+    const hatchRows = await db.getAllAsync<{ clutchId: number; hatchedEggs: number }>(
+      'SELECT clutchId, hatchedEggs FROM hatch_records'
+    );
+    const hatchedEggsByClutchId = new Map(hatchRows.map((row) => [row.clutchId, row.hatchedEggs]));
+
     let fertileSum = 0;
     let candledTotalEggsSum = 0;
     let hatchedSum = 0;
@@ -536,17 +551,17 @@ export const breedingRepository = {
     let hatchedFromFertileSum = 0;
 
     for (const clutch of clutches) {
-      const latestCandling = (await listCandlingRecordsForClutch(db, clutch.id))[0] ?? null;
-      if (latestCandling) {
-        fertileSum += latestCandling.fertileEggs;
+      const latestFertile = latestFertileByClutchId.get(clutch.id);
+      if (latestFertile != null) {
+        fertileSum += latestFertile;
         candledTotalEggsSum += clutch.totalEggs;
       }
-      const hatchRecord = await getHatchRecordForClutchRaw(db, clutch.id);
-      if (hatchRecord) {
-        hatchedSum += hatchRecord.hatchedEggs;
-        if (latestCandling && latestCandling.fertileEggs > 0) {
-          hatchableFertileSum += latestCandling.fertileEggs;
-          hatchedFromFertileSum += hatchRecord.hatchedEggs;
+      const hatchedEggs = hatchedEggsByClutchId.get(clutch.id);
+      if (hatchedEggs != null) {
+        hatchedSum += hatchedEggs;
+        if (latestFertile != null && latestFertile > 0) {
+          hatchableFertileSum += latestFertile;
+          hatchedFromFertileSum += hatchedEggs;
         }
       }
     }

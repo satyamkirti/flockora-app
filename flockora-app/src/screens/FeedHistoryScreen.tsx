@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -104,22 +104,28 @@ export function FeedHistoryScreen({ navigation }: Props) {
         style={styles.dateInput}
       />
 
-      <ScrollView style={styles.list} showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
-        {loading ? (
-          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
-        ) : logs.length === 0 ? (
-          <FadeInUp>
-            <EmptyState title="No feed logs" message="Try adjusting your filters, or log today's feed usage." />
-          </FadeInUp>
-        ) : (
-          <FadeInUp style={styles.resultsCard}>
-            {logs.map((log, index) => {
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+      ) : logs.length === 0 ? (
+        <FadeInUp>
+          <EmptyState title="No feed logs" message="Try adjusting your filters, or log today's feed usage." />
+        </FadeInUp>
+      ) : (
+        <FadeInUp style={styles.list}>
+          <FlatList
+            style={styles.list}
+            data={logs}
+            keyExtractor={(log) => String(log.id)}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={[styles.listContent, styles.resultsCard]}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            renderItem={({ item: log }) => {
               const feedName = items.find((item) => item.id === log.feedItemId)?.name ?? 'Unknown feed';
               const flockName = flocks.find((flock) => flock.id === log.flockId)?.name;
               const birdName = birds.find((bird) => bird.id === log.birdId)?.name;
               const subjectLabel = birdName ?? flockName ?? null;
               return (
-                <View key={log.id} style={[styles.row, index === logs.length - 1 && styles.rowLast]}>
+                <View style={styles.row}>
                   <Pressable
                     style={styles.rowMain}
                     onPress={() => navigation.navigate('LogFeedUsage', { logId: log.id })}
@@ -135,6 +141,7 @@ export function FeedHistoryScreen({ navigation }: Props) {
                   <Pressable
                     style={styles.rowIcon}
                     onPress={() => navigation.navigate('LogFeedUsage', { logId: log.id })}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     accessibilityRole="button"
                     accessibilityLabel={`Edit feed log from ${formatDueDate(log.date)}`}
                   >
@@ -143,6 +150,7 @@ export function FeedHistoryScreen({ navigation }: Props) {
                   <Pressable
                     style={styles.rowIcon}
                     onPress={() => handleDelete(log)}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     accessibilityRole="button"
                     accessibilityLabel={`Delete feed log from ${formatDueDate(log.date)}`}
                   >
@@ -150,10 +158,10 @@ export function FeedHistoryScreen({ navigation }: Props) {
                   </Pressable>
                 </View>
               );
-            })}
-          </FadeInUp>
-        )}
-      </ScrollView>
+            }}
+          />
+        </FadeInUp>
+      )}
     </AppScreen>
   );
 }
@@ -212,15 +220,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingHorizontal: spacing.lg,
   },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  rowLast: {
-    borderBottomWidth: 0,
   },
   rowMain: {
     flex: 1,

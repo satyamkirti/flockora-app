@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { AppText } from './AppText';
 import { PrimaryButton } from './PrimaryButton';
+import { TextButton } from './TextButton';
 import { colors, radii, spacing } from '../theme';
 
 type EditableFieldModalProps = {
@@ -38,11 +39,7 @@ export function EditableFieldModal({ visible, label, value, onCancel, onSave }: 
             placeholderTextColor={colors.mutedText}
           />
           <View style={styles.actions}>
-            <Pressable style={styles.cancelButton} onPress={onCancel} accessibilityRole="button" accessibilityLabel="Cancel">
-              <AppText variant="button" color={colors.secondaryText}>
-                Cancel
-              </AppText>
-            </Pressable>
+            <TextButton label="Cancel" onPress={onCancel} />
             <PrimaryButton label="Save" style={styles.saveButton} onPress={() => onSave(draft.trim() || value)} />
           </View>
         </Pressable>
@@ -83,10 +80,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: spacing.lg,
     gap: spacing.md,
-  },
-  cancelButton: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
   },
   saveButton: {
     flex: 1,

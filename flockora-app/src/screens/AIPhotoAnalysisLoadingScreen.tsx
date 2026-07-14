@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { AppScreen, AppText, BirdPhotoBadge, FadeInUp, PrimaryButton } from '../components';
+import { AppScreen, AppText, BirdPhotoBadge, FadeInUp, PrimaryButton, TextButton } from '../components';
 import { aiAnalysisStatusMessages, speciesByKey } from '../data/onboardingData';
 import { useOnboarding } from '../context/OnboardingContext';
 import { analyzeBirdPhoto, BirdAnalysisErrorKind } from '../services/birdAnalysisService';
@@ -112,11 +112,7 @@ export function AIPhotoAnalysisLoadingScreen({ navigation }: Props) {
               {state.message}
             </AppText>
             <PrimaryButton label="Try Again" onPress={runAnalysis} style={styles.retryButton} />
-            <Pressable onPress={handleEnterManually} style={styles.manualButton}>
-              <AppText variant="button" color={colors.secondaryText}>
-                Enter Details Manually
-              </AppText>
-            </Pressable>
+            <TextButton label="Enter Details Manually" onPress={handleEnterManually} style={styles.manualButton} />
           </FadeInUp>
         )}
       </View>
@@ -166,6 +162,5 @@ const styles = StyleSheet.create({
   },
   manualButton: {
     marginTop: spacing.sm,
-    paddingVertical: spacing.sm,
   },
 });

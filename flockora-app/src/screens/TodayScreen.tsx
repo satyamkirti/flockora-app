@@ -34,11 +34,11 @@ type Props = NativeStackScreenProps<TodayStackParamList, 'TodayHome'>;
 export function TodayScreen({ navigation }: Props) {
   const db = useSQLiteContext();
   const { overdueTasks, todayTasks, upcomingTasks, loading, refresh: refreshTasks } = useTodayTasks();
-  const { stats, refresh: refreshStats } = useTaskStats();
-  const { stats: healthStats } = useHealthDashboardStats();
-  const { summary: eggSummary } = useEggDashboard();
-  const { summary: feedSummary } = useFeedDashboard();
-  const { summary: breedingSummary } = useBreedingDashboard();
+  const { stats, loading: statsLoading, refresh: refreshStats } = useTaskStats();
+  const { stats: healthStats, loading: healthLoading } = useHealthDashboardStats();
+  const { summary: eggSummary, loading: eggLoading } = useEggDashboard();
+  const { summary: feedSummary, loading: feedLoading } = useFeedDashboard();
+  const { summary: breedingSummary, loading: breedingLoading } = useBreedingDashboard();
   const { birds } = useBirds();
   const { flocks } = useFlocks();
 
@@ -142,17 +142,21 @@ export function TodayScreen({ navigation }: Props) {
           <ProgressBar progress={progress} />
         </View>
 
-        <View style={styles.summaryGrid}>
-          {summaryCards.map((card) => (
-            <StatCard
-              key={card.title}
-              title={card.title}
-              value={card.value}
-              accentColor={card.accentColor}
-              style={styles.statCard}
-            />
-          ))}
-        </View>
+        {statsLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <View style={styles.summaryGrid}>
+            {summaryCards.map((card) => (
+              <StatCard
+                key={card.title}
+                title={card.title}
+                value={card.value}
+                accentColor={card.accentColor}
+                style={styles.statCard}
+              />
+            ))}
+          </View>
+        )}
 
         <SectionHeader title="Today's Tasks" />
         {loading ? (
@@ -205,56 +209,72 @@ export function TodayScreen({ navigation }: Props) {
         )}
 
         <SectionHeader title="Flock Health" />
-        <View style={styles.summaryGrid}>
-          {healthSummaryCards.map((card) => (
-            <StatCard
-              key={card.title}
-              title={card.title}
-              value={card.value}
-              accentColor={card.accentColor}
-              style={styles.statCard}
-            />
-          ))}
-        </View>
+        {healthLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <View style={styles.summaryGrid}>
+            {healthSummaryCards.map((card) => (
+              <StatCard
+                key={card.title}
+                title={card.title}
+                value={card.value}
+                accentColor={card.accentColor}
+                style={styles.statCard}
+              />
+            ))}
+          </View>
+        )}
 
         <SectionHeader title="Egg Production" />
-        <View style={styles.summaryGrid}>
-          {eggSummaryCards.map((card) => (
-            <StatCard
-              key={card.title}
-              title={card.title}
-              value={card.value}
-              accentColor={card.accentColor}
-              style={styles.statCard}
-            />
-          ))}
-        </View>
+        {eggLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <View style={styles.summaryGrid}>
+            {eggSummaryCards.map((card) => (
+              <StatCard
+                key={card.title}
+                title={card.title}
+                value={card.value}
+                accentColor={card.accentColor}
+                style={styles.statCard}
+              />
+            ))}
+          </View>
+        )}
 
         <SectionHeader title="Feed" />
-        <View style={styles.summaryGrid}>
-          {feedSummaryCards.map((card) => (
-            <StatCard
-              key={card.title}
-              title={card.title}
-              value={card.value}
-              accentColor={card.accentColor}
-              style={styles.statCard}
-            />
-          ))}
-        </View>
+        {feedLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <View style={styles.summaryGrid}>
+            {feedSummaryCards.map((card) => (
+              <StatCard
+                key={card.title}
+                title={card.title}
+                value={card.value}
+                accentColor={card.accentColor}
+                style={styles.statCard}
+              />
+            ))}
+          </View>
+        )}
 
         <SectionHeader title="Breeding" />
-        <View style={styles.summaryGrid}>
-          {breedingSummaryCards.map((card) => (
-            <StatCard
-              key={card.title}
-              title={card.title}
-              value={card.value}
-              accentColor={card.accentColor}
-              style={styles.statCard}
-            />
-          ))}
-        </View>
+        {breedingLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <View style={styles.summaryGrid}>
+            {breedingSummaryCards.map((card) => (
+              <StatCard
+                key={card.title}
+                title={card.title}
+                value={card.value}
+                accentColor={card.accentColor}
+                style={styles.statCard}
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
 
       <PrimaryButton label="+ Add Task" onPress={() => navigation.navigate('AddEditTask', {})} />

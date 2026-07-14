@@ -18,6 +18,7 @@ import {
   AppScreen,
   AppText,
   PrimaryButton,
+  TextButton,
   IconButton,
   FormField,
   SegmentedControl,
@@ -224,16 +225,8 @@ export function AddEditBirdScreen({ route, navigation }: Props) {
               <View style={styles.previewWrap}>
                 <Image source={{ uri: photo.uri }} style={styles.previewImage} />
                 <View style={styles.previewActions}>
-                  <Pressable style={styles.secondaryButton} onPress={handleTakePhoto} disabled={isPicking}>
-                    <AppText variant="button" color={colors.secondaryText}>
-                      Retake
-                    </AppText>
-                  </Pressable>
-                  <Pressable style={styles.secondaryButton} onPress={handleChooseFromGallery} disabled={isPicking}>
-                    <AppText variant="button" color={colors.secondaryText}>
-                      Choose Another Photo
-                    </AppText>
-                  </Pressable>
+                  <TextButton label="Retake" onPress={handleTakePhoto} disabled={isPicking} />
+                  <TextButton label="Choose Another Photo" onPress={handleChooseFromGallery} disabled={isPicking} />
                 </View>
               </View>
             ) : (
@@ -483,10 +476,6 @@ const styles = StyleSheet.create({
   previewActions: {
     flexDirection: 'row',
     gap: spacing.md,
-  },
-  secondaryButton: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
   },
   fieldBlock: {
     marginBottom: spacing.lg,

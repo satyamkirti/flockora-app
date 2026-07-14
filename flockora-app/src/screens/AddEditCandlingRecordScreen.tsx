@@ -6,12 +6,11 @@ import { AppScreen, AppText, PrimaryButton, IconButton, FormField } from '../com
 import { useCandlingRecords, useClutch } from '../hooks';
 import { breedingRepository, CandlingCountExceedsClutchError } from '../db/repositories';
 import { CandlingRecordInput, createEmptyCandlingRecordInput } from '../types/breeding';
+import { isValidDateString } from '../utils/formValidation';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<FlockStackParamList, 'AddEditCandlingRecord'>;
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function parseCount(text: string): number {
   const value = Number.parseInt(text, 10);
@@ -58,7 +57,7 @@ export function AddEditCandlingRecordScreen({ route, navigation }: Props) {
   const update = (patch: Partial<CandlingRecordInput>) => setForm((current) => ({ ...current, ...patch }));
 
   const handleSave = async () => {
-    if (!DATE_PATTERN.test(dateText.trim())) {
+    if (!isValidDateString(dateText.trim())) {
       Alert.alert('Invalid date', 'Please use YYYY-MM-DD for the date.');
       return;
     }

@@ -20,11 +20,9 @@ export function BreedingPairListScreen({ navigation }: Props) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const entries = await Promise.all(
-        pairs.map(async (pair) => [pair.id, await breedingRepository.getClutchCountForPair(db, pair.id)] as const)
-      );
+      const counts = await breedingRepository.getClutchCountsByPairId(db);
       if (!cancelled) {
-        setClutchCounts(Object.fromEntries(entries));
+        setClutchCounts(counts);
       }
     })();
     return () => {

@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { Alert } from 'react-native';
 import { Task } from '../types/task';
 import { HealthRecord } from '../types/healthRecord';
 import { FeedItem } from '../types/feed';
@@ -13,6 +14,22 @@ export async function ensureNotificationPermission(): Promise<boolean> {
   }
   const { status } = await Notifications.requestPermissionsAsync();
   return status === 'granted';
+}
+
+/**
+ * Call after saving an entity whose reminder the user wanted but that came back with no
+ * notification ID. Re-checks permission (rather than trusting the null alone) so a reminder
+ * skipped for a legitimate reason (e.g. a feed-expiry/hatch date already in the past) isn't
+ * misreported as a permission problem.
+ */
+export async function warnIfNotificationPermissionMissing(missingNotification: boolean): Promise<void> {
+  if (!missingNotification) {
+    return;
+  }
+  const granted = await ensureNotificationPermission();
+  if (!granted) {
+    Alert.alert('Notifications are off', 'Enable notifications for Flockora in your device settings to get reminders.');
+  }
 }
 
 export async function cancelNotification(notificationId: string | null): Promise<void> {

@@ -190,6 +190,9 @@ export function SettingsScreen({ navigation }: Props) {
             Care. Hatch. Breed. Protect. Flockora helps backyard poultry keepers and hobby breeders track birds,
             flocks, daily care, eggs, feed, and breeding/hatching — all stored privately on this device.
           </AppText>
+          <AppText variant="caption" color={colors.mutedText}>
+            Flockora is a personal record-keeping tool, not a substitute for professional veterinary care.
+          </AppText>
         </FadeInUp>
 
         <FadeInUp delay={60} style={styles.card}>

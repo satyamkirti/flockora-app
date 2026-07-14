@@ -27,7 +27,7 @@ import {
 } from '../components';
 import { useTask, useBirds, useFlocks } from '../hooks';
 import { taskRepository } from '../db/repositories';
-import { syncTaskNotification } from '../services/notificationService';
+import { syncTaskNotification, warnIfNotificationPermissionMissing } from '../services/notificationService';
 import { taskTypeByKey, taskTypeOptions } from '../data/taskTypes';
 import { RepeatType, TaskInput, TaskType, createEmptyTaskInput } from '../types/task';
 import { parseDateTimeInputs, toDateInputValue, toTimeInputValue } from '../utils/taskSchedule';
@@ -141,18 +141,15 @@ export function AddEditTaskScreen({ route, navigation }: Props) {
         const updated = await taskRepository.updateTask(db, taskId, payload);
         const notificationId = await syncTaskNotification(updated, existingTask?.notificationId ?? null);
         await taskRepository.setNotificationId(db, taskId, notificationId);
-        if (payload.notificationEnabled && !notificationId) {
-          Alert.alert('Notifications are off', 'Enable notifications for Flockora in your device settings to get reminders.');
-        }
+        await warnIfNotificationPermissionMissing(payload.notificationEnabled && !notificationId);
         navigation.goBack();
       } else {
         const created = await taskRepository.createTask(db, payload);
         const notificationId = await syncTaskNotification(created, null);
         if (notificationId) {
           await taskRepository.setNotificationId(db, created.id, notificationId);
-        } else if (payload.notificationEnabled) {
-          Alert.alert('Notifications are off', 'Enable notifications for Flockora in your device settings to get reminders.');
         }
+        await warnIfNotificationPermissionMissing(payload.notificationEnabled && !notificationId);
         navigation.replace('TaskDetail', { taskId: created.id });
       }
     } catch (error) {

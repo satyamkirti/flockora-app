@@ -4,6 +4,7 @@ export * from './SectionHeader';
 export * from './StatCard';
 export * from './StatusPill';
 export * from './PrimaryButton';
+export * from './TextButton';
 export * from './IconButton';
 export * from './EmptyState';
 export * from './FloatingCameraButton';

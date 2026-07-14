@@ -3,6 +3,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from './AppText';
 import { BirdPhotoBadge } from './BirdPhotoBadge';
+import { TextButton } from './TextButton';
 import { speciesByKey } from '../data/onboardingData';
 import { Bird } from '../types/bird';
 import { colors, radii, spacing } from '../theme';
@@ -75,11 +76,7 @@ export function BirdPickerModal({ visible, onClose, birds, selectedBirdId, onSel
             ) : null}
           </ScrollView>
 
-          <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel="Close">
-            <AppText variant="button" color={colors.secondaryText}>
-              Close
-            </AppText>
-          </Pressable>
+          <TextButton label="Close" onPress={onClose} style={styles.closeButton} />
         </Pressable>
       </Pressable>
     </Modal>
@@ -124,7 +121,5 @@ const styles = StyleSheet.create({
   closeButton: {
     marginTop: spacing.lg,
     alignSelf: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
   },
 });

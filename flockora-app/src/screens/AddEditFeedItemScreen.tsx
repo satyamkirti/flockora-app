@@ -5,15 +5,14 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { AppScreen, AppText, PrimaryButton, IconButton, FormField, SelectableCard, FadeInUp } from '../components';
 import { useFeedItem } from '../hooks';
 import { feedRepository } from '../db/repositories';
-import { syncFeedExpiryReminder } from '../services/notificationService';
+import { syncFeedExpiryReminder, warnIfNotificationPermissionMissing } from '../services/notificationService';
 import { feedTypeOptions } from '../data/feedTypes';
 import { FeedItemInput, createEmptyFeedItemInput } from '../types/feed';
+import { isValidDateString } from '../utils/formValidation';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<FlockStackParamList, 'AddEditFeedItem'>;
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function parseOptionalNumber(text: string): number | null {
   const trimmed = text.trim();
@@ -73,11 +72,11 @@ export function AddEditFeedItemScreen({ route, navigation }: Props) {
       Alert.alert('Unit required', 'Please enter a unit, e.g. kg, lb, or bags.');
       return;
     }
-    if (expiryDateText.trim() && !DATE_PATTERN.test(expiryDateText.trim())) {
+    if (expiryDateText.trim() && !isValidDateString(expiryDateText.trim())) {
       Alert.alert('Invalid expiry date', 'Please use YYYY-MM-DD for the expiry date.');
       return;
     }
-    if (purchaseDateText.trim() && !DATE_PATTERN.test(purchaseDateText.trim())) {
+    if (purchaseDateText.trim() && !isValidDateString(purchaseDateText.trim())) {
       Alert.alert('Invalid purchase date', 'Please use YYYY-MM-DD for the purchase date.');
       return;
     }
@@ -101,12 +100,14 @@ export function AddEditFeedItemScreen({ route, navigation }: Props) {
         const updated = await feedRepository.updateFeedItem(db, itemId, payload);
         const notificationId = await syncFeedExpiryReminder(updated, existingItem?.notificationId ?? null);
         await feedRepository.setNotificationId(db, itemId, notificationId);
+        await warnIfNotificationPermissionMissing(Boolean(payload.expiryDate) && !notificationId);
       } else {
         const created = await feedRepository.createFeedItem(db, payload);
         const notificationId = await syncFeedExpiryReminder(created, null);
         if (notificationId) {
           await feedRepository.setNotificationId(db, created.id, notificationId);
         }
+        await warnIfNotificationPermissionMissing(Boolean(payload.expiryDate) && !notificationId);
       }
       navigation.goBack();
     } catch (error) {

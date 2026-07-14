@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { CapturedPhoto } from '../types/onboarding';
 
 export type PickPhotoOutcome =
@@ -13,12 +14,27 @@ const IMAGE_PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
   quality: 0.8,
 };
 
-function toCapturedPhoto(asset: ImagePicker.ImagePickerAsset): CapturedPhoto {
-  return {
-    uri: asset.uri,
-    mimeType: asset.mimeType ?? 'image/jpeg',
-    fileName: asset.fileName ?? `bird-photo-${Date.now()}.jpg`,
-  };
+/** Bird photos and health-record documents are only ever shown at small-to-medium sizes
+ *  (badges, thumbnails, one detail-card image) — capping the longest edge avoids storing and
+ *  re-decoding multi-megapixel camera output for images that are never displayed that large. */
+const MAX_IMAGE_DIMENSION = 1600;
+
+async function toCapturedPhoto(asset: ImagePicker.ImagePickerAsset): Promise<CapturedPhoto> {
+  const fileName = asset.fileName ?? `bird-photo-${Date.now()}.jpg`;
+  const exceedsMaxDimension = asset.width > MAX_IMAGE_DIMENSION || asset.height > MAX_IMAGE_DIMENSION;
+  if (!exceedsMaxDimension) {
+    return { uri: asset.uri, mimeType: asset.mimeType ?? 'image/jpeg', fileName };
+  }
+
+  try {
+    const image = await ImageManipulator.manipulate(asset.uri).resize({ width: MAX_IMAGE_DIMENSION }).renderAsync();
+    const resized = await image.saveAsync({ compress: 0.8, format: SaveFormat.JPEG });
+    return { uri: resized.uri, mimeType: 'image/jpeg', fileName };
+  } catch {
+    // Resize is a size optimization, not a correctness requirement — fall back to the
+    // picker's own (already quality-compressed) output rather than blocking the capture.
+    return { uri: asset.uri, mimeType: asset.mimeType ?? 'image/jpeg', fileName };
+  }
 }
 
 /** Requests camera permission only when this is called (not on screen mount) and, if granted,
@@ -34,7 +50,7 @@ export async function captureFromCamera(): Promise<PickPhotoOutcome> {
     return { status: 'canceled' };
   }
 
-  return { status: 'success', photo: toCapturedPhoto(result.assets[0]) };
+  return { status: 'success', photo: await toCapturedPhoto(result.assets[0]) };
 }
 
 /** Requests photo-library permission only when this is called and, if granted, opens the
@@ -50,5 +66,5 @@ export async function pickFromGallery(): Promise<PickPhotoOutcome> {
     return { status: 'canceled' };
   }
 
-  return { status: 'success', photo: toCapturedPhoto(result.assets[0]) };
+  return { status: 'success', photo: await toCapturedPhoto(result.assets[0]) };
 }

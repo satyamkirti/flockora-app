@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
 import { AppText } from './AppText';
 import { EditableFieldModal } from './EditableFieldModal';
+import { TextButton } from './TextButton';
 import { flockRepository } from '../db/repositories';
 import { createEmptyFlockInput, FlockWithCount } from '../types/flock';
 import { colors, radii, spacing } from '../theme';
@@ -112,6 +113,7 @@ export function FlockManagerModal({
                       onClose();
                       onEditDetails(flock);
                     }}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     accessibilityRole="button"
                     accessibilityLabel={`Manage ${flock.name} details`}
                   >
@@ -121,6 +123,7 @@ export function FlockManagerModal({
                 <Pressable
                   style={styles.rowIcon}
                   onPress={() => setRenamingFlock(flock)}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                   accessibilityRole="button"
                   accessibilityLabel={`Rename ${flock.name}`}
                 >
@@ -129,6 +132,7 @@ export function FlockManagerModal({
                 <Pressable
                   style={styles.rowIcon}
                   onPress={() => handleDelete(flock)}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                   accessibilityRole="button"
                   accessibilityLabel={`Delete ${flock.name}`}
                 >
@@ -165,11 +169,7 @@ export function FlockManagerModal({
             </Pressable>
           </View>
 
-          <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel="Close">
-            <AppText variant="button" color={colors.secondaryText}>
-              Close
-            </AppText>
-          </Pressable>
+          <TextButton label="Close" onPress={onClose} style={styles.closeButton} />
         </Pressable>
       </Pressable>
 
@@ -253,7 +253,5 @@ const styles = StyleSheet.create({
   closeButton: {
     marginTop: spacing.lg,
     alignSelf: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
   },
 });

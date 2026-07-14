@@ -7,12 +7,11 @@ import { useHatchRecord, useClutch } from '../hooks';
 import { breedingRepository } from '../db/repositories';
 import { cancelNotification } from '../services/notificationService';
 import { HatchRecordInput, createEmptyHatchRecordInput } from '../types/breeding';
+import { isValidDateString } from '../utils/formValidation';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<FlockStackParamList, 'AddEditHatchRecord'>;
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function parseCount(text: string): number {
   const value = Number.parseInt(text, 10);
@@ -57,7 +56,7 @@ export function AddEditHatchRecordScreen({ route, navigation }: Props) {
   const update = (patch: Partial<HatchRecordInput>) => setForm((current) => ({ ...current, ...patch }));
 
   const handleSave = async () => {
-    if (!DATE_PATTERN.test(hatchDateText.trim())) {
+    if (!isValidDateString(hatchDateText.trim())) {
       Alert.alert('Invalid date', 'Please use YYYY-MM-DD for the hatch date.');
       return;
     }

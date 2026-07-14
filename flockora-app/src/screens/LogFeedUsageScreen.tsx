@@ -29,12 +29,11 @@ import { notifyLowStock, notifyOutOfStock } from '../services/notificationServic
 import { getFeedStockState } from '../utils/feedStock';
 import { toDateInputValue } from '../utils/taskSchedule';
 import { FeedLogInput, createEmptyFeedLogInput } from '../types/feed';
+import { isValidDateString } from '../utils/formValidation';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<FlockStackParamList, 'LogFeedUsage'>;
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export function LogFeedUsageScreen({ route, navigation }: Props) {
   const { feedItemId: routeFeedItemId, logId } = route.params;
@@ -92,7 +91,7 @@ export function LogFeedUsageScreen({ route, navigation }: Props) {
       Alert.alert('Invalid quantity', 'Please enter a quantity used greater than zero.');
       return;
     }
-    if (!DATE_PATTERN.test(dateText.trim())) {
+    if (!isValidDateString(dateText.trim())) {
       Alert.alert('Invalid date', 'Please use YYYY-MM-DD for the date.');
       return;
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
 import {
@@ -35,12 +35,12 @@ type Props = NativeStackScreenProps<FlockStackParamList, 'EggDashboard'>;
 
 export function EggDashboardScreen({ navigation }: Props) {
   const db = useSQLiteContext();
-  const { summary } = useEggDashboard();
+  const { summary, loading: summaryLoading } = useEggDashboard();
   const { statistics } = useEggStatistics();
   const { points: last7Days } = useEggProductionSeries(7);
   const { points: last30Days } = useEggProductionSeries(30);
   const { points: monthlyTrend } = useEggMonthlyTrend(6);
-  const { records: recentRecords } = useEggHistory(emptyEggRecordFilters);
+  const { records: recentRecords, loading: recentLoading } = useEggHistory(emptyEggRecordFilters);
   const { flocks } = useFlocks();
   const { birds } = useBirds();
 
@@ -90,17 +90,21 @@ export function EggDashboardScreen({ navigation }: Props) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <FadeInUp style={styles.summaryGrid}>
-          {summaryCards.map((card) => (
-            <StatCard
-              key={card.title}
-              title={card.title}
-              value={card.value}
-              accentColor={card.accentColor}
-              style={styles.statCard}
-            />
-          ))}
-        </FadeInUp>
+        {summaryLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <FadeInUp style={styles.summaryGrid}>
+            {summaryCards.map((card) => (
+              <StatCard
+                key={card.title}
+                title={card.title}
+                value={card.value}
+                accentColor={card.accentColor}
+                style={styles.statCard}
+              />
+            ))}
+          </FadeInUp>
+        )}
 
         <FadeInUp delay={40} style={styles.bestDayCard}>
           <AppText variant="caption" color={colors.mutedText}>
@@ -139,7 +143,9 @@ export function EggDashboardScreen({ navigation }: Props) {
         </FadeInUp>
 
         <SectionHeader title="Recent Collections" />
-        {recentRecords.length === 0 ? (
+        {recentLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : recentRecords.length === 0 ? (
           <FadeInUp delay={160}>
             <EmptyState title="No collections yet" message="Log your first egg collection to see it here." />
           </FadeInUp>
@@ -271,5 +277,8 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     backgroundColor: colors.hatchOrange,
+  },
+  loader: {
+    marginVertical: spacing.lg,
   },
 });

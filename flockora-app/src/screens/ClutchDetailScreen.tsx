@@ -208,6 +208,7 @@ export function ClutchDetailScreen({ route, navigation }: Props) {
             <Pressable
               style={styles.historyIcon}
               onPress={() => navigation.navigate('AddEditCandlingRecord', { clutchId: clutch.id, recordId: record.id })}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               accessibilityRole="button"
               accessibilityLabel={`Edit candling record from ${formatDueDate(record.date)}`}
             >
@@ -216,6 +217,7 @@ export function ClutchDetailScreen({ route, navigation }: Props) {
             <Pressable
               style={styles.historyIcon}
               onPress={() => handleDeleteCandling(record.id)}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               accessibilityRole="button"
               accessibilityLabel={`Delete candling record from ${formatDueDate(record.date)}`}
             >

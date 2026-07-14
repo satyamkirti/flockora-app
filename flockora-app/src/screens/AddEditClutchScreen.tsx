@@ -28,18 +28,18 @@ import {
   syncCandlingReminder,
   syncHatchExpectedReminder,
   syncHatchDueReminder,
+  warnIfNotificationPermissionMissing,
 } from '../services/notificationService';
 import { deriveClutchSpecies } from '../utils/breedingCalc';
 import { getIncubationPeriodDays } from '../data/incubationPeriods';
 import { speciesByKey } from '../data/onboardingData';
 import { toDateInputValue } from '../utils/taskSchedule';
+import { isValidDateString } from '../utils/formValidation';
 import { ClutchInput, ClutchStatus, IncubationType, createEmptyClutchInput } from '../types/breeding';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<FlockStackParamList, 'AddEditClutch'>;
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 const incubationTypeOptions: { label: string; value: IncubationType }[] = [
   { label: 'Natural', value: 'natural' },
@@ -115,7 +115,7 @@ export function AddEditClutchScreen({ route, navigation }: Props) {
   const suggestedDays = derivedSpecies ? getIncubationPeriodDays(derivedSpecies) : null;
 
   const handleUseSuggestedHatchDate = () => {
-    if (!DATE_PATTERN.test(incubationStartDateText.trim())) {
+    if (!isValidDateString(incubationStartDateText.trim())) {
       Alert.alert('Set a start date first', 'Enter an incubation start date to get a suggested hatch date.');
       return;
     }
@@ -127,7 +127,7 @@ export function AddEditClutchScreen({ route, navigation }: Props) {
   };
 
   const handleSave = async () => {
-    if (!DATE_PATTERN.test(laidDateText.trim())) {
+    if (!isValidDateString(laidDateText.trim())) {
       Alert.alert('Invalid laid date', 'Please use YYYY-MM-DD for the laid date.');
       return;
     }
@@ -136,7 +136,7 @@ export function AddEditClutchScreen({ route, navigation }: Props) {
       ['expected hatch date', expectedHatchDateText],
       ['actual hatch date', actualHatchDateText],
     ] as const) {
-      if (text.trim() && !DATE_PATTERN.test(text.trim())) {
+      if (text.trim() && !isValidDateString(text.trim())) {
         Alert.alert('Invalid date', `Please use YYYY-MM-DD for the ${label}.`);
         return;
       }
@@ -178,6 +178,11 @@ export function AddEditClutchScreen({ route, navigation }: Props) {
         hatchExpected: hatchExpectedId,
         hatchDue: hatchDueId,
       });
+
+      const missingCandling = Boolean(savedClutch.incubationStartDate) && !candlingId;
+      const missingHatchExpected = Boolean(savedClutch.expectedHatchDate) && !hatchExpectedId;
+      const missingHatchDue = Boolean(savedClutch.expectedHatchDate) && !hatchDueId;
+      await warnIfNotificationPermissionMissing(missingCandling || missingHatchExpected || missingHatchDue);
 
       navigation.goBack();
     } catch (error) {

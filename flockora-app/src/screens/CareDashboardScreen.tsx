@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommonActions } from '@react-navigation/native';
 import {
@@ -91,17 +91,21 @@ export function CareDashboardScreen({ navigation }: Props) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <FadeInUp style={styles.statsGrid}>
-          {statCards.map((card) => (
-            <StatCard
-              key={card.title}
-              title={card.title}
-              value={card.value}
-              accentColor={card.accentColor}
-              style={styles.statCard}
-            />
-          ))}
-        </FadeInUp>
+        {loading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <FadeInUp style={styles.statsGrid}>
+            {statCards.map((card) => (
+              <StatCard
+                key={card.title}
+                title={card.title}
+                value={card.value}
+                accentColor={card.accentColor}
+                style={styles.statCard}
+              />
+            ))}
+          </FadeInUp>
+        )}
 
         <FadeInUp delay={40} style={styles.actions}>
           <PrimaryButton label="+ Log Care Record" onPress={handleAddCareRecord} />
@@ -109,7 +113,9 @@ export function CareDashboardScreen({ navigation }: Props) {
         </FadeInUp>
 
         <SectionHeader title="Overdue" />
-        {data.overdueReminders.length === 0 ? (
+        {loading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : data.overdueReminders.length === 0 ? (
           <FadeInUp delay={60}>
             <EmptyState title="Nothing overdue" message="All care reminders are on track." />
           </FadeInUp>
@@ -137,7 +143,9 @@ export function CareDashboardScreen({ navigation }: Props) {
         )}
 
         <SectionHeader title="Upcoming" />
-        {data.upcomingReminders.length === 0 ? (
+        {loading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : data.upcomingReminders.length === 0 ? (
           <FadeInUp delay={80}>
             <EmptyState title="No upcoming reminders" message="Add a reminder to plan ahead." />
           </FadeInUp>
@@ -167,7 +175,9 @@ export function CareDashboardScreen({ navigation }: Props) {
         )}
 
         <SectionHeader title="Recent Care Records" />
-        {loading ? null : data.recentRecords.length === 0 ? (
+        {loading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : data.recentRecords.length === 0 ? (
           <FadeInUp delay={100}>
             <EmptyState title="No care records yet" message="Log a checkup, treatment, or vaccination to start." />
           </FadeInUp>
@@ -196,7 +206,9 @@ export function CareDashboardScreen({ navigation }: Props) {
         )}
 
         <SectionHeader title="Birds Requiring Attention" />
-        {data.attentionBirdIds.length === 0 && data.attentionFlockIds.length === 0 ? (
+        {loading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : data.attentionBirdIds.length === 0 && data.attentionFlockIds.length === 0 ? (
           <FadeInUp delay={120}>
             <EmptyState title="Everyone looks good" message="No overdue reminders or health alerts right now." />
           </FadeInUp>
@@ -287,5 +299,8 @@ const styles = StyleSheet.create({
   },
   rowMain: {
     flex: 1,
+  },
+  loader: {
+    marginVertical: spacing.lg,
   },
 });

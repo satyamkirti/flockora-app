@@ -22,7 +22,7 @@ export function BreedingHubScreen({ navigation }: Props) {
   const { pairs, loading: loadingPairs } = useBreedingPairs();
   const { clutches, loading: loadingClutches } = useClutches(emptyClutchFilters);
   const { birds } = useBirds();
-  const { summary } = useBreedingDashboard();
+  const { summary, loading: summaryLoading } = useBreedingDashboard();
 
   const activePairs = pairs.filter((pair) => pair.status === 'active').slice(0, 3);
   const activeClutches = clutches.filter((clutch) => clutch.status === 'active' && !clutch.actualHatchDate).slice(0, 3);
@@ -44,11 +44,15 @@ export function BreedingHubScreen({ navigation }: Props) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <FadeInUp style={styles.summaryGrid}>
-          {summaryCards.map((card) => (
-            <StatCard key={card.title} title={card.title} value={card.value} accentColor={card.accentColor} style={styles.statCard} />
-          ))}
-        </FadeInUp>
+        {summaryLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <FadeInUp style={styles.summaryGrid}>
+            {summaryCards.map((card) => (
+              <StatCard key={card.title} title={card.title} value={card.value} accentColor={card.accentColor} style={styles.statCard} />
+            ))}
+          </FadeInUp>
+        )}
 
         <FadeInUp delay={40} style={styles.actionsRow}>
           <Pressable style={styles.actionButton} onPress={() => navigation.navigate('AddEditBreedingPair', {})}>

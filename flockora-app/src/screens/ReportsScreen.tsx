@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommonActions } from '@react-navigation/native';
 import { AppScreen, AppText, IconButton, SectionHeader, StatCard, BarChart, FadeInUp } from '../components';
@@ -30,14 +30,18 @@ function ViewLink({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 export function ReportsScreen({ navigation }: Props) {
-  const { summary: flockSummary } = useFlockDashboardStats();
-  const { statistics: eggStats } = useEggStatistics();
+  const { summary: flockSummary, loading: flockLoading } = useFlockDashboardStats();
+  const { statistics: eggStats, loading: eggStatsLoading } = useEggStatistics();
   const { points: eggLast30Days } = useEggProductionSeries(30);
-  const { summary: feedDashboard } = useFeedDashboard();
-  const { statistics: feedStats } = useFeedStatistics();
-  const { stats: healthStats } = useHealthDashboardStats();
-  const { summary: breedingDashboard } = useBreedingDashboard();
-  const { statistics: breedingStats } = useBreedingStatistics();
+  const { summary: feedDashboard, loading: feedDashboardLoading } = useFeedDashboard();
+  const { statistics: feedStats, loading: feedStatsLoading } = useFeedStatistics();
+  const { stats: healthStats, loading: healthLoading } = useHealthDashboardStats();
+  const { summary: breedingDashboard, loading: breedingDashboardLoading } = useBreedingDashboard();
+  const { statistics: breedingStats, loading: breedingStatsLoading } = useBreedingStatistics();
+
+  const eggLoading = eggStatsLoading;
+  const feedLoading = feedDashboardLoading || feedStatsLoading;
+  const breedingLoading = breedingDashboardLoading || breedingStatsLoading;
 
   const goToFlockTab = (screen: string) => {
     navigation.getParent()?.dispatch(CommonActions.navigate({ name: 'Flock', params: { screen, params: {} } }));
@@ -114,25 +118,33 @@ export function ReportsScreen({ navigation }: Props) {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <SectionHeader title="Flock Overview" action={<ViewLink label="View" onPress={() => goToFlockTab('FlockHome')} />} />
-        <FadeInUp style={styles.cardGrid}>
-          {flockCards.map((card) => (
-            <StatCard key={card.title} title={card.title} value={card.value} accentColor={card.accentColor} style={styles.statCard} />
-          ))}
-        </FadeInUp>
+        {flockLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <FadeInUp style={styles.cardGrid}>
+            {flockCards.map((card) => (
+              <StatCard key={card.title} title={card.title} value={card.value} accentColor={card.accentColor} style={styles.statCard} />
+            ))}
+          </FadeInUp>
+        )}
 
         <SectionHeader title="Egg Production" action={<ViewLink label="View" onPress={() => goToFlockTab('EggDashboard')} />} />
-        <FadeInUp delay={40} style={styles.cardGrid}>
-          {eggCards.map((card) => (
-            <StatCard
-              key={card.title}
-              title={card.title}
-              value={card.value}
-              subtitle={card.subtitle}
-              accentColor={card.accentColor}
-              style={styles.statCard}
-            />
-          ))}
-        </FadeInUp>
+        {eggLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <FadeInUp delay={40} style={styles.cardGrid}>
+            {eggCards.map((card) => (
+              <StatCard
+                key={card.title}
+                title={card.title}
+                value={card.value}
+                subtitle={card.subtitle}
+                accentColor={card.accentColor}
+                style={styles.statCard}
+              />
+            ))}
+          </FadeInUp>
+        )}
         <FadeInUp delay={60} style={[styles.chartCard, shadows.card]}>
           <AppText variant="caption" color={colors.mutedText} style={styles.chartLabel}>
             Last 30 Days
@@ -141,25 +153,37 @@ export function ReportsScreen({ navigation }: Props) {
         </FadeInUp>
 
         <SectionHeader title="Feed & Inventory" action={<ViewLink label="View" onPress={() => goToFlockTab('FeedInventory')} />} />
-        <FadeInUp delay={80} style={styles.cardGrid}>
-          {feedCards.map((card) => (
-            <StatCard key={card.title} title={card.title} value={card.value} accentColor={card.accentColor} style={styles.statCard} />
-          ))}
-        </FadeInUp>
+        {feedLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <FadeInUp delay={80} style={styles.cardGrid}>
+            {feedCards.map((card) => (
+              <StatCard key={card.title} title={card.title} value={card.value} accentColor={card.accentColor} style={styles.statCard} />
+            ))}
+          </FadeInUp>
+        )}
 
         <SectionHeader title="Health & Care" action={<ViewLink label="View" onPress={() => goToPulseTab('CareDashboard')} />} />
-        <FadeInUp delay={100} style={styles.cardGrid}>
-          {healthCards.map((card) => (
-            <StatCard key={card.title} title={card.title} value={card.value} accentColor={card.accentColor} style={styles.statCard} />
-          ))}
-        </FadeInUp>
+        {healthLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <FadeInUp delay={100} style={styles.cardGrid}>
+            {healthCards.map((card) => (
+              <StatCard key={card.title} title={card.title} value={card.value} accentColor={card.accentColor} style={styles.statCard} />
+            ))}
+          </FadeInUp>
+        )}
 
         <SectionHeader title="Breeding & Hatching" action={<ViewLink label="View" onPress={() => goToFlockTab('BreedingHub')} />} />
-        <FadeInUp delay={120} style={[styles.cardGrid, styles.lastCardGrid]}>
-          {breedingCards.map((card) => (
-            <StatCard key={card.title} title={card.title} value={card.value} accentColor={card.accentColor} style={styles.statCard} />
-          ))}
-        </FadeInUp>
+        {breedingLoading ? (
+          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+        ) : (
+          <FadeInUp delay={120} style={[styles.cardGrid, styles.lastCardGrid]}>
+            {breedingCards.map((card) => (
+              <StatCard key={card.title} title={card.title} value={card.value} accentColor={card.accentColor} style={styles.statCard} />
+            ))}
+          </FadeInUp>
+        )}
       </ScrollView>
     </AppScreen>
   );
@@ -207,5 +231,8 @@ const styles = StyleSheet.create({
   chartLabel: {
     marginBottom: spacing.sm,
     marginLeft: spacing.xs,
+  },
+  loader: {
+    marginVertical: spacing.lg,
   },
 });

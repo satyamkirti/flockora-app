@@ -25,13 +25,11 @@ import {
 import { useEggRecord, useBirds, useFlocks } from '../hooks';
 import { eggRecordRepository } from '../db/repositories';
 import { EggRecordInput, createEmptyEggRecordInput } from '../types/eggRecord';
+import { isValidDateString, isValidTimeString } from '../utils/formValidation';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<FlockStackParamList, 'AddEditEggRecord'>;
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 function parseCount(text: string): number {
   const value = Number.parseInt(text, 10);
@@ -90,11 +88,11 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
   const birdName = birds.find((bird) => bird.id === form.birdId)?.name ?? 'No Bird';
 
   const handleSave = async () => {
-    if (!DATE_PATTERN.test(dateText.trim())) {
+    if (!isValidDateString(dateText.trim())) {
       Alert.alert('Invalid date', 'Please use YYYY-MM-DD for the date.');
       return;
     }
-    if (timeText.trim() && !TIME_PATTERN.test(timeText.trim())) {
+    if (timeText.trim() && !isValidTimeString(timeText.trim())) {
       Alert.alert('Invalid time', 'Please use HH:MM (24-hour) for the time, or leave it blank.');
       return;
     }

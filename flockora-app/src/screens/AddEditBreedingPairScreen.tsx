@@ -16,6 +16,7 @@ import {
 import { useBreedingPair, useBirds } from '../hooks';
 import { breedingRepository, InvalidSexPairingError, SameBirdPairingError } from '../db/repositories';
 import { classifyBirdSex } from '../utils/birdSex';
+import { isValidDateString } from '../utils/formValidation';
 import { BreedingPairInput, BreedingPairStatus, createEmptyBreedingPairInput } from '../types/breeding';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
@@ -27,8 +28,6 @@ const statusOptions: { label: string; value: BreedingPairStatus }[] = [
   { label: 'Separated', value: 'separated' },
   { label: 'Retired', value: 'retired' },
 ];
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export function AddEditBreedingPairScreen({ route, navigation }: Props) {
   const { pairId } = route.params;
@@ -96,11 +95,11 @@ export function AddEditBreedingPairScreen({ route, navigation }: Props) {
       Alert.alert('Select both birds', 'Please choose a male and a female bird for this pair.');
       return;
     }
-    if (!DATE_PATTERN.test(pairedDateText.trim())) {
+    if (!isValidDateString(pairedDateText.trim())) {
       Alert.alert('Invalid paired date', 'Please use YYYY-MM-DD for the paired date.');
       return;
     }
-    if (separatedDateText.trim() && !DATE_PATTERN.test(separatedDateText.trim())) {
+    if (separatedDateText.trim() && !isValidDateString(separatedDateText.trim())) {
       Alert.alert('Invalid separated date', 'Please use YYYY-MM-DD for the separated date.');
       return;
     }

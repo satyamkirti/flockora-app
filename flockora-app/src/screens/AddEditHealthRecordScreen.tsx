@@ -28,17 +28,15 @@ import {
 } from '../components';
 import { useHealthRecord, useBirds, useFlocks } from '../hooks';
 import { healthRecordRepository } from '../db/repositories';
-import { syncHealthReminder } from '../services/notificationService';
+import { syncHealthReminder, warnIfNotificationPermissionMissing } from '../services/notificationService';
 import { healthRecordTypeOptions } from '../data/healthRecordTypes';
 import { captureFromCamera, pickFromGallery, PickPhotoOutcome } from '../services/imagePickerService';
 import { HealthRecordInput, createEmptyHealthRecordInput } from '../types/healthRecord';
+import { isValidDateString, isValidTimeString } from '../utils/formValidation';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
 
 type Props = NativeStackScreenProps<FlockStackParamList, 'AddEditHealthRecord'>;
-
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const TIME_PATTERN = /^\d{1,2}:\d{2}$/;
 
 function showDocumentPermissionDeniedAlert(kind: 'camera' | 'gallery', canAskAgain: boolean, onUseOther: () => void) {
   const otherLabel = kind === 'camera' ? 'Choose from Gallery' : 'Take a Photo';
@@ -163,14 +161,14 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
       return;
     }
 
-    if (timeText.trim() && !TIME_PATTERN.test(timeText.trim())) {
+    if (timeText.trim() && !isValidTimeString(timeText.trim())) {
       Alert.alert('Invalid time', 'Please use HH:MM for the time.');
       return;
     }
 
     let reminderDate: string | null = null;
     if (reminderEnabled) {
-      if (!DATE_PATTERN.test(reminderDateText.trim())) {
+      if (!isValidDateString(reminderDateText.trim())) {
         Alert.alert('Invalid reminder date', 'Please use YYYY-MM-DD for the reminder date.');
         return;
       }
@@ -204,6 +202,7 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
         const updated = await healthRecordRepository.updateHealthRecord(db, recordId, payload);
         const notificationId = await syncHealthReminder(updated, existingRecord?.notificationId ?? null);
         await healthRecordRepository.setNotificationId(db, recordId, notificationId);
+        await warnIfNotificationPermissionMissing(Boolean(payload.reminderDate) && !notificationId);
         navigation.goBack();
       } else {
         const created = await healthRecordRepository.createHealthRecord(db, payload);
@@ -211,6 +210,7 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
         if (notificationId) {
           await healthRecordRepository.setNotificationId(db, created.id, notificationId);
         }
+        await warnIfNotificationPermissionMissing(Boolean(payload.reminderDate) && !notificationId);
         navigation.replace('HealthRecordDetail', { recordId: created.id });
       }
     } catch (error) {

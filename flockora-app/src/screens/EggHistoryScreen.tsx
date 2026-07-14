@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -85,19 +85,25 @@ export function EggHistoryScreen({ navigation }: Props) {
         style={styles.dateInput}
       />
 
-      <ScrollView style={styles.list} showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
-        {loading ? (
-          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
-        ) : records.length === 0 ? (
-          <FadeInUp>
-            <EmptyState title="No egg records" message="Try adjusting your search or filters." />
-          </FadeInUp>
-        ) : (
-          <FadeInUp style={styles.resultsCard}>
-            {records.map((record, index) => {
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+      ) : records.length === 0 ? (
+        <FadeInUp>
+          <EmptyState title="No egg records" message="Try adjusting your search or filters." />
+        </FadeInUp>
+      ) : (
+        <FadeInUp style={styles.list}>
+          <FlatList
+            style={styles.list}
+            data={records}
+            keyExtractor={(record) => String(record.id)}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={[styles.listContent, styles.resultsCard]}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            renderItem={({ item: record }) => {
               const flockName = flocks.find((flock) => flock.id === record.flockId)?.name;
               return (
-                <View key={record.id} style={[styles.row, index === records.length - 1 && styles.rowLast]}>
+                <View style={styles.row}>
                   <Pressable
                     style={styles.rowMain}
                     onPress={() => navigation.navigate('AddEditEggRecord', { recordId: record.id })}
@@ -114,6 +120,7 @@ export function EggHistoryScreen({ navigation }: Props) {
                   <Pressable
                     style={styles.rowIcon}
                     onPress={() => navigation.navigate('AddEditEggRecord', { recordId: record.id })}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     accessibilityRole="button"
                     accessibilityLabel={`Edit egg record from ${formatDueDate(record.date)}`}
                   >
@@ -122,6 +129,7 @@ export function EggHistoryScreen({ navigation }: Props) {
                   <Pressable
                     style={styles.rowIcon}
                     onPress={() => handleDelete(record)}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                     accessibilityRole="button"
                     accessibilityLabel={`Delete egg record from ${formatDueDate(record.date)}`}
                   >
@@ -129,10 +137,10 @@ export function EggHistoryScreen({ navigation }: Props) {
                   </Pressable>
                 </View>
               );
-            })}
-          </FadeInUp>
-        )}
-      </ScrollView>
+            }}
+          />
+        </FadeInUp>
+      )}
     </AppScreen>
   );
 }
@@ -203,15 +211,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     paddingHorizontal: spacing.lg,
   },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.border,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
-  },
-  rowLast: {
-    borderBottomWidth: 0,
   },
   rowMain: {
     flex: 1,
