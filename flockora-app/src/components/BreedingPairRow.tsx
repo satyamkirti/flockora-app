@@ -36,8 +36,18 @@ export function BreedingPairRow({
   clutchCount,
   onPress,
 }: BreedingPairRowProps) {
+  const rowLabel = [
+    pairName,
+    `${maleName} and ${femaleName}`,
+    `paired ${pairedDateLabel}`,
+    statusLabel[status],
+    `${clutchCount} ${clutchCount === 1 ? 'clutch' : 'clutches'}`,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   return (
-    <Pressable onPress={onPress} style={styles.row}>
+    <Pressable onPress={onPress} style={styles.row} accessibilityRole="button" accessibilityLabel={rowLabel}>
       <AppText style={styles.icon}>🧬</AppText>
       <View style={styles.content}>
         <AppText variant="cardTitle">{pairName}</AppText>

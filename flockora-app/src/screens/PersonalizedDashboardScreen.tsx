@@ -42,7 +42,7 @@ export function PersonalizedDashboardScreen({ navigation }: Props) {
     <AppScreen>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <FadeInUp style={styles.heroBlock}>
-          <BirdPhotoBadge icon={species.icon} size={128} />
+          <BirdPhotoBadge icon={species.icon} photoUri={bird.photo?.uri} size={128} />
           <AppText variant="display" align="center">
             You're all set!
           </AppText>

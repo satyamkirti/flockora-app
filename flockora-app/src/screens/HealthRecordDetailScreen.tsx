@@ -84,9 +84,10 @@ export function HealthRecordDetailScreen({ route, navigation }: Props) {
   return (
     <AppScreen>
       <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
         <IconButton
           name="pencil"
+          accessibilityLabel="Edit care record"
           onPress={() =>
             navigation.navigate('AddEditHealthRecord', {
               birdId: record.birdId,

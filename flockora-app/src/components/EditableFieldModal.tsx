@@ -38,7 +38,7 @@ export function EditableFieldModal({ visible, label, value, onCancel, onSave }: 
             placeholderTextColor={colors.mutedText}
           />
           <View style={styles.actions}>
-            <Pressable style={styles.cancelButton} onPress={onCancel}>
+            <Pressable style={styles.cancelButton} onPress={onCancel} accessibilityRole="button" accessibilityLabel="Cancel">
               <AppText variant="button" color={colors.secondaryText}>
                 Cancel
               </AppText>

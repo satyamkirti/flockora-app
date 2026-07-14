@@ -7,11 +7,19 @@ type IconButtonProps = {
   name: keyof typeof Ionicons.glyphMap;
   onPress?: () => void;
   tinted?: boolean;
+  accessibilityLabel: string;
+  accessibilityHint?: string;
 };
 
-export function IconButton({ name, onPress, tinted = false }: IconButtonProps) {
+export function IconButton({ name, onPress, tinted = false, accessibilityLabel, accessibilityHint }: IconButtonProps) {
   return (
-    <Pressable style={[styles.button, tinted && styles.tinted]} onPress={onPress}>
+    <Pressable
+      style={[styles.button, tinted && styles.tinted]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
+    >
       <Ionicons name={name} size={20} color={tinted ? colors.cardSurface : colors.primaryText} />
     </Pressable>
   );

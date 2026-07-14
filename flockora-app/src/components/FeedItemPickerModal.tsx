@@ -30,7 +30,14 @@ export function FeedItemPickerModal({ visible, onClose, items, selectedFeedItemI
             {items.map((item) => {
               const typeOption = feedTypeByKey(item.feedType);
               return (
-                <Pressable key={item.id} style={styles.row} onPress={() => handleSelect(item.id)}>
+                <Pressable
+                  key={item.id}
+                  style={styles.row}
+                  onPress={() => handleSelect(item.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${item.name}, ${item.quantity} ${item.unit} available`}
+                  accessibilityState={{ selected: selectedFeedItemId === item.id }}
+                >
                   <AppText style={styles.icon}>{typeOption.icon}</AppText>
                   <View style={styles.rowMain}>
                     <AppText variant="cardTitle">{item.name}</AppText>
@@ -52,7 +59,7 @@ export function FeedItemPickerModal({ visible, onClose, items, selectedFeedItemI
             ) : null}
           </ScrollView>
 
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel="Close">
             <AppText variant="button" color={colors.secondaryText}>
               Close
             </AppText>

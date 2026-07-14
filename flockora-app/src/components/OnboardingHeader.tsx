@@ -13,7 +13,7 @@ export function OnboardingHeader({ step, totalSteps, onBack }: OnboardingHeaderP
   return (
     <View style={styles.row}>
       {onBack ? (
-        <IconButton name="chevron-back" onPress={onBack} />
+        <IconButton name="chevron-back" onPress={onBack} accessibilityLabel="Go back" />
       ) : (
         <View style={styles.spacer} />
       )}

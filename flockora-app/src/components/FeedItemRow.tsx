@@ -44,7 +44,13 @@ export function FeedItemRow({
           </View>
         ) : null}
       </View>
-      <Pressable style={styles.deleteIcon} onPress={onDelete} hitSlop={8}>
+      <Pressable
+        style={styles.deleteIcon}
+        onPress={onDelete}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={`Delete ${name}`}
+      >
         <Ionicons name="trash-outline" size={18} color={colors.alertCoral} />
       </Pressable>
     </Pressable>

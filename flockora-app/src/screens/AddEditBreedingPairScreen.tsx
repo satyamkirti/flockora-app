@@ -72,6 +72,25 @@ export function AddEditBreedingPairScreen({ route, navigation }: Props) {
   const femaleSexKnown = femaleBird ? classifyBirdSex(femaleBird.sex) !== 'unknown' : false;
   const showSexWarning = Boolean(maleBird) && Boolean(femaleBird) && (!maleSexKnown || !femaleSexKnown);
 
+  const handleDelete = () => {
+    if (pairId == null) return;
+    Alert.alert(
+      'Delete breeding pair',
+      `Delete this breeding pair${form.pairName ? ` "${form.pairName}"` : ''}? Clutch and hatch history stay on record but will no longer be linked to a pair. This can't be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await breedingRepository.deleteBreedingPair(db, pairId);
+            navigation.goBack();
+          },
+        },
+      ]
+    );
+  };
+
   const handleSave = async () => {
     if (!form.maleBirdId || !form.femaleBirdId) {
       Alert.alert('Select both birds', 'Please choose a male and a female bird for this pair.');
@@ -124,7 +143,7 @@ export function AddEditBreedingPairScreen({ route, navigation }: Props) {
   return (
     <AppScreen>
       <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
         <AppText variant="sectionTitle">{isEditing ? 'Edit Pair' : 'Add Breeding Pair'}</AppText>
         <View style={styles.headerSpacer} />
       </View>
@@ -207,6 +226,10 @@ export function AddEditBreedingPairScreen({ route, navigation }: Props) {
             onChangeText={(text) => update({ notes: text })}
             placeholder="Anything worth remembering about this pair"
           />
+
+          {isEditing ? (
+            <PrimaryButton label="Delete Pair" onPress={handleDelete} style={styles.deleteButton} />
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -296,5 +319,9 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.6,
+  },
+  deleteButton: {
+    backgroundColor: colors.alertCoral,
+    marginTop: spacing.sm,
   },
 });

@@ -47,7 +47,7 @@ export function EggHistoryScreen({ navigation }: Props) {
   return (
     <AppScreen>
       <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
         <AppText variant="sectionTitle">Egg History</AppText>
         <View style={styles.headerSpacer} />
       </View>
@@ -114,10 +114,17 @@ export function EggHistoryScreen({ navigation }: Props) {
                   <Pressable
                     style={styles.rowIcon}
                     onPress={() => navigation.navigate('AddEditEggRecord', { recordId: record.id })}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Edit egg record from ${formatDueDate(record.date)}`}
                   >
                     <Ionicons name="pencil" size={18} color={colors.mutedText} />
                   </Pressable>
-                  <Pressable style={styles.rowIcon} onPress={() => handleDelete(record)}>
+                  <Pressable
+                    style={styles.rowIcon}
+                    onPress={() => handleDelete(record)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Delete egg record from ${formatDueDate(record.date)}`}
+                  >
                     <Ionicons name="trash-outline" size={18} color={colors.alertCoral} />
                   </Pressable>
                 </View>

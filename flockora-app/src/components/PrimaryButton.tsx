@@ -11,7 +11,7 @@ type PrimaryButtonProps = {
 
 export function PrimaryButton({ label, onPress, style }: PrimaryButtonProps) {
   return (
-    <Pressable onPress={onPress} style={[styles.button, style]}>
+    <Pressable onPress={onPress} style={[styles.button, style]} accessibilityRole="button" accessibilityLabel={label}>
       <AppText variant="button" color={colors.cardSurface}>
         {label}
       </AppText>

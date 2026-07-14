@@ -87,7 +87,7 @@ export function FeedHistoryScreen({ navigation }: Props) {
   return (
     <AppScreen>
       <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
         <AppText variant="sectionTitle">Feed History</AppText>
         <View style={styles.headerSpacer} />
       </View>
@@ -135,10 +135,17 @@ export function FeedHistoryScreen({ navigation }: Props) {
                   <Pressable
                     style={styles.rowIcon}
                     onPress={() => navigation.navigate('LogFeedUsage', { logId: log.id })}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Edit feed log from ${formatDueDate(log.date)}`}
                   >
                     <Ionicons name="pencil" size={18} color={colors.mutedText} />
                   </Pressable>
-                  <Pressable style={styles.rowIcon} onPress={() => handleDelete(log)}>
+                  <Pressable
+                    style={styles.rowIcon}
+                    onPress={() => handleDelete(log)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Delete feed log from ${formatDueDate(log.date)}`}
+                  >
                     <Ionicons name="trash-outline" size={18} color={colors.alertCoral} />
                   </Pressable>
                 </View>

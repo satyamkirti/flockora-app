@@ -30,6 +30,9 @@ export function SelectableCard({ icon, label, blurb, selected, onPress }: Select
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         style={[styles.card, shadows.card, selected && styles.cardSelected]}
+        accessibilityRole="button"
+        accessibilityLabel={blurb ? `${label}, ${blurb}` : label}
+        accessibilityState={{ selected }}
       >
         {selected ? (
           <View style={styles.checkBadge}>

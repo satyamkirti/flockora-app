@@ -99,8 +99,16 @@ export function ReportsScreen({ navigation }: Props) {
           </AppText>
         </View>
         <View style={styles.headerActions}>
-          <IconButton name="cloud-download-outline" onPress={() => navigation.navigate('BackupRestore')} />
-          <IconButton name="settings-outline" onPress={() => navigation.navigate('Settings')} />
+          <IconButton
+            name="cloud-download-outline"
+            onPress={() => navigation.navigate('BackupRestore')}
+            accessibilityLabel="Backup and restore"
+          />
+          <IconButton
+            name="settings-outline"
+            onPress={() => navigation.navigate('Settings')}
+            accessibilityLabel="Settings"
+          />
         </View>
       </View>
 

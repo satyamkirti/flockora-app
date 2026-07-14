@@ -28,7 +28,13 @@ export function BirdPickerModal({ visible, onClose, birds, selectedBirdId, onSel
           <AppText variant="sectionTitle">Bird</AppText>
 
           <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-            <Pressable style={styles.row} onPress={() => handleSelect(null)}>
+            <Pressable
+              style={styles.row}
+              onPress={() => handleSelect(null)}
+              accessibilityRole="button"
+              accessibilityLabel="No Bird"
+              accessibilityState={{ selected: selectedBirdId == null }}
+            >
               <View style={styles.rowMain}>
                 <AppText variant="cardTitle">No Bird</AppText>
               </View>
@@ -40,8 +46,15 @@ export function BirdPickerModal({ visible, onClose, birds, selectedBirdId, onSel
             {birds.map((bird) => {
               const species = speciesByKey(bird.species);
               return (
-                <Pressable key={bird.id} style={styles.row} onPress={() => handleSelect(bird.id)}>
-                  <BirdPhotoBadge icon={species.icon} size={36} style={styles.avatar} />
+                <Pressable
+                  key={bird.id}
+                  style={styles.row}
+                  onPress={() => handleSelect(bird.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${bird.name}, ${bird.breed || species.label}`}
+                  accessibilityState={{ selected: selectedBirdId === bird.id }}
+                >
+                  <BirdPhotoBadge icon={species.icon} photoUri={bird.photoUri} size={36} style={styles.avatar} />
                   <View style={styles.rowMain}>
                     <AppText variant="cardTitle">{bird.name}</AppText>
                     <AppText variant="caption" color={colors.mutedText}>
@@ -62,7 +75,7 @@ export function BirdPickerModal({ visible, onClose, birds, selectedBirdId, onSel
             ) : null}
           </ScrollView>
 
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel="Close">
             <AppText variant="button" color={colors.secondaryText}>
               Close
             </AppText>

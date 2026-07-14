@@ -24,6 +24,7 @@ export function FormField({ label, optional, multiline, ...rest }: FormFieldProp
         style={[styles.input, multiline && styles.multiline]}
         placeholderTextColor={colors.mutedText}
         multiline={multiline}
+        accessibilityLabel={label}
         {...rest}
       />
     </View>

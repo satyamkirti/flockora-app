@@ -83,7 +83,11 @@ export function CareDashboardScreen({ navigation }: Props) {
             Reminders and records across your flock.
           </AppText>
         </View>
-        <IconButton name="search-outline" onPress={() => navigation.navigate('PulseHome')} />
+        <IconButton
+          name="search-outline"
+          onPress={() => navigation.navigate('PulseHome')}
+          accessibilityLabel="Search care records"
+        />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>

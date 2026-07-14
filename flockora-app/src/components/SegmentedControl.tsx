@@ -19,6 +19,9 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
             key={option.value}
             onPress={() => onChange(option.value)}
             style={[styles.segment, selected && styles.segmentSelected]}
+            accessibilityRole="button"
+            accessibilityLabel={option.label}
+            accessibilityState={{ selected }}
           >
             <AppText variant="caption" color={selected ? colors.cardSurface : colors.primaryText}>
               {option.label}

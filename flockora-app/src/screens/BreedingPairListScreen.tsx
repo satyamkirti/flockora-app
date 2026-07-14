@@ -35,7 +35,7 @@ export function BreedingPairListScreen({ navigation }: Props) {
   return (
     <AppScreen>
       <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
         <AppText variant="sectionTitle">Breeding Pairs</AppText>
         <View style={styles.headerSpacer} />
       </View>

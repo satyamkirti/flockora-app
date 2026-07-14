@@ -99,7 +99,7 @@ export function ReviewConfirmBirdDetailsScreen({ navigation }: Props) {
       <OnboardingHeader step={4} totalSteps={4} onBack={() => navigation.goBack()} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <FadeInUp style={styles.headerBlock}>
-          <BirdPhotoBadge icon={species.icon} size={96} />
+          <BirdPhotoBadge icon={species.icon} photoUri={bird.photo?.uri} size={96} />
           <AppText variant="screenTitle" align="center">
             {bird.name || 'Your bird'}
           </AppText>

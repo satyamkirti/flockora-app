@@ -120,8 +120,12 @@ export function ClutchDetailScreen({ route, navigation }: Props) {
   return (
     <AppScreen>
       <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
-        <IconButton name="pencil" onPress={() => navigation.navigate('AddEditClutch', { clutchId: clutch.id })} />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
+        <IconButton
+          name="pencil"
+          onPress={() => navigation.navigate('AddEditClutch', { clutchId: clutch.id })}
+          accessibilityLabel="Edit clutch"
+        />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -204,10 +208,17 @@ export function ClutchDetailScreen({ route, navigation }: Props) {
             <Pressable
               style={styles.historyIcon}
               onPress={() => navigation.navigate('AddEditCandlingRecord', { clutchId: clutch.id, recordId: record.id })}
+              accessibilityRole="button"
+              accessibilityLabel={`Edit candling record from ${formatDueDate(record.date)}`}
             >
               <Ionicons name="pencil" size={16} color={colors.mutedText} />
             </Pressable>
-            <Pressable style={styles.historyIcon} onPress={() => handleDeleteCandling(record.id)}>
+            <Pressable
+              style={styles.historyIcon}
+              onPress={() => handleDeleteCandling(record.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`Delete candling record from ${formatDueDate(record.date)}`}
+            >
               <Ionicons name="trash-outline" size={16} color={colors.alertCoral} />
             </Pressable>
           </View>

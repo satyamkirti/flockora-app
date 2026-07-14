@@ -84,9 +84,9 @@ export function EggDashboardScreen({ navigation }: Props) {
   return (
     <AppScreen>
       <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
         <AppText variant="sectionTitle">Egg Production</AppText>
-        <IconButton name="share-outline" onPress={handleExport} />
+        <IconButton name="share-outline" onPress={handleExport} accessibilityLabel="Export egg records as CSV" />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>

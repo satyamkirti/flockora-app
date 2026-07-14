@@ -137,7 +137,7 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
   return (
     <AppScreen>
       <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
         <AppText variant="sectionTitle">{isEditing ? 'Edit Egg Record' : 'Log Eggs'}</AppText>
         <View style={styles.headerSpacer} />
       </View>
@@ -182,6 +182,8 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
               <Pressable
                 style={styles.stepButton}
                 onPress={() => setTotalText(String(Math.max(0, parseCount(totalText) - 1)))}
+                accessibilityRole="button"
+                accessibilityLabel="Decrease total eggs"
               >
                 <Ionicons name="remove" size={20} color={colors.primaryText} />
               </Pressable>
@@ -194,7 +196,12 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
                   keyboardType="number-pad"
                 />
               </View>
-              <Pressable style={styles.stepButton} onPress={() => setTotalText(String(parseCount(totalText) + 1))}>
+              <Pressable
+                style={styles.stepButton}
+                onPress={() => setTotalText(String(parseCount(totalText) + 1))}
+                accessibilityRole="button"
+                accessibilityLabel="Increase total eggs"
+              >
                 <Ionicons name="add" size={20} color={colors.primaryText} />
               </Pressable>
             </View>

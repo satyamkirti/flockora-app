@@ -27,10 +27,25 @@ export function TaskRow({
   onPress,
 }: TaskRowProps) {
   const isOverdue = overdue && !completed;
+  const rowLabel = [title, subjectLabel, dueTimeLabel, isOverdue ? 'overdue' : null, completed ? 'completed' : null]
+    .filter(Boolean)
+    .join(', ');
 
   return (
-    <Pressable onPress={onPress} style={[styles.row, completed && styles.completedRow, isOverdue && styles.overdueRow]}>
-      <Pressable onPress={onToggle} hitSlop={10} style={[styles.checkbox, completed && styles.checkboxChecked]}>
+    <Pressable
+      onPress={onPress}
+      style={[styles.row, completed && styles.completedRow, isOverdue && styles.overdueRow]}
+      accessibilityRole="button"
+      accessibilityLabel={rowLabel}
+    >
+      <Pressable
+        onPress={onToggle}
+        hitSlop={10}
+        style={[styles.checkbox, completed && styles.checkboxChecked]}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: completed }}
+        accessibilityLabel={completed ? `Mark ${title} as not done` : `Mark ${title} as done`}
+      >
         {completed ? <Ionicons name="checkmark" size={16} color={colors.cardSurface} /> : null}
       </Pressable>
 

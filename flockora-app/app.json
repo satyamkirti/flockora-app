@@ -3,6 +3,7 @@
     "name": "flockora-app",
     "slug": "flockora-app",
     "version": "1.0.0",
+    "description": "Care. Hatch. Breed. Protect. Flockora helps backyard poultry keepers and hobby breeders track birds, flocks, daily care, eggs, feed, and breeding/hatching — all stored privately on this device.",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -14,10 +15,12 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.flockora.app"
+      "bundleIdentifier": "com.flockora.app",
+      "buildNumber": "1"
     },
     "android": {
       "package": "com.flockora.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

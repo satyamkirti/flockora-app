@@ -19,9 +19,10 @@ type ClutchRowProps = {
 
 export function ClutchRow({ icon, title, eggsLabel, daysLabel, progress, phase, onPress }: ClutchRowProps) {
   const phaseMeta = incubationPhaseLabels[phase];
+  const rowLabel = [title, eggsLabel, daysLabel, phaseMeta.label].filter(Boolean).join(', ');
 
   return (
-    <Pressable onPress={onPress} style={styles.row}>
+    <Pressable onPress={onPress} style={styles.row} accessibilityRole="button" accessibilityLabel={rowLabel}>
       <View style={styles.headerRow}>
         <AppText style={styles.icon}>{icon}</AppText>
         <View style={styles.content}>

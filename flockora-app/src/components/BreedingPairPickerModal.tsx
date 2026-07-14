@@ -35,7 +35,13 @@ export function BreedingPairPickerModal({
           <AppText variant="sectionTitle">Breeding Pair</AppText>
 
           <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-            <Pressable style={styles.row} onPress={() => handleSelect(null)}>
+            <Pressable
+              style={styles.row}
+              onPress={() => handleSelect(null)}
+              accessibilityRole="button"
+              accessibilityLabel="No Breeding Pair"
+              accessibilityState={{ selected: selectedPairId == null }}
+            >
               <View style={styles.rowMain}>
                 <AppText variant="cardTitle">No Breeding Pair</AppText>
               </View>
@@ -46,7 +52,14 @@ export function BreedingPairPickerModal({
               const maleName = birds.find((bird) => bird.id === pair.maleBirdId)?.name ?? 'Unknown';
               const femaleName = birds.find((bird) => bird.id === pair.femaleBirdId)?.name ?? 'Unknown';
               return (
-                <Pressable key={pair.id} style={styles.row} onPress={() => handleSelect(pair.id)}>
+                <Pressable
+                  key={pair.id}
+                  style={styles.row}
+                  onPress={() => handleSelect(pair.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={pair.pairName || `${maleName} and ${femaleName}`}
+                  accessibilityState={{ selected: selectedPairId === pair.id }}
+                >
                   <View style={styles.rowMain}>
                     <AppText variant="cardTitle">{pair.pairName || `${maleName} × ${femaleName}`}</AppText>
                     <AppText variant="caption" color={colors.mutedText}>
@@ -67,7 +80,7 @@ export function BreedingPairPickerModal({
             ) : null}
           </ScrollView>
 
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel="Close">
             <AppText variant="button" color={colors.secondaryText}>
               Close
             </AppText>

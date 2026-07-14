@@ -111,13 +111,17 @@ export function BirdProfileScreen({ route, navigation }: Props) {
   return (
     <AppScreen>
       <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
-        <IconButton name="pencil" onPress={() => navigation.navigate('AddEditBird', { birdId: bird.id })} />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
+        <IconButton
+          name="pencil"
+          onPress={() => navigation.navigate('AddEditBird', { birdId: bird.id })}
+          accessibilityLabel="Edit bird"
+        />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <FadeInUp style={styles.heroBlock}>
-          <BirdPhotoBadge icon={species.icon} size={112} />
+          <BirdPhotoBadge icon={species.icon} photoUri={bird.photoUri} size={112} />
           <AppText variant="display" align="center">
             {bird.name}
           </AppText>

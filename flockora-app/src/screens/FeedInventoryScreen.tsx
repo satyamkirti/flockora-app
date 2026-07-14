@@ -54,9 +54,13 @@ export function FeedInventoryScreen({ navigation }: Props) {
   return (
     <AppScreen>
       <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
         <AppText variant="sectionTitle">Feed & Inventory</AppText>
-        <IconButton name="add" onPress={() => navigation.navigate('AddEditFeedItem', {})} />
+        <IconButton
+          name="add"
+          onPress={() => navigation.navigate('AddEditFeedItem', {})}
+          accessibilityLabel="Add feed item"
+        />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>

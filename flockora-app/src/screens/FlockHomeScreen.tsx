@@ -137,7 +137,11 @@ export function FlockHomeScreen({ navigation }: Props) {
             {selectedFlockId ? ` in ${flockNameById(selectedFlockId)}` : ' total'}
           </AppText>
         </View>
-        <IconButton name="options-outline" onPress={() => setManageVisible(true)} />
+        <IconButton
+          name="options-outline"
+          onPress={() => setManageVisible(true)}
+          accessibilityLabel="Manage groups"
+        />
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>

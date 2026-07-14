@@ -15,8 +15,11 @@ type HealthTimelineRowProps = {
 };
 
 export function HealthTimelineRow({ icon, title, dateLabel, status, birdName, onPress }: HealthTimelineRowProps) {
+  const statusLabel = status === 'active' ? 'Active' : 'Completed';
+  const rowLabel = [title, birdName, dateLabel, statusLabel].filter(Boolean).join(', ');
+
   return (
-    <Pressable onPress={onPress} style={styles.row}>
+    <Pressable onPress={onPress} style={styles.row} accessibilityRole="button" accessibilityLabel={rowLabel}>
       <AppText style={styles.icon}>{icon}</AppText>
       <View style={styles.content}>
         <AppText variant="cardTitle">{title}</AppText>

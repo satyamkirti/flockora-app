@@ -91,8 +91,12 @@ export function TaskDetailScreen({ route, navigation }: Props) {
   return (
     <AppScreen>
       <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
-        <IconButton name="pencil" onPress={() => navigation.navigate('AddEditTask', { taskId: task.id })} />
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
+        <IconButton
+          name="pencil"
+          onPress={() => navigation.navigate('AddEditTask', { taskId: task.id })}
+          accessibilityLabel="Edit task"
+        />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>

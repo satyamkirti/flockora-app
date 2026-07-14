@@ -72,7 +72,13 @@ export function FlockManagerModal({
 
           <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
             {selectable ? (
-              <Pressable style={styles.row} onPress={() => handleSelectRow(null)}>
+              <Pressable
+                style={styles.row}
+                onPress={() => handleSelectRow(null)}
+                accessibilityRole="button"
+                accessibilityLabel="No Flock"
+                accessibilityState={{ selected: selectedFlockId == null }}
+              >
                 <View style={styles.rowMain}>
                   <AppText variant="cardTitle">No Flock</AppText>
                 </View>
@@ -84,7 +90,13 @@ export function FlockManagerModal({
 
             {flocks.map((flock) => (
               <View key={flock.id} style={styles.row}>
-                <Pressable style={styles.rowMain} onPress={() => handleSelectRow(flock.id)}>
+                <Pressable
+                  style={styles.rowMain}
+                  onPress={() => handleSelectRow(flock.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${flock.name}, ${flock.birdCount} ${flock.birdCount === 1 ? 'bird' : 'birds'}`}
+                  accessibilityState={{ selected: selectable && selectedFlockId === flock.id }}
+                >
                   <AppText variant="cardTitle">{flock.name}</AppText>
                   <AppText variant="caption" color={colors.mutedText}>
                     {flock.birdCount} {flock.birdCount === 1 ? 'bird' : 'birds'}
@@ -100,14 +112,26 @@ export function FlockManagerModal({
                       onClose();
                       onEditDetails(flock);
                     }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Manage ${flock.name} details`}
                   >
                     <Ionicons name="options-outline" size={18} color={colors.mutedText} />
                   </Pressable>
                 ) : null}
-                <Pressable style={styles.rowIcon} onPress={() => setRenamingFlock(flock)}>
+                <Pressable
+                  style={styles.rowIcon}
+                  onPress={() => setRenamingFlock(flock)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Rename ${flock.name}`}
+                >
                   <Ionicons name="pencil" size={18} color={colors.mutedText} />
                 </Pressable>
-                <Pressable style={styles.rowIcon} onPress={() => handleDelete(flock)}>
+                <Pressable
+                  style={styles.rowIcon}
+                  onPress={() => handleDelete(flock)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Delete ${flock.name}`}
+                >
                   <Ionicons name="trash-outline" size={18} color={colors.alertCoral} />
                 </Pressable>
               </View>
@@ -129,13 +153,19 @@ export function FlockManagerModal({
               style={styles.createInput}
               onSubmitEditing={handleCreate}
               returnKeyType="done"
+              accessibilityLabel="New flock name"
             />
-            <Pressable style={styles.addButton} onPress={handleCreate}>
+            <Pressable
+              style={styles.addButton}
+              onPress={handleCreate}
+              accessibilityRole="button"
+              accessibilityLabel="Add flock"
+            >
               <Ionicons name="add" size={22} color={colors.cardSurface} />
             </Pressable>
           </View>
 
-          <Pressable onPress={onClose} style={styles.closeButton}>
+          <Pressable onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel="Close">
             <AppText variant="button" color={colors.secondaryText}>
               Close
             </AppText>
