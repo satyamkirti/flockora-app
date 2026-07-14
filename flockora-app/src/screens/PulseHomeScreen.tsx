@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppScreen, AppText, HealthTimelineRow, EmptyState, FadeInUp, ScreenHeader } from '../components';
 import { useHealthRecords, useBirds, useFlocks } from '../hooks';
 import { healthRecordTypeOptions, healthRecordTypeByKey } from '../data/healthRecordTypes';
 import { formatDueDate } from '../utils/taskSchedule';
 import { navigateToTab } from '../utils/crossTabNavigation';
-import { HealthRecordFilters, HealthRecordStatus, HealthRecordType, emptyHealthRecordFilters } from '../types/healthRecord';
+import {
+  HealthRecord,
+  HealthRecordFilters,
+  HealthRecordStatus,
+  HealthRecordType,
+  emptyHealthRecordFilters,
+} from '../types/healthRecord';
 import { PulseStackParamList } from '../navigation/pulseTypes';
 import { colors, radii, spacing } from '../theme';
 
@@ -85,7 +91,31 @@ export function PulseHomeScreen({ navigation }: Props) {
     { key: 'completed', label: 'Completed', value: 'completed' as HealthRecordStatus },
   ];
 
-  const handleOpenRecord = (recordId: number) => navigateToTab(navigation, 'Flock', 'HealthRecordDetail', { recordId });
+  const handleOpenRecord = useCallback(
+    (recordId: number) => navigateToTab(navigation, 'Flock', 'HealthRecordDetail', { recordId }),
+    [navigation]
+  );
+
+  const keyExtractor = useCallback((record: HealthRecord) => String(record.id), []);
+
+  const renderItem = useCallback(
+    ({ item: record }: { item: HealthRecord }) => {
+      const typeOption = healthRecordTypeByKey(record.type);
+      const birdName = birds.find((bird) => bird.id === record.birdId)?.name;
+      const flockName = flocks.find((flock) => flock.id === record.flockId)?.name;
+      return (
+        <HealthTimelineRow
+          icon={typeOption.icon}
+          title={record.title}
+          dateLabel={record.startDate ? formatDueDate(record.startDate) : 'No date'}
+          status={record.status}
+          birdName={birdName ?? flockName ?? 'Unassigned'}
+          onPress={() => handleOpenRecord(record.id)}
+        />
+      );
+    },
+    [birds, flocks, handleOpenRecord]
+  );
 
   return (
     <AppScreen>
@@ -112,34 +142,24 @@ export function PulseHomeScreen({ navigation }: Props) {
         style={styles.dateInput}
       />
 
-      <ScrollView style={styles.list} showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
-        {loading ? (
-          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
-        ) : records.length === 0 ? (
-          <FadeInUp>
-            <EmptyState title="No matching records" message="Try adjusting your search or filters." />
-          </FadeInUp>
-        ) : (
-          <FadeInUp style={styles.resultsCard}>
-            {records.map((record) => {
-              const typeOption = healthRecordTypeByKey(record.type);
-              const birdName = birds.find((bird) => bird.id === record.birdId)?.name;
-              const flockName = flocks.find((flock) => flock.id === record.flockId)?.name;
-              return (
-                <HealthTimelineRow
-                  key={record.id}
-                  icon={typeOption.icon}
-                  title={record.title}
-                  dateLabel={record.startDate ? formatDueDate(record.startDate) : 'No date'}
-                  status={record.status}
-                  birdName={birdName ?? flockName ?? 'Unassigned'}
-                  onPress={() => handleOpenRecord(record.id)}
-                />
-              );
-            })}
-          </FadeInUp>
-        )}
-      </ScrollView>
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+      ) : records.length === 0 ? (
+        <FadeInUp>
+          <EmptyState title="No matching records" message="Try adjusting your search or filters." />
+        </FadeInUp>
+      ) : (
+        <FadeInUp style={styles.list}>
+          <FlatList
+            style={styles.list}
+            data={records}
+            keyExtractor={keyExtractor}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={[styles.listContent, styles.resultsCard]}
+            renderItem={renderItem}
+          />
+        </FadeInUp>
+      )}
     </AppScreen>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,12 +31,56 @@ export function EggHistoryScreen({ navigation }: Props) {
     ...flocks.map((flock) => ({ key: String(flock.id), label: flock.name, value: flock.id })),
   ];
 
-  const handleDelete = (record: EggRecord) => {
-    confirmDestructive('Delete egg record', `Delete the record for ${formatDueDate(record.date)}?`, async () => {
-      await eggRecordRepository.deleteEggRecord(db, record.id);
-      refresh();
-    });
-  };
+  const handleDelete = useCallback(
+    (record: EggRecord) => {
+      confirmDestructive('Delete egg record', `Delete the record for ${formatDueDate(record.date)}?`, async () => {
+        await eggRecordRepository.deleteEggRecord(db, record.id);
+        refresh();
+      });
+    },
+    [db, refresh]
+  );
+
+  const keyExtractor = useCallback((record: EggRecord) => String(record.id), []);
+
+  const renderItem = useCallback(
+    ({ item: record }: { item: EggRecord }) => {
+      const flockName = flocks.find((flock) => flock.id === record.flockId)?.name;
+      return (
+        <View style={styles.row}>
+          <Pressable style={styles.rowMain} onPress={() => navigation.navigate('AddEditEggRecord', { recordId: record.id })}>
+            <AppText variant="cardTitle">
+              {formatDueDate(record.date)}
+              {record.time ? ` · ${record.time}` : ''} · {record.totalEggs} eggs
+            </AppText>
+            <AppText variant="caption" color={colors.secondaryText}>
+              {flockName ?? 'Unassigned'}
+              {record.notes ? ` · ${record.notes}` : ''}
+            </AppText>
+          </Pressable>
+          <Pressable
+            style={styles.rowIcon}
+            onPress={() => navigation.navigate('AddEditEggRecord', { recordId: record.id })}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityRole="button"
+            accessibilityLabel={`Edit egg record from ${formatDueDate(record.date)}`}
+          >
+            <Ionicons name="pencil" size={18} color={colors.mutedText} />
+          </Pressable>
+          <Pressable
+            style={styles.rowIcon}
+            onPress={() => handleDelete(record)}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityRole="button"
+            accessibilityLabel={`Delete egg record from ${formatDueDate(record.date)}`}
+          >
+            <Ionicons name="trash-outline" size={18} color={colors.alertCoral} />
+          </Pressable>
+        </View>
+      );
+    },
+    [flocks, navigation, handleDelete]
+  );
 
   return (
     <AppScreen>
@@ -86,48 +130,11 @@ export function EggHistoryScreen({ navigation }: Props) {
           <FlatList
             style={styles.list}
             data={records}
-            keyExtractor={(record) => String(record.id)}
+            keyExtractor={keyExtractor}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={[styles.listContent, styles.resultsCard]}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
-            renderItem={({ item: record }) => {
-              const flockName = flocks.find((flock) => flock.id === record.flockId)?.name;
-              return (
-                <View style={styles.row}>
-                  <Pressable
-                    style={styles.rowMain}
-                    onPress={() => navigation.navigate('AddEditEggRecord', { recordId: record.id })}
-                  >
-                    <AppText variant="cardTitle">
-                      {formatDueDate(record.date)}
-                      {record.time ? ` · ${record.time}` : ''} · {record.totalEggs} eggs
-                    </AppText>
-                    <AppText variant="caption" color={colors.secondaryText}>
-                      {flockName ?? 'Unassigned'}
-                      {record.notes ? ` · ${record.notes}` : ''}
-                    </AppText>
-                  </Pressable>
-                  <Pressable
-                    style={styles.rowIcon}
-                    onPress={() => navigation.navigate('AddEditEggRecord', { recordId: record.id })}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Edit egg record from ${formatDueDate(record.date)}`}
-                  >
-                    <Ionicons name="pencil" size={18} color={colors.mutedText} />
-                  </Pressable>
-                  <Pressable
-                    style={styles.rowIcon}
-                    onPress={() => handleDelete(record)}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Delete egg record from ${formatDueDate(record.date)}`}
-                  >
-                    <Ionicons name="trash-outline" size={18} color={colors.alertCoral} />
-                  </Pressable>
-                </View>
-              );
-            }}
+            renderItem={renderItem}
           />
         </FadeInUp>
       )}

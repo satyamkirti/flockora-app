@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -71,16 +71,62 @@ export function FeedHistoryScreen({ navigation }: Props) {
     ...birds.map((bird) => ({ key: String(bird.id), label: bird.name, value: bird.id })),
   ];
 
-  const handleDelete = (log: FeedLog) => {
-    confirmDestructive(
-      'Delete feed log',
-      `Delete this log from ${formatDueDate(log.date)}? The used quantity will be restored to stock.`,
-      async () => {
-        await feedRepository.deleteFeedLog(db, log.id);
-        refresh();
-      }
-    );
-  };
+  const handleDelete = useCallback(
+    (log: FeedLog) => {
+      confirmDestructive(
+        'Delete feed log',
+        `Delete this log from ${formatDueDate(log.date)}? The used quantity will be restored to stock.`,
+        async () => {
+          await feedRepository.deleteFeedLog(db, log.id);
+          refresh();
+        }
+      );
+    },
+    [db, refresh]
+  );
+
+  const keyExtractor = useCallback((log: FeedLog) => String(log.id), []);
+
+  const renderItem = useCallback(
+    ({ item: log }: { item: FeedLog }) => {
+      const feedName = items.find((item) => item.id === log.feedItemId)?.name ?? 'Unknown feed';
+      const flockName = flocks.find((flock) => flock.id === log.flockId)?.name;
+      const birdName = birds.find((bird) => bird.id === log.birdId)?.name;
+      const subjectLabel = birdName ?? flockName ?? null;
+      return (
+        <View style={styles.row}>
+          <Pressable style={styles.rowMain} onPress={() => navigation.navigate('LogFeedUsage', { logId: log.id })}>
+            <AppText variant="cardTitle">
+              {formatDueDate(log.date)} · {feedName}
+            </AppText>
+            <AppText variant="caption" color={colors.secondaryText}>
+              {log.quantityUsed} {log.unit} used
+              {subjectLabel ? ` · ${subjectLabel}` : ''}
+            </AppText>
+          </Pressable>
+          <Pressable
+            style={styles.rowIcon}
+            onPress={() => navigation.navigate('LogFeedUsage', { logId: log.id })}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityRole="button"
+            accessibilityLabel={`Edit feed log from ${formatDueDate(log.date)}`}
+          >
+            <Ionicons name="pencil" size={18} color={colors.mutedText} />
+          </Pressable>
+          <Pressable
+            style={styles.rowIcon}
+            onPress={() => handleDelete(log)}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityRole="button"
+            accessibilityLabel={`Delete feed log from ${formatDueDate(log.date)}`}
+          >
+            <Ionicons name="trash-outline" size={18} color={colors.alertCoral} />
+          </Pressable>
+        </View>
+      );
+    },
+    [items, flocks, birds, navigation, handleDelete]
+  );
 
   return (
     <AppScreen>
@@ -109,50 +155,11 @@ export function FeedHistoryScreen({ navigation }: Props) {
           <FlatList
             style={styles.list}
             data={logs}
-            keyExtractor={(log) => String(log.id)}
+            keyExtractor={keyExtractor}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={[styles.listContent, styles.resultsCard]}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
-            renderItem={({ item: log }) => {
-              const feedName = items.find((item) => item.id === log.feedItemId)?.name ?? 'Unknown feed';
-              const flockName = flocks.find((flock) => flock.id === log.flockId)?.name;
-              const birdName = birds.find((bird) => bird.id === log.birdId)?.name;
-              const subjectLabel = birdName ?? flockName ?? null;
-              return (
-                <View style={styles.row}>
-                  <Pressable
-                    style={styles.rowMain}
-                    onPress={() => navigation.navigate('LogFeedUsage', { logId: log.id })}
-                  >
-                    <AppText variant="cardTitle">
-                      {formatDueDate(log.date)} · {feedName}
-                    </AppText>
-                    <AppText variant="caption" color={colors.secondaryText}>
-                      {log.quantityUsed} {log.unit} used
-                      {subjectLabel ? ` · ${subjectLabel}` : ''}
-                    </AppText>
-                  </Pressable>
-                  <Pressable
-                    style={styles.rowIcon}
-                    onPress={() => navigation.navigate('LogFeedUsage', { logId: log.id })}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Edit feed log from ${formatDueDate(log.date)}`}
-                  >
-                    <Ionicons name="pencil" size={18} color={colors.mutedText} />
-                  </Pressable>
-                  <Pressable
-                    style={styles.rowIcon}
-                    onPress={() => handleDelete(log)}
-                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Delete feed log from ${formatDueDate(log.date)}`}
-                  >
-                    <Ionicons name="trash-outline" size={18} color={colors.alertCoral} />
-                  </Pressable>
-                </View>
-              );
-            }}
+            renderItem={renderItem}
           />
         </FadeInUp>
       )}

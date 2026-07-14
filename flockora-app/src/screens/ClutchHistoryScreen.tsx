@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppScreen, AppText, EmptyState, ClutchRow, FadeInUp, ScreenHeader } from '../components';
 import { useClutches, useBreedingPairs, useBirds } from '../hooks';
@@ -11,7 +11,7 @@ import {
   getIncubationPhase,
   getIncubationProgressPercent,
 } from '../utils/breedingCalc';
-import { ClutchFilters, ClutchStatus, emptyClutchFilters } from '../types/breeding';
+import { Clutch, ClutchFilters, ClutchStatus, emptyClutchFilters } from '../types/breeding';
 import { SpeciesKey } from '../types/onboarding';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, spacing } from '../theme';
@@ -77,6 +77,41 @@ export function ClutchHistoryScreen({ navigation }: Props) {
     ...pairs.map((pair) => ({ key: String(pair.id), label: pair.pairName || `Pair #${pair.id}`, value: pair.id })),
   ];
 
+  const keyExtractor = useCallback((clutch: Clutch) => String(clutch.id), []);
+
+  const renderItem = useCallback(
+    ({ item: clutch }: { item: Clutch }) => {
+      const clutchSpecies = deriveClutchSpecies(clutch, pairs, birds);
+      const speciesOption = clutchSpecies ? speciesByKey(clutchSpecies) : null;
+      const phase = getIncubationPhase(clutch);
+      const daysElapsed = getIncubationDaysElapsed(clutch);
+      const daysRemaining = getIncubationDaysRemaining(clutch);
+      const progress = getIncubationProgressPercent(clutch);
+
+      let daysLabel: string | null = null;
+      if (phase === 'completed') {
+        daysLabel = clutch.actualHatchDate ? `Hatched ${clutch.actualHatchDate}` : null;
+      } else if (daysElapsed != null && daysRemaining != null) {
+        daysLabel = `Day ${daysElapsed} · ${daysRemaining >= 0 ? `${daysRemaining} left` : `${Math.abs(daysRemaining)} overdue`}`;
+      } else if (daysElapsed != null) {
+        daysLabel = `Day ${daysElapsed}`;
+      }
+
+      return (
+        <ClutchRow
+          icon={speciesOption?.icon ?? '🥚'}
+          title={clutch.clutchName || `Clutch #${clutch.id}`}
+          eggsLabel={`${clutch.totalEggs} eggs · ${clutch.incubationType === 'incubator' ? 'Incubator' : 'Natural'}`}
+          daysLabel={daysLabel}
+          progress={progress}
+          phase={phase}
+          onPress={() => navigation.navigate('ClutchDetail', { clutchId: clutch.id })}
+        />
+      );
+    },
+    [pairs, birds, navigation]
+  );
+
   return (
     <AppScreen>
       <ScreenHeader title="Incubation & History" onBack={() => navigation.goBack()} />
@@ -93,48 +128,24 @@ export function ClutchHistoryScreen({ navigation }: Props) {
         style={styles.dateInput}
       />
 
-      <ScrollView style={styles.list} showsVerticalScrollIndicator={false} contentContainerStyle={styles.listContent}>
-        {loading ? (
-          <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
-        ) : clutches.length === 0 ? (
-          <FadeInUp>
-            <EmptyState title="No clutches found" message="Try adjusting your filters, or add your first clutch." />
-          </FadeInUp>
-        ) : (
-          <FadeInUp>
-            {clutches.map((clutch) => {
-              const clutchSpecies = deriveClutchSpecies(clutch, pairs, birds);
-              const speciesOption = clutchSpecies ? speciesByKey(clutchSpecies) : null;
-              const phase = getIncubationPhase(clutch);
-              const daysElapsed = getIncubationDaysElapsed(clutch);
-              const daysRemaining = getIncubationDaysRemaining(clutch);
-              const progress = getIncubationProgressPercent(clutch);
-
-              let daysLabel: string | null = null;
-              if (phase === 'completed') {
-                daysLabel = clutch.actualHatchDate ? `Hatched ${clutch.actualHatchDate}` : null;
-              } else if (daysElapsed != null && daysRemaining != null) {
-                daysLabel = `Day ${daysElapsed} · ${daysRemaining >= 0 ? `${daysRemaining} left` : `${Math.abs(daysRemaining)} overdue`}`;
-              } else if (daysElapsed != null) {
-                daysLabel = `Day ${daysElapsed}`;
-              }
-
-              return (
-                <ClutchRow
-                  key={clutch.id}
-                  icon={speciesOption?.icon ?? '🥚'}
-                  title={clutch.clutchName || `Clutch #${clutch.id}`}
-                  eggsLabel={`${clutch.totalEggs} eggs · ${clutch.incubationType === 'incubator' ? 'Incubator' : 'Natural'}`}
-                  daysLabel={daysLabel}
-                  progress={progress}
-                  phase={phase}
-                  onPress={() => navigation.navigate('ClutchDetail', { clutchId: clutch.id })}
-                />
-              );
-            })}
-          </FadeInUp>
-        )}
-      </ScrollView>
+      {loading ? (
+        <ActivityIndicator size="large" color={colors.leafGreen} style={styles.loader} />
+      ) : clutches.length === 0 ? (
+        <FadeInUp>
+          <EmptyState title="No clutches found" message="Try adjusting your filters, or add your first clutch." />
+        </FadeInUp>
+      ) : (
+        <FadeInUp style={styles.list}>
+          <FlatList
+            style={styles.list}
+            data={clutches}
+            keyExtractor={keyExtractor}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+            renderItem={renderItem}
+          />
+        </FadeInUp>
+      )}
     </AppScreen>
   );
 }
