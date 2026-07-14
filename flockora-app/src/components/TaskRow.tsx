@@ -16,7 +16,7 @@ type TaskRowProps = {
   onPress: () => void;
 };
 
-export function TaskRow({
+function TaskRowComponent({
   icon,
   title,
   dueTimeLabel,
@@ -66,6 +66,8 @@ export function TaskRow({
   );
 }
 
+export const TaskRow = React.memo(TaskRowComponent);
+
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
@@ -82,7 +84,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   overdueRow: {
-    backgroundColor: '#FBEAE7',
+    backgroundColor: colors.dangerBackground,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     marginBottom: spacing.sm,

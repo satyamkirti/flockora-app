@@ -1,13 +1,13 @@
 import React from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
 import {
   AppScreen,
-  AppText,
   PrimaryButton,
   IconButton,
   SectionHeader,
+  ScreenHeader,
   StatCard,
   FeedItemRow,
   EmptyState,
@@ -17,6 +17,7 @@ import { useFeedItems, useFeedStatistics } from '../hooks';
 import { feedRepository } from '../db/repositories';
 import { feedTypeByKey } from '../data/feedTypes';
 import { getFeedExpiryState, getFeedStockState, formatQuantitiesByUnit } from '../utils/feedStock';
+import { confirmDestructive } from '../utils/confirmDestructive';
 import { FeedItem } from '../types/feed';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
@@ -38,30 +39,21 @@ export function FeedInventoryScreen({ navigation }: Props) {
   ];
 
   const handleDelete = (item: FeedItem) => {
-    Alert.alert('Delete feed', `Delete "${item.name}"? Its usage history will also be removed.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await feedRepository.deleteFeedItem(db, item.id);
-          refresh();
-        },
-      },
-    ]);
+    confirmDestructive('Delete feed', `Delete "${item.name}"? Its usage history will also be removed.`, async () => {
+      await feedRepository.deleteFeedItem(db, item.id);
+      refresh();
+    });
   };
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">Feed & Inventory</AppText>
-        <IconButton
-          name="add"
-          onPress={() => navigation.navigate('AddEditFeedItem', {})}
-          accessibilityLabel="Add feed item"
-        />
-      </View>
+      <ScreenHeader
+        title="Feed & Inventory"
+        onBack={() => navigation.goBack()}
+        rightAction={
+          <IconButton name="add" onPress={() => navigation.navigate('AddEditFeedItem', {})} accessibilityLabel="Add feed item" />
+        }
+      />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <SectionHeader title="Statistics" />
@@ -118,12 +110,6 @@ export function FeedInventoryScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
   scrollContent: {
     paddingBottom: spacing.xl,
   },

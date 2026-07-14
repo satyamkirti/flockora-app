@@ -7,11 +7,11 @@ import {
   AppScreen,
   AppText,
   PrimaryButton,
-  IconButton,
   FormField,
   SelectableCard,
   FlockManagerModal,
   FadeInUp,
+  ScreenHeader,
 } from '../components';
 import { useHatchRecordById, useClutch, useBreedingPairs, useBirds, useFlocks } from '../hooks';
 import { breedingRepository, DuplicateBirdCreationError } from '../db/repositories';
@@ -103,13 +103,9 @@ export function CreateBirdsFromHatchScreen({ route, navigation }: Props) {
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">Add Hatched Birds</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="Add Hatched Birds" onBack={() => navigation.goBack()} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <FadeInUp>
           <AppText variant="body" color={colors.secondaryText} style={styles.intro}>
             Create bird records for this hatch. Batch keepers can leave the count high and skip individual names —
@@ -183,15 +179,6 @@ export function CreateBirdsFromHatchScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   loader: {
     marginTop: spacing.xxl,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
   },
   scrollContent: {
     paddingBottom: spacing.lg,

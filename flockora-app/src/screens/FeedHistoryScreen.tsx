@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
-import { AppScreen, AppText, IconButton, EmptyState, FadeInUp } from '../components';
+import { AppScreen, AppText, EmptyState, FadeInUp, ScreenHeader } from '../components';
 import { useFeedHistory, useFeedItems, useFlocks, useBirds } from '../hooks';
 import { feedRepository } from '../db/repositories';
 import { formatDueDate } from '../utils/taskSchedule';
+import { confirmDestructive } from '../utils/confirmDestructive';
 import { FeedLog, FeedLogFilters, emptyFeedLogFilters } from '../types/feed';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
@@ -71,26 +72,19 @@ export function FeedHistoryScreen({ navigation }: Props) {
   ];
 
   const handleDelete = (log: FeedLog) => {
-    Alert.alert('Delete feed log', `Delete this log from ${formatDueDate(log.date)}? The used quantity will be restored to stock.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await feedRepository.deleteFeedLog(db, log.id);
-          refresh();
-        },
-      },
-    ]);
+    confirmDestructive(
+      'Delete feed log',
+      `Delete this log from ${formatDueDate(log.date)}? The used quantity will be restored to stock.`,
+      async () => {
+        await feedRepository.deleteFeedLog(db, log.id);
+        refresh();
+      }
+    );
   };
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">Feed History</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="Feed History" onBack={() => navigation.goBack()} />
 
       <FilterChips options={feedOptions} selected={feedItemId} onSelect={setFeedItemId} />
       <FilterChips options={flockOptions} selected={flockId} onSelect={setFlockId} />
@@ -167,15 +161,6 @@ export function FeedHistoryScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
-  },
   chipRow: {
     gap: spacing.sm,
     paddingBottom: spacing.sm,

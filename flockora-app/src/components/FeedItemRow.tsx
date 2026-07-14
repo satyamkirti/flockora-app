@@ -17,7 +17,7 @@ type FeedItemRowProps = {
   onDelete: () => void;
 };
 
-export function FeedItemRow({
+function FeedItemRowComponent({
   icon,
   name,
   feedTypeLabel,
@@ -56,6 +56,8 @@ export function FeedItemRow({
     </Pressable>
   );
 }
+
+export const FeedItemRow = React.memo(FeedItemRowComponent);
 
 const styles = StyleSheet.create({
   row: {

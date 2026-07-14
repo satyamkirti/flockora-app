@@ -1,0 +1,11 @@
+# Root-level ignores shared across flockora-app/ and flockora-backend/.
+# Each sub-project has its own .gitignore for its own build artifacts/dependencies —
+# this file only covers OS cruft and editor directories common to both.
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/

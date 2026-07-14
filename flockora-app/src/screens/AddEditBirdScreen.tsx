@@ -19,13 +19,13 @@ import {
   AppText,
   PrimaryButton,
   TextButton,
-  IconButton,
   FormField,
   SegmentedControl,
   SelectableCard,
   BirdPhotoBadge,
   FlockManagerModal,
   FadeInUp,
+  ScreenHeader,
 } from '../components';
 import { useBird, useFlocks } from '../hooks';
 import { birdRepository } from '../db/repositories';
@@ -208,18 +208,14 @@ export function AddEditBirdScreen({ route, navigation }: Props) {
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">{isEditing ? 'Edit Bird' : 'Add Bird'}</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title={isEditing ? 'Edit Bird' : 'Add Bird'} onBack={() => navigation.goBack()} />
 
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={16}
       >
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <FadeInUp style={styles.captureWrap}>
             {photo ? (
               <View style={styles.previewWrap}>
@@ -410,15 +406,6 @@ export function AddEditBirdScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   loader: {
     marginTop: spacing.xxl,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
   },
   flex: {
     flex: 1,

@@ -1,5 +1,3 @@
-import { Platform } from 'react-native';
-
 export const colors = {
   leafGreen: '#2F7D4A',
   sunflowerYellow: '#F6C445',
@@ -15,6 +13,8 @@ export const colors = {
   border: '#DDE7DA',
   disabled: '#C8D4C5',
   background: '#FCF8F0',
+  warningBackground: '#FFF2E3',
+  dangerBackground: '#FBEAE7',
 };
 
 export const spacing = {

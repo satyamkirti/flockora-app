@@ -1,13 +1,14 @@
 import React from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
-import { AppScreen, AppText, PrimaryButton, IconButton, StatusPill, FadeInUp } from '../components';
+import { AppScreen, AppText, PrimaryButton, IconButton, ScreenHeader, StatusPill, FadeInUp } from '../components';
 import { useHealthRecord, useBirds, useFlocks } from '../hooks';
 import { healthRecordRepository } from '../db/repositories';
 import { cancelNotification } from '../services/notificationService';
 import { healthRecordTypeByKey } from '../data/healthRecordTypes';
 import { formatDueDate } from '../utils/taskSchedule';
+import { confirmDestructive } from '../utils/confirmDestructive';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
 
@@ -67,36 +68,31 @@ export function HealthRecordDetailScreen({ route, navigation }: Props) {
   };
 
   const handleDelete = () => {
-    Alert.alert('Delete health record', `Delete "${record.title}"? This can't be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await cancelNotification(record.notificationId);
-          await healthRecordRepository.deleteHealthRecord(db, record.id);
-          navigation.goBack();
-        },
-      },
-    ]);
+    confirmDestructive('Delete health record', `Delete "${record.title}"? This can't be undone.`, async () => {
+      await cancelNotification(record.notificationId);
+      await healthRecordRepository.deleteHealthRecord(db, record.id);
+      navigation.goBack();
+    });
   };
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <IconButton
-          name="pencil"
-          accessibilityLabel="Edit care record"
-          onPress={() =>
-            navigation.navigate('AddEditHealthRecord', {
-              birdId: record.birdId,
-              flockId: record.flockId,
-              recordId: record.id,
-            })
-          }
-        />
-      </View>
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
+        rightAction={
+          <IconButton
+            name="pencil"
+            accessibilityLabel="Edit care record"
+            onPress={() =>
+              navigation.navigate('AddEditHealthRecord', {
+                birdId: record.birdId,
+                flockId: record.flockId,
+                recordId: record.id,
+              })
+            }
+          />
+        }
+      />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <FadeInUp style={styles.heroBlock}>
@@ -166,11 +162,6 @@ const styles = StyleSheet.create({
   notFoundButton: {
     marginTop: spacing.lg,
     alignSelf: 'stretch',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
   },
   scrollContent: {
     paddingBottom: spacing.xl,

@@ -27,7 +27,7 @@ const statusLabel: Record<BreedingPairStatus, string> = {
   retired: 'Retired',
 };
 
-export function BreedingPairRow({
+function BreedingPairRowComponent({
   pairName,
   maleName,
   femaleName,
@@ -62,6 +62,8 @@ export function BreedingPairRow({
     </Pressable>
   );
 }
+
+export const BreedingPairRow = React.memo(BreedingPairRowComponent);
 
 const styles = StyleSheet.create({
   row: {

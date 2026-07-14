@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
 import { AppText } from './AppText';
 import { EditableFieldModal } from './EditableFieldModal';
 import { TextButton } from './TextButton';
 import { flockRepository } from '../db/repositories';
+import { confirmDestructive } from '../utils/confirmDestructive';
 import { createEmptyFlockInput, FlockWithCount } from '../types/flock';
 import { colors, radii, spacing } from '../theme';
 
@@ -46,17 +47,10 @@ export function FlockManagerModal({
   };
 
   const handleDelete = (flock: FlockWithCount) => {
-    Alert.alert('Delete flock', `Delete "${flock.name}"? Birds in this flock will become unassigned.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await flockRepository.remove(db, flock.id);
-          onChanged();
-        },
-      },
-    ]);
+    confirmDestructive('Delete flock', `Delete "${flock.name}"? Birds in this flock will become unassigned.`, async () => {
+      await flockRepository.remove(db, flock.id);
+      onChanged();
+    });
   };
 
   const handleSelectRow = (flockId: number | null) => {

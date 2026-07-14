@@ -1,6 +1,7 @@
 export * from './AppScreen';
 export * from './AppText';
 export * from './SectionHeader';
+export * from './ScreenHeader';
 export * from './StatCard';
 export * from './StatusPill';
 export * from './PrimaryButton';

@@ -10,8 +10,8 @@ type ConfidenceBadgeProps = {
 
 const config: Record<ConfidenceLevel, { label: string; background: string; text: string }> = {
   HIGH: { label: 'High confidence', background: colors.softGreen, text: colors.leafGreen },
-  LIKELY: { label: 'Likely', background: '#FFF2E3', text: colors.hatchOrange },
-  UNSURE: { label: 'Unsure — please check', background: '#FBEAE7', text: colors.alertCoral },
+  LIKELY: { label: 'Likely', background: colors.warningBackground, text: colors.hatchOrange },
+  UNSURE: { label: 'Unsure — please check', background: colors.dangerBackground, text: colors.alertCoral },
 };
 
 export function ConfidenceBadge({ level }: ConfidenceBadgeProps) {

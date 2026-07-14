@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
-import { AppScreen, AppText, PrimaryButton, IconButton, FadeInUp } from '../components';
+import { AppScreen, AppText, PrimaryButton, FadeInUp, ScreenHeader } from '../components';
 import { backupRepository } from '../db/repositories';
 import { DATABASE_VERSION } from '../db/migrations';
 import { writeAndShareBackup, pickBackupFile, readBackupFile } from '../services/backupFileService';
 import { isValidBackupData, checkSchemaCompatibility } from '../utils/backupValidation';
+import { confirmDestructive } from '../utils/confirmDestructive';
 import { MoreStackParamList } from '../navigation/moreTypes';
 import { colors, radii, spacing } from '../theme';
 
@@ -72,23 +73,17 @@ export function BackupRestoreScreen({ navigation }: Props) {
       return;
     }
 
-    Alert.alert(
+    confirmDestructive(
       'Replace all current data?',
       `Restoring "${outcome.name}" will permanently replace every bird, flock, task, and record currently in Flockora with the contents of this backup. This can't be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Restore', style: 'destructive', onPress: () => runRestore(outcome.uri) },
-      ]
+      () => runRestore(outcome.uri),
+      'Restore'
     );
   };
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">Backup & Restore</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="Backup & Restore" onBack={() => navigation.goBack()} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <FadeInUp style={styles.card}>
@@ -132,15 +127,6 @@ export function BackupRestoreScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
-  },
   scrollContent: {
     paddingBottom: spacing.xl,
   },

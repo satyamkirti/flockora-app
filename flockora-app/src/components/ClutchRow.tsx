@@ -17,7 +17,7 @@ type ClutchRowProps = {
   onPress: () => void;
 };
 
-export function ClutchRow({ icon, title, eggsLabel, daysLabel, progress, phase, onPress }: ClutchRowProps) {
+function ClutchRowComponent({ icon, title, eggsLabel, daysLabel, progress, phase, onPress }: ClutchRowProps) {
   const phaseMeta = incubationPhaseLabels[phase];
   const rowLabel = [title, eggsLabel, daysLabel, phaseMeta.label].filter(Boolean).join(', ');
 
@@ -42,6 +42,8 @@ export function ClutchRow({ icon, title, eggsLabel, daysLabel, progress, phase, 
     </Pressable>
   );
 }
+
+export const ClutchRow = React.memo(ClutchRowComponent);
 
 const styles = StyleSheet.create({
   row: {

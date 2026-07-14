@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
 import {
@@ -7,6 +7,7 @@ import {
   AppText,
   PrimaryButton,
   IconButton,
+  ScreenHeader,
   BirdPhotoBadge,
   StatusPill,
   StatCard,
@@ -20,6 +21,7 @@ import { birdRepository } from '../db/repositories';
 import { speciesByKey } from '../data/onboardingData';
 import { healthRecordTypeByKey } from '../data/healthRecordTypes';
 import { formatDueDate } from '../utils/taskSchedule';
+import { confirmDestructive } from '../utils/confirmDestructive';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
 
@@ -95,29 +97,20 @@ export function BirdProfileScreen({ route, navigation }: Props) {
   };
 
   const handleDelete = () => {
-    Alert.alert('Delete bird', `Remove ${bird.name} from your flock? This can't be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await birdRepository.remove(db, bird.id);
-          navigation.goBack();
-        },
-      },
-    ]);
+    confirmDestructive('Delete bird', `Remove ${bird.name} from your flock? This can't be undone.`, async () => {
+      await birdRepository.remove(db, bird.id);
+      navigation.goBack();
+    });
   };
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <IconButton
-          name="pencil"
-          onPress={() => navigation.navigate('AddEditBird', { birdId: bird.id })}
-          accessibilityLabel="Edit bird"
-        />
-      </View>
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
+        rightAction={
+          <IconButton name="pencil" onPress={() => navigation.navigate('AddEditBird', { birdId: bird.id })} accessibilityLabel="Edit bird" />
+        }
+      />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <FadeInUp style={styles.heroBlock}>
@@ -254,11 +247,6 @@ const styles = StyleSheet.create({
   notFoundButton: {
     marginTop: spacing.lg,
     alignSelf: 'stretch',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
   },
   scrollContent: {
     paddingBottom: spacing.xl,

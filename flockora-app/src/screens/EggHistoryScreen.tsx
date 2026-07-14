@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
-import { AppScreen, AppText, IconButton, EmptyState, FadeInUp } from '../components';
+import { AppScreen, AppText, EmptyState, FadeInUp, ScreenHeader } from '../components';
 import { useEggHistory, useFlocks } from '../hooks';
 import { eggRecordRepository } from '../db/repositories';
 import { formatDueDate } from '../utils/taskSchedule';
+import { confirmDestructive } from '../utils/confirmDestructive';
 import { EggRecord, EggRecordFilters, emptyEggRecordFilters } from '../types/eggRecord';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
@@ -31,26 +32,15 @@ export function EggHistoryScreen({ navigation }: Props) {
   ];
 
   const handleDelete = (record: EggRecord) => {
-    Alert.alert('Delete egg record', `Delete the record for ${formatDueDate(record.date)}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await eggRecordRepository.deleteEggRecord(db, record.id);
-          refresh();
-        },
-      },
-    ]);
+    confirmDestructive('Delete egg record', `Delete the record for ${formatDueDate(record.date)}?`, async () => {
+      await eggRecordRepository.deleteEggRecord(db, record.id);
+      refresh();
+    });
   };
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">Egg History</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="Egg History" onBack={() => navigation.goBack()} />
 
       <TextInput
         value={searchText}
@@ -146,15 +136,6 @@ export function EggHistoryScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
-  },
   searchInput: {
     borderWidth: 1,
     borderColor: colors.border,

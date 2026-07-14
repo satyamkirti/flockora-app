@@ -1,7 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { CommonActions } from '@react-navigation/native';
 import { AppScreen, AppText, IconButton, SectionHeader, StatCard, BarChart, FadeInUp } from '../components';
 import {
   useFlockDashboardStats,
@@ -14,6 +13,7 @@ import {
   useBreedingStatistics,
 } from '../hooks';
 import { formatDueDate } from '../utils/taskSchedule';
+import { navigateToTab } from '../utils/crossTabNavigation';
 import { MoreStackParamList } from '../navigation/moreTypes';
 import { colors, radii, spacing, shadows } from '../theme';
 
@@ -43,13 +43,9 @@ export function ReportsScreen({ navigation }: Props) {
   const feedLoading = feedDashboardLoading || feedStatsLoading;
   const breedingLoading = breedingDashboardLoading || breedingStatsLoading;
 
-  const goToFlockTab = (screen: string) => {
-    navigation.getParent()?.dispatch(CommonActions.navigate({ name: 'Flock', params: { screen, params: {} } }));
-  };
+  const goToFlockTab = (screen: string) => navigateToTab(navigation, 'Flock', screen);
 
-  const goToPulseTab = (screen: string) => {
-    navigation.getParent()?.dispatch(CommonActions.navigate({ name: 'Pulse', params: { screen, params: {} } }));
-  };
+  const goToPulseTab = (screen: string) => navigateToTab(navigation, 'Pulse', screen);
 
   const flockCards = [
     { title: 'Total Birds', value: String(flockSummary.totalBirds), accentColor: colors.leafGreen },

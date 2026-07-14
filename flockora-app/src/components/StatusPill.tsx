@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { AppText } from './AppText';
-import { colors, radii, spacing } from '../theme';
+import { colors, spacing } from '../theme';
 
 type StatusPillProps = {
   label: string;
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.softGreen,
   },
   warning: {
-    backgroundColor: '#FFF2E3',
+    backgroundColor: colors.warningBackground,
   },
   neutral: {
     backgroundColor: colors.warmCream,

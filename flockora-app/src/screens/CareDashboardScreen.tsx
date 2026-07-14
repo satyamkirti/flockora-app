@@ -1,7 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { CommonActions } from '@react-navigation/native';
 import {
   AppScreen,
   AppText,
@@ -16,6 +15,7 @@ import { useCareDashboard, useBirds, useFlocks } from '../hooks';
 import { taskTypeByKey } from '../data/taskTypes';
 import { healthRecordTypeByKey } from '../data/healthRecordTypes';
 import { formatDueDate, formatDueTime } from '../utils/taskSchedule';
+import { navigateToTab } from '../utils/crossTabNavigation';
 import { PulseStackParamList } from '../navigation/pulseTypes';
 import { colors, radii, spacing } from '../theme';
 
@@ -44,35 +44,15 @@ export function CareDashboardScreen({ navigation }: Props) {
     },
   ];
 
-  const handleAddCareRecord = () => {
-    navigation.getParent()?.dispatch(
-      CommonActions.navigate({ name: 'Flock', params: { screen: 'AddEditHealthRecord', params: {} } })
-    );
-  };
+  const handleAddCareRecord = () => navigateToTab(navigation, 'Flock', 'AddEditHealthRecord');
 
-  const handleAddReminder = () => {
-    navigation.getParent()?.dispatch(
-      CommonActions.navigate({ name: 'Today', params: { screen: 'AddEditTask', params: {} } })
-    );
-  };
+  const handleAddReminder = () => navigateToTab(navigation, 'Today', 'AddEditTask');
 
-  const handleOpenReminder = (taskId: number) => {
-    navigation.getParent()?.dispatch(
-      CommonActions.navigate({ name: 'Today', params: { screen: 'TaskDetail', params: { taskId } } })
-    );
-  };
+  const handleOpenReminder = (taskId: number) => navigateToTab(navigation, 'Today', 'TaskDetail', { taskId });
 
-  const handleOpenRecord = (recordId: number) => {
-    navigation.getParent()?.dispatch(
-      CommonActions.navigate({ name: 'Flock', params: { screen: 'HealthRecordDetail', params: { recordId } } })
-    );
-  };
+  const handleOpenRecord = (recordId: number) => navigateToTab(navigation, 'Flock', 'HealthRecordDetail', { recordId });
 
-  const handleOpenBird = (id: number) => {
-    navigation.getParent()?.dispatch(
-      CommonActions.navigate({ name: 'Flock', params: { screen: 'BirdProfile', params: { birdId: id } } })
-    );
-  };
+  const handleOpenBird = (id: number) => navigateToTab(navigation, 'Flock', 'BirdProfile', { birdId: id });
 
   return (
     <AppScreen>

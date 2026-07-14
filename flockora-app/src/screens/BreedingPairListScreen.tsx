@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
-import { AppScreen, AppText, PrimaryButton, IconButton, EmptyState, BreedingPairRow, FadeInUp } from '../components';
+import { AppScreen, PrimaryButton, EmptyState, BreedingPairRow, FadeInUp, ScreenHeader } from '../components';
 import { useBreedingPairs, useBirds } from '../hooks';
 import { breedingRepository } from '../db/repositories';
 import { formatDueDate } from '../utils/taskSchedule';
@@ -32,11 +32,7 @@ export function BreedingPairListScreen({ navigation }: Props) {
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">Breeding Pairs</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="Breeding Pairs" onBack={() => navigation.goBack()} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {loading ? (
@@ -73,15 +69,6 @@ export function BreedingPairListScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
-  },
   scrollContent: {
     paddingBottom: spacing.lg,
   },

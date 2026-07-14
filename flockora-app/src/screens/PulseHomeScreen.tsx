@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { CommonActions } from '@react-navigation/native';
-import { AppScreen, AppText, IconButton, HealthTimelineRow, EmptyState, FadeInUp } from '../components';
+import { AppScreen, AppText, HealthTimelineRow, EmptyState, FadeInUp, ScreenHeader } from '../components';
 import { useHealthRecords, useBirds, useFlocks } from '../hooks';
 import { healthRecordTypeOptions, healthRecordTypeByKey } from '../data/healthRecordTypes';
 import { formatDueDate } from '../utils/taskSchedule';
+import { navigateToTab } from '../utils/crossTabNavigation';
 import { HealthRecordFilters, HealthRecordStatus, HealthRecordType, emptyHealthRecordFilters } from '../types/healthRecord';
 import { PulseStackParamList } from '../navigation/pulseTypes';
 import { colors, radii, spacing } from '../theme';
@@ -85,22 +85,11 @@ export function PulseHomeScreen({ navigation }: Props) {
     { key: 'completed', label: 'Completed', value: 'completed' as HealthRecordStatus },
   ];
 
-  const handleOpenRecord = (recordId: number) => {
-    navigation.getParent()?.dispatch(
-      CommonActions.navigate({
-        name: 'Flock',
-        params: { screen: 'HealthRecordDetail', params: { recordId } },
-      })
-    );
-  };
+  const handleOpenRecord = (recordId: number) => navigateToTab(navigation, 'Flock', 'HealthRecordDetail', { recordId });
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">Search Care Records</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="Search Care Records" onBack={() => navigation.goBack()} />
 
       <TextInput
         value={searchText}
@@ -156,15 +145,6 @@ export function PulseHomeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
-  },
   subtitle: {
     marginTop: spacing.xs,
   },

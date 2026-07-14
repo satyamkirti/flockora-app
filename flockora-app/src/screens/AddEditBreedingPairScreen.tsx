@@ -7,16 +7,17 @@ import {
   AppScreen,
   AppText,
   PrimaryButton,
-  IconButton,
   FormField,
   SegmentedControl,
   BirdPickerModal,
   FadeInUp,
+  ScreenHeader,
 } from '../components';
 import { useBreedingPair, useBirds } from '../hooks';
 import { breedingRepository, InvalidSexPairingError, SameBirdPairingError } from '../db/repositories';
 import { classifyBirdSex } from '../utils/birdSex';
 import { isValidDateString } from '../utils/formValidation';
+import { confirmDestructive } from '../utils/confirmDestructive';
 import { BreedingPairInput, BreedingPairStatus, createEmptyBreedingPairInput } from '../types/breeding';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
@@ -73,20 +74,13 @@ export function AddEditBreedingPairScreen({ route, navigation }: Props) {
 
   const handleDelete = () => {
     if (pairId == null) return;
-    Alert.alert(
+    confirmDestructive(
       'Delete breeding pair',
       `Delete this breeding pair${form.pairName ? ` "${form.pairName}"` : ''}? Clutch and hatch history stay on record but will no longer be linked to a pair. This can't be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            await breedingRepository.deleteBreedingPair(db, pairId);
-            navigation.goBack();
-          },
-        },
-      ]
+      async () => {
+        await breedingRepository.deleteBreedingPair(db, pairId);
+        navigation.goBack();
+      }
     );
   };
 
@@ -141,18 +135,14 @@ export function AddEditBreedingPairScreen({ route, navigation }: Props) {
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">{isEditing ? 'Edit Pair' : 'Add Breeding Pair'}</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title={isEditing ? 'Edit Pair' : 'Add Breeding Pair'} onBack={() => navigation.goBack()} />
 
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={16}
       >
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.fieldBlock}>
             <AppText variant="cardTitle" style={styles.label}>
               Male
@@ -265,15 +255,6 @@ const styles = StyleSheet.create({
   loader: {
     marginTop: spacing.xxl,
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
-  },
   flex: {
     flex: 1,
   },
@@ -301,7 +282,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.sm,
-    backgroundColor: '#FFF2E3',
+    backgroundColor: colors.warningBackground,
     borderRadius: radii.md,
     padding: spacing.md,
     marginBottom: spacing.lg,

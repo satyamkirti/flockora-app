@@ -4,7 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CommonActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
-import { AppScreen, AppText, IconButton, SectionHeader, FadeInUp } from '../components';
+import { AppScreen, AppText, SectionHeader, ScreenHeader, FadeInUp } from '../components';
 import { useOnboarding } from '../context/OnboardingContext';
 import { DATABASE_VERSION } from '../db/migrations';
 import { clearTemporaryCache, formatBytes } from '../services/cacheService';
@@ -152,11 +152,7 @@ export function SettingsScreen({ navigation }: Props) {
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">Settings</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="Settings" onBack={() => navigation.goBack()} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <SectionHeader title="Data & App" />
@@ -264,15 +260,6 @@ export function SettingsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
-  },
   scrollContent: {
     paddingBottom: spacing.xl,
   },

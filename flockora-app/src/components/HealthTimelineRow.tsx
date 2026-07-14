@@ -14,7 +14,7 @@ type HealthTimelineRowProps = {
   onPress: () => void;
 };
 
-export function HealthTimelineRow({ icon, title, dateLabel, status, birdName, onPress }: HealthTimelineRowProps) {
+function HealthTimelineRowComponent({ icon, title, dateLabel, status, birdName, onPress }: HealthTimelineRowProps) {
   const statusLabel = status === 'active' ? 'Active' : 'Completed';
   const rowLabel = [title, birdName, dateLabel, statusLabel].filter(Boolean).join(', ');
 
@@ -35,6 +35,8 @@ export function HealthTimelineRow({ icon, title, dateLabel, status, birdName, on
     </Pressable>
   );
 }
+
+export const HealthTimelineRow = React.memo(HealthTimelineRowComponent);
 
 const styles = StyleSheet.create({
   row: {

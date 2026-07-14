@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radii, shadows, spacing } from '../theme';
+import { colors, shadows, spacing } from '../theme';
 
 type FloatingCameraButtonProps = {
   onPress?: () => void;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { AppScreen, AppText, IconButton, EmptyState, ClutchRow, FadeInUp } from '../components';
+import { AppScreen, AppText, EmptyState, ClutchRow, FadeInUp, ScreenHeader } from '../components';
 import { useClutches, useBreedingPairs, useBirds } from '../hooks';
 import { speciesOptions, speciesByKey } from '../data/onboardingData';
 import {
@@ -79,11 +79,7 @@ export function ClutchHistoryScreen({ navigation }: Props) {
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">Incubation & History</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="Incubation & History" onBack={() => navigation.goBack()} />
 
       <FilterChips options={speciesChipOptions} selected={species} onSelect={setSpecies} />
       <FilterChips options={pairChipOptions} selected={breedingPairId} onSelect={setBreedingPairId} />
@@ -144,15 +140,6 @@ export function ClutchHistoryScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
-  },
   chipRow: {
     gap: spacing.sm,
     paddingBottom: spacing.sm,

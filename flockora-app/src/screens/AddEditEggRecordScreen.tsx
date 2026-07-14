@@ -16,11 +16,11 @@ import {
   AppScreen,
   AppText,
   PrimaryButton,
-  IconButton,
   FormField,
   BirdPickerModal,
   FlockManagerModal,
   FadeInUp,
+  ScreenHeader,
 } from '../components';
 import { useEggRecord, useBirds, useFlocks } from '../hooks';
 import { eggRecordRepository } from '../db/repositories';
@@ -134,18 +134,14 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">{isEditing ? 'Edit Egg Record' : 'Log Eggs'}</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title={isEditing ? 'Edit Egg Record' : 'Log Eggs'} onBack={() => navigation.goBack()} />
 
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={16}
       >
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <FadeInUp style={styles.countRow}>
             <View style={styles.countInput}>
               <FormField label="Date" value={dateText} onChangeText={setDateText} placeholder="YYYY-MM-DD" />
@@ -292,15 +288,6 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   loader: {
     marginTop: spacing.xxl,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
   },
   flex: {
     flex: 1,

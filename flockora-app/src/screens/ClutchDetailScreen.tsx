@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -8,6 +8,7 @@ import {
   AppText,
   PrimaryButton,
   IconButton,
+  ScreenHeader,
   StatusPill,
   ProgressBar,
   FadeInUp,
@@ -27,6 +28,7 @@ import {
   getIncubationProgressPercent,
   incubationPhaseLabels,
 } from '../utils/breedingCalc';
+import { confirmDestructive } from '../utils/confirmDestructive';
 import { FlockStackParamList } from '../navigation/flockTypes';
 import { colors, radii, spacing } from '../theme';
 
@@ -85,48 +87,40 @@ export function ClutchDetailScreen({ route, navigation }: Props) {
   ];
 
   const handleDelete = () => {
-    Alert.alert('Delete clutch', `Delete "${clutch.clutchName || `Clutch #${clutch.id}`}"? This removes its candling and hatch records too.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await cancelNotification(clutch.candlingNotificationId);
-          await cancelNotification(clutch.hatchExpectedNotificationId);
-          await cancelNotification(clutch.hatchDueNotificationId);
-          await breedingRepository.deleteClutch(db, clutch.id);
-          navigation.goBack();
-        },
-      },
-    ]);
+    confirmDestructive(
+      'Delete clutch',
+      `Delete "${clutch.clutchName || `Clutch #${clutch.id}`}"? This removes its candling and hatch records too.`,
+      async () => {
+        await cancelNotification(clutch.candlingNotificationId);
+        await cancelNotification(clutch.hatchExpectedNotificationId);
+        await cancelNotification(clutch.hatchDueNotificationId);
+        await breedingRepository.deleteClutch(db, clutch.id);
+        navigation.goBack();
+      }
+    );
   };
 
   const handleDeleteCandling = (recordId: number) => {
-    Alert.alert('Delete candling record', 'Are you sure you want to delete this record?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await breedingRepository.deleteCandlingRecord(db, recordId);
-          refreshCandling();
-        },
-      },
-    ]);
+    confirmDestructive('Delete candling record', 'Are you sure you want to delete this record?', async () => {
+      await breedingRepository.deleteCandlingRecord(db, recordId);
+      refreshCandling();
+    });
   };
 
   const canAddBirds = hatchRecord != null && hatchRecord.hatchedEggs > 0 && !hatchRecord.birdsCreated;
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <IconButton
-          name="pencil"
-          onPress={() => navigation.navigate('AddEditClutch', { clutchId: clutch.id })}
-          accessibilityLabel="Edit clutch"
-        />
-      </View>
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
+        rightAction={
+          <IconButton
+            name="pencil"
+            onPress={() => navigation.navigate('AddEditClutch', { clutchId: clutch.id })}
+            accessibilityLabel="Edit clutch"
+          />
+        }
+      />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <FadeInUp style={styles.heroBlock}>
@@ -283,11 +277,6 @@ const styles = StyleSheet.create({
   notFoundButton: {
     marginTop: spacing.lg,
     alignSelf: 'stretch',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
   },
   scrollContent: {
     paddingBottom: spacing.xl,

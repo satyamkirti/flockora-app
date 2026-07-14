@@ -1,7 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { AppScreen, AppText, IconButton, SectionHeader, StatCard, EmptyState, BreedingPairRow, ClutchRow, FadeInUp } from '../components';
+import { AppScreen, AppText, SectionHeader, ScreenHeader, StatCard, EmptyState, BreedingPairRow, ClutchRow, FadeInUp } from '../components';
 import { useBreedingPairs, useClutches, useBirds, useBreedingDashboard } from '../hooks';
 import { speciesByKey } from '../data/onboardingData';
 import { formatDueDate } from '../utils/taskSchedule';
@@ -37,11 +37,7 @@ export function BreedingHubScreen({ navigation }: Props) {
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <AppText variant="sectionTitle">Breeding & Hatching</AppText>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScreenHeader title="Breeding & Hatching" onBack={() => navigation.goBack()} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {summaryLoading ? (
@@ -184,15 +180,6 @@ export function BreedingHubScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-  },
-  headerSpacer: {
-    width: 44,
-  },
   scrollContent: {
     paddingBottom: spacing.xl,
   },

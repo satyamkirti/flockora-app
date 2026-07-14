@@ -13,7 +13,7 @@ type BirdListRowProps = {
   onPress: () => void;
 };
 
-export function BirdListRow({ bird, flockName, onPress }: BirdListRowProps) {
+function BirdListRowComponent({ bird, flockName, onPress }: BirdListRowProps) {
   const species = speciesByKey(bird.species);
   const detailParts = [bird.breed || species.label, flockName].filter(Boolean);
   const rowLabel = [bird.name, ...detailParts, bird.isActive ? 'Active' : 'Inactive'].filter(Boolean).join(', ');
@@ -36,6 +36,8 @@ export function BirdListRow({ bird, flockName, onPress }: BirdListRowProps) {
     </Pressable>
   );
 }
+
+export const BirdListRow = React.memo(BirdListRowComponent);
 
 const styles = StyleSheet.create({
   row: {

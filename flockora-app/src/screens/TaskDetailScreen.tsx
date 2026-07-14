@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSQLiteContext } from 'expo-sqlite';
 import {
@@ -7,6 +7,7 @@ import {
   AppText,
   PrimaryButton,
   IconButton,
+  ScreenHeader,
   StatusPill,
   FadeInUp,
 } from '../components';
@@ -15,6 +16,7 @@ import { taskRepository } from '../db/repositories';
 import { cancelNotification } from '../services/notificationService';
 import { taskTypeByKey } from '../data/taskTypes';
 import { isTaskCompletedToday, isTaskOverdue, formatDueDate, formatDueTime, repeatLabel } from '../utils/taskSchedule';
+import { confirmDestructive } from '../utils/confirmDestructive';
 import { TodayStackParamList } from '../navigation/todayTypes';
 import { colors, radii, spacing } from '../theme';
 
@@ -74,30 +76,21 @@ export function TaskDetailScreen({ route, navigation }: Props) {
   };
 
   const handleDelete = () => {
-    Alert.alert('Delete task', `Delete "${task.title}"? This can't be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await cancelNotification(task.notificationId);
-          await taskRepository.deleteTask(db, task.id);
-          navigation.goBack();
-        },
-      },
-    ]);
+    confirmDestructive('Delete task', `Delete "${task.title}"? This can't be undone.`, async () => {
+      await cancelNotification(task.notificationId);
+      await taskRepository.deleteTask(db, task.id);
+      navigation.goBack();
+    });
   };
 
   return (
     <AppScreen>
-      <View style={styles.headerRow}>
-        <IconButton name="chevron-back" onPress={() => navigation.goBack()} accessibilityLabel="Go back" />
-        <IconButton
-          name="pencil"
-          onPress={() => navigation.navigate('AddEditTask', { taskId: task.id })}
-          accessibilityLabel="Edit task"
-        />
-      </View>
+      <ScreenHeader
+        onBack={() => navigation.goBack()}
+        rightAction={
+          <IconButton name="pencil" onPress={() => navigation.navigate('AddEditTask', { taskId: task.id })} accessibilityLabel="Edit task" />
+        }
+      />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <FadeInUp style={styles.heroBlock}>
@@ -164,11 +157,6 @@ const styles = StyleSheet.create({
   notFoundButton: {
     marginTop: spacing.lg,
     alignSelf: 'stretch',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
   },
   scrollContent: {
     paddingBottom: spacing.xl,
