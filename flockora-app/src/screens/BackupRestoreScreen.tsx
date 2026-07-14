@@ -6,7 +6,7 @@ import { AppScreen, AppText, PrimaryButton, FadeInUp, ScreenHeader } from '../co
 import { backupRepository } from '../db/repositories';
 import { DATABASE_VERSION } from '../db/migrations';
 import { writeAndShareBackup, pickBackupFile, readBackupFile } from '../services/backupFileService';
-import { isValidBackupData, checkSchemaCompatibility } from '../utils/backupValidation';
+import { isValidBackupData, checkSchemaCompatibility, hasReferentialIntegrity } from '../utils/backupValidation';
 import { confirmDestructive } from '../utils/confirmDestructive';
 import { MoreStackParamList } from '../navigation/moreTypes';
 import { colors, radii, spacing } from '../theme';
@@ -46,6 +46,13 @@ export function BackupRestoreScreen({ navigation }: Props) {
         Alert.alert(
           'Update required',
           'This backup was created with a newer version of Flockora. Please update the app before restoring it.'
+        );
+        return;
+      }
+      if (!hasReferentialIntegrity(parsed)) {
+        Alert.alert(
+          'Corrupted backup',
+          'This backup file has broken internal references and can’t be safely restored. No changes were made.'
         );
         return;
       }
