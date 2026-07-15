@@ -11,8 +11,16 @@
 | Item | Status | Evidence / Note |
 |---|---|---|
 | Privacy policy URL decided | **COMPLIANT/READY** | `flockora-app/src/config/privacyConfig.ts`'s `PRIVACY_POLICY_URL` constant is set to `https://flockora.com/privacy` — the confirmed, final intended location. |
-| Privacy policy actually published and reachable at that URL | **ACTION REQUIRED — confirmed NOT live as of 2026-07-15.** | The business has confirmed the page is not yet published. Accordingly `PRIVACY_POLICY_URL_IS_PLACEHOLDER = true` (re-corrected this sprint — an intervening sprint had prematurely set it `false` based only on the URL being decided, not on the page being live), so Settings still shows its honest "not yet published" message instead of opening a dead link. **Must be flipped to `false` only once the page is confirmed reachable**, and the page must actually be live before Play Console submission, since Play validates the link resolves. |
+| Privacy policy content | **COMPLIANT/READY (content finalized this sprint)** | `PRIVACY_POLICY_DRAFT.md` now has every resolvable business fact filled in (publisher: Prisad Business Services LLP; jurisdiction: India; contact: privacy@flockora.com; age positioning: 18+, not directed to children; last updated: July 15, 2026). Two sections (§16 Security, §17 International processing) remain honestly marked "not yet confirmed," pending a production backend hosting decision — correctly left unresolved rather than guessed at. |
+| Privacy policy actually published and reachable at that URL | **ACTION REQUIRED — confirmed NOT live as of 2026-07-15.** | The business has confirmed the page is not yet published — content being finalized (row above) is a necessary but not sufficient step. Accordingly `PRIVACY_POLICY_URL_IS_PLACEHOLDER = true`, so Settings still shows its honest "not yet published" message instead of opening a dead link. **Must be flipped to `false` only once the page is confirmed reachable**, and the page must actually be live before Play Console submission, since Play validates the link resolves. |
 | Play Console "Privacy Policy" field | **ACTION REQUIRED** | Must be filled in with `https://flockora.com/privacy` once published — a Play Console action, not a code change. |
+
+## 1a. Target audience / age declaration
+
+| Item | Status |
+|---|---|
+| Play Console "Target audience and content" section | **ACTION REQUIRED — business decision now available, submission action still pending.** Flockora's confirmed positioning is 18+, not directed to children. This is a Play Console form the business (not this codebase) must complete directly at submission time using that positioning — the app itself has no age gate, so this is a declaration, not a technical enforcement (`PRIVACY_POLICY_DRAFT.md` §15). Completing this Play Console section is independent of, and not satisfied merely by, the privacy policy stating the same thing. |
+| Does the app's actual content/functionality contradict an 18+, not-for-children positioning? | **COMPLIANT/READY** — no code check performed here beyond confirming no child-directed feature exists (no child-safety-relevant permission, no child-directed marketing copy found in-app); this is a content/positioning judgment for the business, not a code fact this audit can further verify. |
 
 ## 2. Data Safety declaration — data collected
 
@@ -122,7 +130,8 @@
 | Area | Status |
 |---|---|
 | Data Safety form — can be filled out accurately today | **COMPLIANT/READY**, with one **EXTERNAL VERIFICATION REQUIRED** item (encryption in transit — depends on a not-yet-existing production backend deployment) |
-| Privacy policy | **ACTION REQUIRED — confirmed not live.** URL decided (`https://flockora.com/privacy`); page content drafted (`PRIVACY_POLICY_DRAFT.md`, still has unresolved `[BUSINESS DECISION REQUIRED]` markers); the app's in-app link (`privacyConfig.ts`) correctly shows a "not yet published" message rather than opening a dead link, pending the page actually going live — outside this repository's control. |
+| Privacy policy | **ACTION REQUIRED — content finalized, page confirmed NOT live.** URL decided (`https://flockora.com/privacy`); page content finalized this sprint (`PRIVACY_POLICY_DRAFT.md` — publisher, jurisdiction, contact, age positioning, and dates all resolved; only backend-hosting-dependent sections left honestly pending); the app's in-app link (`privacyConfig.ts`) correctly shows a "not yet published" message rather than opening a dead link, pending the page actually going live — outside this repository's control. |
+| Target audience / age declaration | **ACTION REQUIRED (submission action)** — business positioning confirmed (18+, not directed to children); must still be entered in Play Console's own "Target audience and content" section at submission time (see §1a). |
 | Account deletion | **NOT APPLICABLE** — no accounts exist; do not build one |
 | Permissions | **COMPLIANT/READY** |
 | Misleading-claim risk | **ACTION REQUIRED** — enforce evidence-based copy only, no absolute privacy claims, when writing the actual Play Store listing |

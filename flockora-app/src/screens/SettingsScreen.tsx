@@ -9,7 +9,7 @@ import { useOnboarding } from '../context/OnboardingContext';
 import { DATABASE_VERSION } from '../db/migrations';
 import { clearTemporaryCache, formatBytes } from '../services/cacheService';
 import { MoreStackParamList } from '../navigation/moreTypes';
-import { PRIVACY_POLICY_URL, PRIVACY_POLICY_URL_IS_PLACEHOLDER } from '../config/privacyConfig';
+import { PRIVACY_CONTACT_EMAIL, PRIVACY_POLICY_URL, PRIVACY_POLICY_URL_IS_PLACEHOLDER } from '../config/privacyConfig';
 import { colors, radii, spacing } from '../theme';
 import packageJson from '../../package.json';
 
@@ -150,6 +150,10 @@ export function SettingsScreen({ navigation }: Props) {
     Linking.openURL(PRIVACY_POLICY_URL);
   };
 
+  const handlePrivacyContact = () => {
+    Linking.openURL(`mailto:${PRIVACY_CONTACT_EMAIL}`);
+  };
+
   return (
     <AppScreen>
       <ScreenHeader title="Settings" onBack={() => navigation.goBack()} />
@@ -224,6 +228,11 @@ export function SettingsScreen({ navigation }: Props) {
           <Pressable onPress={handlePrivacyPolicy} hitSlop={8}>
             <AppText variant="button" color={colors.leafGreen}>
               Read the full Privacy Policy →
+            </AppText>
+          </Pressable>
+          <Pressable onPress={handlePrivacyContact} hitSlop={8} style={styles.privacyContactRow}>
+            <AppText variant="caption" color={colors.secondaryText}>
+              Privacy questions or requests: {PRIVACY_CONTACT_EMAIL}
             </AppText>
           </Pressable>
         </FadeInUp>
@@ -316,5 +325,8 @@ const styles = StyleSheet.create({
   },
   libraryItem: {
     marginBottom: spacing.xs,
+  },
+  privacyContactRow: {
+    marginTop: spacing.sm,
   },
 });

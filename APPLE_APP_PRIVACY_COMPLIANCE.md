@@ -11,8 +11,15 @@
 | Item | Status |
 |---|---|
 | Privacy policy URL decided | **COMPLIANT/READY** — `flockora-app/src/config/privacyConfig.ts`'s `PRIVACY_POLICY_URL` constant is set to `https://flockora.com/privacy`, the confirmed final intended location. |
-| Privacy policy actually live at that URL | **ACTION REQUIRED — confirmed NOT live as of 2026-07-15.** App Store Connect requires a working link at submission time; this repository cannot publish a webpage. `PRIVACY_POLICY_DRAFT.md` is the content to publish there. The app's in-app link (`PRIVACY_POLICY_URL_IS_PLACEHOLDER = true`, re-corrected this sprint) correctly shows a "not yet published" message rather than opening a dead link until the page is confirmed live. |
+| Privacy policy content | **COMPLIANT/READY (content finalized this sprint)** — `PRIVACY_POLICY_DRAFT.md` now has every resolvable business fact filled in (publisher: Prisad Business Services LLP; jurisdiction: India; contact: privacy@flockora.com; age positioning: 18+, not directed to children; last updated: July 15, 2026). §16/§17 remain honestly pending on a production backend hosting decision. |
+| Privacy policy actually live at that URL | **ACTION REQUIRED — confirmed NOT live as of 2026-07-15.** App Store Connect requires a working link at submission time; this repository cannot publish a webpage. Content is finalized (row above) but that is not sufficient — the page must actually be deployed. The app's in-app link (`PRIVACY_POLICY_URL_IS_PLACEHOLDER = true`) correctly shows a "not yet published" message rather than opening a dead link until the page is confirmed live. |
 | App Store Connect "Privacy Policy URL" field | **ACTION REQUIRED** — set to `https://flockora.com/privacy` once published (App Store Connect action, not a code change). |
+
+## 1a. Age rating
+
+| Item | Status |
+|---|---|
+| App Store Connect age rating questionnaire | **ACTION REQUIRED (submission action)** — business positioning confirmed (18+, not directed to children). This questionnaire is answered directly in App Store Connect at submission time using that positioning; it is a separate declaration from, and not satisfied merely by, the privacy policy stating the same thing (`PRIVACY_POLICY_DRAFT.md` §15). |
 
 ## 2. App Privacy disclosure categories (App Store Connect "App Privacy" questionnaire)
 
@@ -111,7 +118,8 @@
 | Area | Status |
 |---|---|
 | App Privacy questionnaire — can be filled out accurately today | **COMPLIANT/READY** for every category except Photos or Videos (declare as collected, not linked, not used for tracking, App Functionality purpose) |
-| Privacy policy | **ACTION REQUIRED — confirmed not live.** URL decided (`https://flockora.com/privacy`); page content drafted (`PRIVACY_POLICY_DRAFT.md`, still has unresolved `[BUSINESS DECISION REQUIRED]` markers) — outside this repository's control to publish. |
+| Privacy policy | **ACTION REQUIRED — content finalized, page confirmed NOT live.** URL decided (`https://flockora.com/privacy`); page content finalized this sprint (`PRIVACY_POLICY_DRAFT.md`) — outside this repository's control to actually publish. |
+| Age rating | **ACTION REQUIRED (submission action)** — business positioning confirmed (18+, not directed to children); must still be entered in App Store Connect's own age rating questionnaire at submission time (see §1a). |
 | Tracking / ATT | **NOT APPLICABLE** — no tracking occurs |
 | Account deletion | **NOT APPLICABLE** — no accounts exist; do not build one |
 | Permission purpose strings | **COMPLIANT/READY** |

@@ -60,6 +60,12 @@
 **CODE EVIDENCE:** `PRIVACY_DATA_AUDIT.md` §11 — no auth/account code anywhere in the repository.
 **CONFIDENCE:** VERIFIED
 
+### A10. Target audience and content (Play Console's separate "Target audience" section, not the Data Safety form itself)
+
+**PROPOSED ANSWER:** Target age group: 18 and older. App is not directed to children.
+**CODE EVIDENCE:** Business-confirmed positioning (2026-07-15), not a code fact — the app itself has no age gate or age-verification code, so this is a declared audience, not a technical enforcement. Reflected in `PRIVACY_POLICY_DRAFT.md` §15.
+**CONFIDENCE:** BUSINESS DECISION REQUIRED — resolved as of this sprint (18+, not directed to children); still requires a human to actually enter it in Play Console at submission time, since this repository cannot submit anything.
+
 ---
 
 ## B. APPLE APP PRIVACY — DRAFT ANSWERS
@@ -106,9 +112,28 @@
 **CODE EVIDENCE:** Full `package.json` review, `PRIVACY_DATA_AUDIT.md` §9.
 **CONFIDENCE:** VERIFIED
 
+### B8. App Store Connect age rating questionnaire
+
+**PROPOSED ANSWER:** Complete using Flockora's confirmed positioning — intended for users 18 and older, not directed to children.
+**CODE EVIDENCE:** Business-confirmed positioning (2026-07-15), not a code fact — no age gate exists in the app. Reflected in `PRIVACY_POLICY_DRAFT.md` §15.
+**CONFIDENCE:** BUSINESS DECISION REQUIRED — resolved as of this sprint; still requires a human to actually complete the App Store Connect questionnaire at submission time, since this repository cannot submit anything.
+
 ---
 
+## Items blocked specifically by the not-yet-deployed production backend
+
+These cannot be finalized by any documentation or business decision alone — they require the production backend to actually exist and be verified, which this repository/audit cannot do:
+
+- **A7 (Google Play "encrypted in transit"):** Cannot answer "Yes" — no production backend exists; the client's fallback URL scheme is `http://` (dev-only). Requires: backend deployed behind HTTPS, `EXPO_PUBLIC_BACKEND_URL` set to that URL at production build time, then re-verify.
+- **B6 (Apple privacy policy URL) — the *content* is finalized, but the *page* being live is a separate, still-blocked step:** not blocked by the backend, but by the website not yet being deployed; listed here for visibility since it shares the same "cannot verify from this repository" nature.
+- **`PRIVACY_POLICY_DRAFT.md` §16 (Security) and §17 (International processing):** cannot be completed honestly until a backend hosting/deployment decision is made — deliberately left as `[NOT YET CONFIRMED]` rather than answered.
+- **Google Play / Apple encryption-related follow-on questions** (if either console asks for more detail once "encrypted in transit" is answered): also blocked until the same backend deployment exists.
+
+Everything else in this document (A1–A6, A8–A10, B1–B5, B7–B8) is answerable today from code and confirmed business facts alone, independent of the backend deployment.
+
 ## Notes for whoever submits these forms
+
+- Legal entity (Prisad Business Services LLP), jurisdiction (India), and contact (privacy@flockora.com) are now confirmed and reflected in `PRIVACY_POLICY_DRAFT.md` — these do not appear as separate Play/Apple form fields directly, but should be used consistently in any store-listing "Developer" contact information the business enters separately in each console.
 
 - Re-run the grep sweep in `PRIVACY_DATA_AUDIT.md` §0 against the exact commit being submitted before copying these answers verbatim — this document reflects `main` at the commit recorded in `PROJECT_CONTEXT.md`'s new dated sprint section, and any code change after that point (especially a real AI provider integration, which `SECURITY.md` Rule 15 already flags as mandatory-re-audit-triggering) invalidates these answers.
 - Do not submit A7/B6 as fully resolved — both depend on infrastructure decisions (backend HTTPS deployment; live privacy-policy webpage) that this repository cannot make or verify on its own.

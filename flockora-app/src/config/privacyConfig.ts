@@ -8,3 +8,10 @@
  */
 export const PRIVACY_POLICY_URL_IS_PLACEHOLDER = true;
 export const PRIVACY_POLICY_URL = 'https://flockora.com/privacy';
+
+/**
+ * Confirmed, real contact address for privacy-related questions or requests. Unlike
+ * `PRIVACY_POLICY_URL`, this is reachable today (it's an email address, not a webpage that
+ * needs deploying) and safe to show in-app now.
+ */
+export const PRIVACY_CONTACT_EMAIL = 'privacy@flockora.com';

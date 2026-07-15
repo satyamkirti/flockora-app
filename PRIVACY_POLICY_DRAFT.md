@@ -1,21 +1,21 @@
 # Flockora Privacy Policy — DRAFT
 
-**Status: DRAFT — NOT FINAL LEGAL TEXT.** This draft is based only on Flockora's proven current data behavior, verified against the source code (`PRIVACY_DATA_AUDIT.md`, same sprint/commit). It contains explicit `[BUSINESS DECISION REQUIRED: ...]` markers wherever a legal entity name, address, contact email, jurisdiction, or similar business fact is needed but not documented anywhere in this repository. **Do not publish this text as-is at `https://flockora.com/privacy` until every marker below is resolved and the document has been reviewed by whoever is legally responsible for Flockora's compliance.**
+**Status: CONTENT FINALIZED — pending legal sign-off and website deployment, NOT YET LIVE.** Every business-fact marker that could be resolved with currently confirmed information (publisher entity, jurisdiction, contact email, age positioning, publication date, update-notification method) has been resolved below. Two sections remain deliberately incomplete — §16 (Security) and §17 (International processing) — because they depend on a production backend hosting/deployment decision that has explicitly **not** been made yet; this document states that honestly rather than guessing, per standing instruction not to invent a backend region, processor, or transfer mechanism. **This page is NOT live at `https://flockora.com/privacy` as of this update. Do not treat, cite, or represent this document as published, reachable, or in effect until the webpage has actually been deployed and someone has separately confirmed it is live** — resolving the text markers below is a necessary but not sufficient condition for publication; a final legal review by whoever is legally responsible for Flockora's compliance is still required before this goes live.
 
-Intended publication URL: **https://flockora.com/privacy**
+Intended publication URL: **https://flockora.com/privacy** (not yet live)
 Official website: **https://flockora.com**
 
 ---
 
 ## Flockora Privacy Policy
 
-**Last updated:** [BUSINESS DECISION REQUIRED: insert the actual publication date]
+**Last updated:** July 15, 2026
 
 ### 1. Introduction
 
 Flockora ("Flockora," "we," "us," or "our") is a mobile app for backyard poultry keepers and hobby breeders to track birds, flocks, daily care, eggs, feed, and breeding/hatching. This Privacy Policy explains what information Flockora processes, where it's stored, what (if anything) is sent off your device, and how you can control it. This policy is written to reflect exactly what the app currently does — not aspirational or generic claims.
 
-Flockora is published by [BUSINESS DECISION REQUIRED: legal entity name] ("we/us" throughout this policy), based in [BUSINESS DECISION REQUIRED: jurisdiction/country].
+Flockora is published by Prisad Business Services LLP ("we," "us," or "our" throughout this policy), based in India.
 
 ### 2. Scope
 
@@ -97,29 +97,29 @@ Flockora does not have user accounts, sign-in, or sign-up of any kind. There is 
 
 ### 15. Children / age considerations
 
-[BUSINESS DECISION REQUIRED: Flockora has no age gate, no age-verification step, and no code that restricts or checks the age of its users. This section requires an explicit business decision on Flockora's intended minimum age / target audience (e.g., for Google Play's "target audience" declaration and Apple's age rating) before this policy or either store listing can make a specific age claim. Do not state a specific age policy here until that decision is made and documented.]
+Flockora is intended for users aged 18 and older and is not directed to children. The app itself has no age gate or age-verification step — this section states our intended audience, not a technical restriction enforced in the app. This statement is separate from, and does not replace, the age rating and target-audience information Flockora provides directly to Google Play and the Apple App Store as part of each store's own listing/submission process — those are independent declarations made in each store's console, not derived from or satisfied by this policy alone.
 
 ### 16. Security
 
 We take reasonable, industry-standard measures to protect the information Flockora processes. Your on-device data benefits from your device's own operating-system-level protections. The one piece of data we do process off-device (§5) is handled by a server we control, validated before processing, and never written to persistent storage. No system is perfectly secure, and we encourage you to keep your device's own lock screen and software up to date.
 
-[EXTERNAL FACT REQUIRES VERIFICATION: this policy should be updated to confirm the production backend serving §5's feature is reachable only over an encrypted (HTTPS) connection before this policy is published, since that depends on a backend deployment that does not exist yet at the time of this draft.]
+[NOT YET CONFIRMED — no production backend exists: Flockora's backend is not deployed anywhere today (`PRIVACY_DATA_AUDIT.md` §8), so we cannot yet confirm whether the production connection will be encrypted (HTTPS). We do not claim it is encrypted in transit until a real production backend is deployed and that fact is verified — this section will be updated at that time, not before.]
 
 ### 17. International processing
 
-[BUSINESS DECISION REQUIRED: this repository does not document where Flockora's backend will ultimately be hosted, so no claim about international data transfer, a specific country of processing, or a legal transfer mechanism (e.g., Standard Contractual Clauses) can be made yet. Add this section, naming the actual hosting region/country and any applicable transfer mechanism, once the backend deployment location is decided.]
+[NOT YET CONFIRMED: where Flockora's backend will ultimately be hosted, and any resulting international data transfer or transfer mechanism (e.g., Standard Contractual Clauses), has not been decided as of this policy's last update. We will not guess at a hosting region or legal transfer mechanism here — this section will name the actual hosting region/country and any applicable transfer mechanism once that decision is made, before (not after) it takes effect.]
 
 ### 18. Your privacy rights / requests
 
-[BUSINESS DECISION REQUIRED: this repository does not document a designated contact channel, legal jurisdiction, or applicable privacy law (e.g., GDPR, CCPA) for handling a formal data-subject request. Because Flockora retains no data about you off-device beyond a photo that is discarded immediately after processing (§5/§12), most such requests would be satisfied by the in-app deletion/uninstall controls in §13 — but the specific rights language and request channel required by your target markets' law must be added here as a business/legal decision, not invented.]
+If you have a question or request about your data, contact us at **privacy@flockora.com**. Because Flockora stores your bird, flock, and care records locally on your own device — and has no user account or server-side profile of you (§14) — most requests are already fully in your own control: you can view, edit, or delete any individual record directly in the app (§13), export everything as a backup file, or remove all local data at once by uninstalling the app. For anything else, including a question about the one photo described in §5, email the address above.
 
 ### 19. Changes to this policy
 
-We may update this policy as Flockora's features change — in particular, before any change to how the bird-photo feature in §5 works (for example, connecting a real AI provider). [BUSINESS DECISION REQUIRED: describe how updates will be communicated — e.g., an updated "Last updated" date, an in-app notice, or both.]
+We may update this policy as Flockora's features change — in particular, before any change to how the bird-photo feature in §5 works (for example, connecting a real AI provider). We will note any change by updating the "Last updated" date at the top of this page.
 
 ### 20. Contact
 
-[BUSINESS DECISION REQUIRED: no support/contact email or address is documented anywhere in this repository. `SettingsScreen.tsx`'s existing "Contact & Feedback" row currently and correctly tells the user no dedicated channel exists yet — this policy must not invent one. Add a real contact method here once one exists.]
+For any privacy-related question, request, or concern, contact us at **privacy@flockora.com**.
 
 ### 21. Official website
 
@@ -127,4 +127,4 @@ https://flockora.com
 
 ---
 
-*(End of draft. Every `[BUSINESS DECISION REQUIRED: ...]` and `[EXTERNAL FACT REQUIRES VERIFICATION: ...]` marker above must be resolved before this text is published as Flockora's live privacy policy.)*
+*(End of draft. All business-fact markers are resolved except §16 and §17, which remain honestly marked `[NOT YET CONFIRMED]` pending a production backend hosting decision — do not fill those in with an invented region, processor, or transfer mechanism. Before this text is published as Flockora's live privacy policy: (1) it must receive final legal sign-off from whoever is legally responsible for Flockora's compliance, and (2) the webpage at `https://flockora.com/privacy` must actually be deployed — resolving this document's text is necessary but not sufficient for either.)*
