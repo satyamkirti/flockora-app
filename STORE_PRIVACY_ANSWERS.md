@@ -14,8 +14,8 @@
 
 ### A2. Data type: Photos
 
-**PROPOSED ANSWER:** Collected: Yes. Shared with third parties: No. Purpose: App functionality. Is data processing ephemeral: Yes. Required or optional: Required for the AI-suggestion feature specifically (a photo is required to complete onboarding's first-bird step; the AI analysis of it is not — a failed request falls back to manual entry).
-**CODE EVIDENCE:** `flockora-app/src/screens/AddFirstBirdScreen.tsx` (`canContinue` requires `bird.photo !== null`); `flockora-app/src/screens/AIPhotoAnalysisLoadingScreen.tsx` ("Enter Details Manually" fallback on failure); `flockora-backend/src/validators/analyzeBirdUpload.ts` (`multer.memoryStorage()`, no disk/DB persistence — supports the ephemeral-processing answer).
+**PROPOSED ANSWER:** Collected: Yes. Shared with third parties: No. Purpose: App functionality. Is data processing ephemeral: Yes. Required or optional: **Required** — onboarding (which includes this photo) is the app's mandatory first-run flow; there is no way to reach the main app without completing it, so the photo cannot be declared "Optional." (Separately, and not to be confused with the Required/Optional field: if the AI *analysis* of that photo fails, "Enter Details Manually" lets onboarding proceed with no analysis — but that's a fallback for a failed request, not a way to skip providing the photo itself.)
+**CODE EVIDENCE:** `flockora-app/src/screens/AddFirstBirdScreen.tsx` (`canContinue` requires `bird.photo !== null`; onboarding is the only path from `Welcome` to `Main`); `flockora-app/src/screens/AIPhotoAnalysisLoadingScreen.tsx` ("Enter Details Manually" fallback on analysis failure only); `flockora-backend/src/validators/analyzeBirdUpload.ts` (`multer.memoryStorage()`, no disk/DB persistence — supports the ephemeral-processing answer).
 **CONFIDENCE:** VERIFIED
 
 ### A3. Data type: Personal info (name, email, user IDs, etc.)
@@ -96,9 +96,9 @@
 
 ### B6. Privacy Policy URL (App Store Connect field)
 
-**PROPOSED ANSWER:** `https://flockora.com/privacy`
-**CODE EVIDENCE:** `flockora-app/src/config/privacyConfig.ts` (this sprint's update).
-**CONFIDENCE:** EXTERNAL VERIFICATION REQUIRED — the code now points here; whether the page is actually live at submission time is outside this repository's control.
+**PROPOSED ANSWER:** `https://flockora.com/privacy` — but **do not enter this in App Store Connect until it is confirmed live**; submitting a dead privacy-policy link is an independent App Review rejection risk.
+**CODE EVIDENCE:** `flockora-app/src/config/privacyConfig.ts` — `PRIVACY_POLICY_URL` is set to this address, but `PRIVACY_POLICY_URL_IS_PLACEHOLDER = true` (confirmed/re-corrected this sprint) because the business has confirmed the page is not yet published.
+**CONFIDENCE:** EXTERNAL VERIFICATION REQUIRED — confirmed NOT live as of 2026-07-15; must be re-verified live immediately before submission.
 
 ### B7. Are third-party SDKs' own data practices accounted for in this declaration?
 
@@ -112,3 +112,4 @@
 
 - Re-run the grep sweep in `PRIVACY_DATA_AUDIT.md` §0 against the exact commit being submitted before copying these answers verbatim — this document reflects `main` at the commit recorded in `PROJECT_CONTEXT.md`'s new dated sprint section, and any code change after that point (especially a real AI provider integration, which `SECURITY.md` Rule 15 already flags as mandatory-re-audit-triggering) invalidates these answers.
 - Do not submit A7/B6 as fully resolved — both depend on infrastructure decisions (backend HTTPS deployment; live privacy-policy webpage) that this repository cannot make or verify on its own.
+- **A7/B6 re-confirmed as of the 2026-07-15 re-audit sprint:** the privacy policy is confirmed NOT live yet, and no production backend deployment exists. Both must be resolved and re-verified — not just re-copied from this document — immediately before whichever store submission happens first.

@@ -10,8 +10,8 @@
 
 | Item | Status | Evidence / Note |
 |---|---|---|
-| Privacy policy URL configured in-app | **COMPLIANT/READY** (as of this sprint) | `flockora-app/src/config/privacyConfig.ts` now points to `https://flockora.com/privacy`, `PRIVACY_POLICY_URL_IS_PLACEHOLDER = false`, reachable from Settings. |
-| Privacy policy actually published and reachable at that URL | **EXTERNAL VERIFICATION REQUIRED** | This repository cannot prove a webpage exists at `https://flockora.com/privacy` — that is outside the codebase. `PRIVACY_POLICY_DRAFT.md` (this sprint) is a draft for that page; it must be published at the real URL before Play Console submission, since Play validates the link resolves. |
+| Privacy policy URL decided | **COMPLIANT/READY** | `flockora-app/src/config/privacyConfig.ts`'s `PRIVACY_POLICY_URL` constant is set to `https://flockora.com/privacy` — the confirmed, final intended location. |
+| Privacy policy actually published and reachable at that URL | **ACTION REQUIRED — confirmed NOT live as of 2026-07-15.** | The business has confirmed the page is not yet published. Accordingly `PRIVACY_POLICY_URL_IS_PLACEHOLDER = true` (re-corrected this sprint — an intervening sprint had prematurely set it `false` based only on the URL being decided, not on the page being live), so Settings still shows its honest "not yet published" message instead of opening a dead link. **Must be flipped to `false` only once the page is confirmed reachable**, and the page must actually be live before Play Console submission, since Play validates the link resolves. |
 | Play Console "Privacy Policy" field | **ACTION REQUIRED** | Must be filled in with `https://flockora.com/privacy` once published — a Play Console action, not a code change. |
 
 ## 2. Data Safety declaration — data collected
@@ -42,7 +42,7 @@
 
 | Item | Status |
 |---|---|
-| Is the onboarding photo required to use the app? | **ACTION REQUIRED (disclosure accuracy)** — a photo is required to complete onboarding's first-bird step (`AddFirstBirdScreen`'s `canContinue` requires `bird.photo !== null`), but the AI *analysis* of that photo is not required — if the AI request fails, "Enter Details Manually" proceeds with no analysis. Declare the photo collection as **required for the AI-suggestion feature** but note in Data Safety free-text that failure gracefully degrades to manual entry (`PRIVACY_DATA_AUDIT.md` §3). |
+| Is the onboarding photo required to use the app? | **Declare as "Required."** Onboarding (`Welcome → … → AddFirstBird → … → Main`) is the app's mandatory first-run flow — `AddFirstBirdScreen`'s `canContinue` requires `bird.photo !== null`, and there is no way to reach the main app (`Main`/`AppTabs`) without completing it. The **photo collection itself is Required**, full stop — do not select "Optional," since the user cannot decline to provide it and still use the app. What *is* optional is whether the AI **analysis** of that photo succeeds: if the request fails, "Enter Details Manually" proceeds with no analysis — but that's a fallback for a failed request, not an alternative the user can choose instead of providing a photo. Use the Data Safety free-text field to note the graceful degrade-to-manual-entry behavior; do not let it soften the Required/Optional selection itself (`PRIVACY_DATA_AUDIT.md` §3). |
 | Any other data type required? | **COMPLIANT/READY** — no other Play-taxonomy data type is collected/transmitted at all, so "required vs optional" doesn't apply beyond the photo. |
 
 ## 5. Ephemeral processing
@@ -122,7 +122,7 @@
 | Area | Status |
 |---|---|
 | Data Safety form — can be filled out accurately today | **COMPLIANT/READY**, with one **EXTERNAL VERIFICATION REQUIRED** item (encryption in transit — depends on a not-yet-existing production backend deployment) |
-| Privacy policy | **ACTION REQUIRED** — publish the actual page at `https://flockora.com/privacy` (page content drafted in `PRIVACY_POLICY_DRAFT.md`, not yet a live webpage — outside this repository's control) |
+| Privacy policy | **ACTION REQUIRED — confirmed not live.** URL decided (`https://flockora.com/privacy`); page content drafted (`PRIVACY_POLICY_DRAFT.md`, still has unresolved `[BUSINESS DECISION REQUIRED]` markers); the app's in-app link (`privacyConfig.ts`) correctly shows a "not yet published" message rather than opening a dead link, pending the page actually going live — outside this repository's control. |
 | Account deletion | **NOT APPLICABLE** — no accounts exist; do not build one |
 | Permissions | **COMPLIANT/READY** |
 | Misleading-claim risk | **ACTION REQUIRED** — enforce evidence-based copy only, no absolute privacy claims, when writing the actual Play Store listing |

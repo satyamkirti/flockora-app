@@ -10,8 +10,8 @@
 
 | Item | Status |
 |---|---|
-| Privacy policy URL configured in-app | **COMPLIANT/READY** (as of this sprint) — `flockora-app/src/config/privacyConfig.ts` now points to `https://flockora.com/privacy`. |
-| Privacy policy actually live at that URL | **EXTERNAL VERIFICATION REQUIRED** — App Store Connect requires a working link at submission time; this repository cannot publish a webpage. `PRIVACY_POLICY_DRAFT.md` is the content to publish there. |
+| Privacy policy URL decided | **COMPLIANT/READY** — `flockora-app/src/config/privacyConfig.ts`'s `PRIVACY_POLICY_URL` constant is set to `https://flockora.com/privacy`, the confirmed final intended location. |
+| Privacy policy actually live at that URL | **ACTION REQUIRED — confirmed NOT live as of 2026-07-15.** App Store Connect requires a working link at submission time; this repository cannot publish a webpage. `PRIVACY_POLICY_DRAFT.md` is the content to publish there. The app's in-app link (`PRIVACY_POLICY_URL_IS_PLACEHOLDER = true`, re-corrected this sprint) correctly shows a "not yet published" message rather than opening a dead link until the page is confirmed live. |
 | App Store Connect "Privacy Policy URL" field | **ACTION REQUIRED** — set to `https://flockora.com/privacy` once published (App Store Connect action, not a code change). |
 
 ## 2. App Privacy disclosure categories (App Store Connect "App Privacy" questionnaire)
@@ -111,7 +111,7 @@
 | Area | Status |
 |---|---|
 | App Privacy questionnaire — can be filled out accurately today | **COMPLIANT/READY** for every category except Photos or Videos (declare as collected, not linked, not used for tracking, App Functionality purpose) |
-| Privacy policy | **ACTION REQUIRED** — publish the actual page at `https://flockora.com/privacy` (drafted in `PRIVACY_POLICY_DRAFT.md`, not yet live — outside this repository's control) |
+| Privacy policy | **ACTION REQUIRED — confirmed not live.** URL decided (`https://flockora.com/privacy`); page content drafted (`PRIVACY_POLICY_DRAFT.md`, still has unresolved `[BUSINESS DECISION REQUIRED]` markers) — outside this repository's control to publish. |
 | Tracking / ATT | **NOT APPLICABLE** — no tracking occurs |
 | Account deletion | **NOT APPLICABLE** — no accounts exist; do not build one |
 | Permission purpose strings | **COMPLIANT/READY** |
