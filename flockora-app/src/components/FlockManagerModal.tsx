@@ -37,13 +37,20 @@ export function FlockManagerModal({
   const db = useSQLiteContext();
   const [newFlockName, setNewFlockName] = useState('');
   const [renamingFlock, setRenamingFlock] = useState<FlockWithCount | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const handleCreate = async () => {
+    if (creating) return;
     const name = newFlockName.trim();
     if (!name) return;
-    await flockRepository.create(db, { ...createEmptyFlockInput(), name });
-    setNewFlockName('');
-    onChanged();
+    setCreating(true);
+    try {
+      await flockRepository.create(db, { ...createEmptyFlockInput(), name });
+      setNewFlockName('');
+      onChanged();
+    } finally {
+      setCreating(false);
+    }
   };
 
   const handleDelete = (flock: FlockWithCount) => {
@@ -156,8 +163,10 @@ export function FlockManagerModal({
             <Pressable
               style={styles.addButton}
               onPress={handleCreate}
+              disabled={creating}
               accessibilityRole="button"
               accessibilityLabel="Add flock"
+              accessibilityState={{ disabled: creating }}
             >
               <Ionicons name="add" size={22} color={colors.cardSurface} />
             </Pressable>
