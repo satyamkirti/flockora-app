@@ -56,7 +56,7 @@ export const birdRepository = {
 
   getById,
 
-  async create(db: SQLiteDatabase, input: BirdInput): Promise<Bird> {
+  async createBird(db: SQLiteDatabase, input: BirdInput): Promise<Bird> {
     const now = new Date().toISOString();
     const result = await db.runAsync(
       `INSERT INTO birds
@@ -89,7 +89,7 @@ export const birdRepository = {
     return created;
   },
 
-  async update(db: SQLiteDatabase, id: number, input: BirdInput): Promise<Bird> {
+  async updateBird(db: SQLiteDatabase, id: number, input: BirdInput): Promise<Bird> {
     const now = new Date().toISOString();
     await db.runAsync(
       `UPDATE birds SET
@@ -123,7 +123,7 @@ export const birdRepository = {
     return updated;
   },
 
-  async remove(db: SQLiteDatabase, id: number): Promise<void> {
+  async deleteBird(db: SQLiteDatabase, id: number): Promise<void> {
     await db.runAsync('DELETE FROM birds WHERE id = ?', [id]);
   },
 

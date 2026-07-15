@@ -497,7 +497,7 @@ export const breedingRepository = {
 
       for (let index = 1; index <= options.count; index += 1) {
         const name = options.count === 1 ? options.namePrefix : `${options.namePrefix} ${index}`;
-        const bird = await birdRepository.create(db, {
+        const bird = await birdRepository.createBird(db, {
           name,
           species: options.species,
           breed: null,

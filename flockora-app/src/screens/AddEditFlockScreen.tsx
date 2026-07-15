@@ -58,9 +58,9 @@ export function AddEditFlockScreen({ route, navigation }: Props) {
     setSaving(true);
     try {
       if (isEditing && flockId != null) {
-        await flockRepository.update(db, flockId, payload);
+        await flockRepository.updateFlock(db, flockId, payload);
       } else {
-        await flockRepository.create(db, payload);
+        await flockRepository.createFlock(db, payload);
       }
       navigation.goBack();
     } catch (error) {

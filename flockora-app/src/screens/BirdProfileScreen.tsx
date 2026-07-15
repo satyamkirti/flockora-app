@@ -106,7 +106,7 @@ export function BirdProfileScreen({ route, navigation }: Props) {
         healthRecordRepository.getNotificationIdsByBird(db, bird.id),
       ]);
       await Promise.all([...taskNotificationIds, ...healthNotificationIds].map(cancelNotification));
-      await birdRepository.remove(db, bird.id);
+      await birdRepository.deleteBird(db, bird.id);
       navigation.goBack();
     });
   };

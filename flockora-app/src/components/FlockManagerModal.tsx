@@ -45,7 +45,7 @@ export function FlockManagerModal({
     if (!name) return;
     setCreating(true);
     try {
-      await flockRepository.create(db, { ...createEmptyFlockInput(), name });
+      await flockRepository.createFlock(db, { ...createEmptyFlockInput(), name });
       setNewFlockName('');
       onChanged();
     } finally {
@@ -55,7 +55,7 @@ export function FlockManagerModal({
 
   const handleDelete = (flock: FlockWithCount) => {
     confirmDestructive('Delete flock', `Delete "${flock.name}"? Birds in this flock will become unassigned.`, async () => {
-      await flockRepository.remove(db, flock.id);
+      await flockRepository.deleteFlock(db, flock.id);
       onChanged();
     });
   };

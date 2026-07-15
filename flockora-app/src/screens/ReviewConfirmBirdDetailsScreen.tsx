@@ -69,7 +69,7 @@ export function ReviewConfirmBirdDetailsScreen({ navigation }: Props) {
   const handleConfirm = async () => {
     setSaving(true);
     try {
-      await birdRepository.create(db, {
+      await birdRepository.createBird(db, {
         name: bird.name.trim(),
         species: speciesKey ?? 'chicken',
         breed: bird.confirmedBreed || null,

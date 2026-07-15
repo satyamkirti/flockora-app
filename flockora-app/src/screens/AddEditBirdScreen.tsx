@@ -185,10 +185,10 @@ export function AddEditBirdScreen({ route, navigation }: Props) {
     setSaving(true);
     try {
       if (isEditing && birdId != null) {
-        await birdRepository.update(db, birdId, payload);
+        await birdRepository.updateBird(db, birdId, payload);
         navigation.goBack();
       } else {
-        const created = await birdRepository.create(db, payload);
+        const created = await birdRepository.createBird(db, payload);
         navigation.replace('BirdProfile', { birdId: created.id });
       }
     } catch (error) {

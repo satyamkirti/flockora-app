@@ -36,7 +36,7 @@ export const flockRepository = {
     return row ? mapRow(row) : null;
   },
 
-  async create(db: SQLiteDatabase, input: FlockInput): Promise<Flock> {
+  async createFlock(db: SQLiteDatabase, input: FlockInput): Promise<Flock> {
     const now = new Date().toISOString();
     const result = await db.runAsync(
       'INSERT INTO flocks (name, species, breed, purpose, notes, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -49,7 +49,7 @@ export const flockRepository = {
     return mapRow(row);
   },
 
-  async update(db: SQLiteDatabase, id: number, input: FlockInput): Promise<Flock> {
+  async updateFlock(db: SQLiteDatabase, id: number, input: FlockInput): Promise<Flock> {
     const now = new Date().toISOString();
     await db.runAsync(
       'UPDATE flocks SET name = ?, species = ?, breed = ?, purpose = ?, notes = ?, updatedAt = ? WHERE id = ?',
@@ -63,7 +63,7 @@ export const flockRepository = {
   },
 
   /** Lightweight rename used by the quick-create/rename flow in FlockManagerModal — leaves
-   *  species/breed/purpose/notes untouched. Full editing goes through update() above. */
+   *  species/breed/purpose/notes untouched. Full editing goes through updateFlock() above. */
   async rename(db: SQLiteDatabase, id: number, name: string): Promise<void> {
     await db.runAsync('UPDATE flocks SET name = ?, updatedAt = ? WHERE id = ?', [
       name,
@@ -72,7 +72,7 @@ export const flockRepository = {
     ]);
   },
 
-  async remove(db: SQLiteDatabase, id: number): Promise<void> {
+  async deleteFlock(db: SQLiteDatabase, id: number): Promise<void> {
     await db.runAsync('DELETE FROM flocks WHERE id = ?', [id]);
   },
 
