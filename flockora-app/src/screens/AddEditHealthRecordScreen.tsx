@@ -478,6 +478,7 @@ export function AddEditHealthRecordScreen({ route, navigation }: Props) {
         label={saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Add Care Record'}
         onPress={handleSave}
         style={saving ? styles.disabled : undefined}
+        disabled={saving}
       />
 
       <BirdPickerModal

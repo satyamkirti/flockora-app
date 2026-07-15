@@ -421,6 +421,7 @@ export function AddEditClutchScreen({ route, navigation }: Props) {
         label={saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Add Clutch'}
         onPress={handleSave}
         style={saving ? styles.disabled : undefined}
+        disabled={saving}
       />
 
       <BreedingPairPickerModal

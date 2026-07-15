@@ -161,6 +161,7 @@ export function CreateBirdsFromHatchScreen({ route, navigation }: Props) {
         label={saving ? 'Adding…' : 'Add Hatched Birds'}
         onPress={handleCreate}
         style={saving ? styles.disabled : undefined}
+        disabled={saving}
       />
 
       <FlockManagerModal

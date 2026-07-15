@@ -7,11 +7,19 @@ type PrimaryButtonProps = {
   label: string;
   onPress?: () => void;
   style?: ViewStyle;
+  disabled?: boolean;
 };
 
-export function PrimaryButton({ label, onPress, style }: PrimaryButtonProps) {
+export function PrimaryButton({ label, onPress, style, disabled }: PrimaryButtonProps) {
   return (
-    <Pressable onPress={onPress} style={[styles.button, style]} accessibilityRole="button" accessibilityLabel={label}>
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={[styles.button, style]}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled }}
+    >
       <AppText variant="button" color={colors.cardSurface}>
         {label}
       </AppText>

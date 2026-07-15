@@ -154,6 +154,7 @@ export function AddEditFlockScreen({ route, navigation }: Props) {
         label={saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Create Group'}
         onPress={handleSave}
         style={saving ? styles.disabled : undefined}
+        disabled={saving}
       />
     </AppScreen>
   );

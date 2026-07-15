@@ -153,6 +153,7 @@ export function AddEditCandlingRecordScreen({ route, navigation }: Props) {
         label={saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Save Candling Record'}
         onPress={handleSave}
         style={saving ? styles.disabled : undefined}
+        disabled={saving}
       />
     </AppScreen>
   );

@@ -278,6 +278,7 @@ export function AddEditFeedItemScreen({ route, navigation }: Props) {
         label={saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Add Feed'}
         onPress={handleSave}
         style={saving ? styles.disabled : undefined}
+        disabled={saving}
       />
     </AppScreen>
   );

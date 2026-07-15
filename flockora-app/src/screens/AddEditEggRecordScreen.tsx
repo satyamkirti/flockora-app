@@ -262,6 +262,7 @@ export function AddEditEggRecordScreen({ route, navigation }: Props) {
         label={saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Save Egg Record'}
         onPress={handleSave}
         style={saving ? styles.disabled : undefined}
+        disabled={saving}
       />
 
       <BirdPickerModal

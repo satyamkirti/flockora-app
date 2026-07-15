@@ -210,6 +210,7 @@ export function LogFeedUsageScreen({ route, navigation }: Props) {
         label={saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Log Usage'}
         onPress={handleSave}
         style={saving ? styles.disabled : undefined}
+        disabled={saving}
       />
 
       <FeedItemPickerModal

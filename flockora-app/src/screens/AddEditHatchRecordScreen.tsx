@@ -165,6 +165,7 @@ export function AddEditHatchRecordScreen({ route, navigation }: Props) {
         label={saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Save Hatch Record'}
         onPress={handleSave}
         style={saving ? styles.disabled : undefined}
+        disabled={saving}
       />
     </AppScreen>
   );

@@ -142,6 +142,7 @@ export function ReviewConfirmBirdDetailsScreen({ navigation }: Props) {
         label={saving ? 'Saving…' : 'Confirm & Continue'}
         onPress={handleConfirm}
         style={saving ? styles.disabled : undefined}
+        disabled={saving}
       />
 
       {activeRow ? (

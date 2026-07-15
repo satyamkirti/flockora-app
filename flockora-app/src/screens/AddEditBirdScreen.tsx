@@ -388,6 +388,7 @@ export function AddEditBirdScreen({ route, navigation }: Props) {
         label={saving ? 'Saving…' : isEditing ? 'Save Changes' : 'Add Bird'}
         onPress={handleSave}
         style={saving ? styles.disabled : undefined}
+        disabled={saving}
       />
 
       <FlockManagerModal
