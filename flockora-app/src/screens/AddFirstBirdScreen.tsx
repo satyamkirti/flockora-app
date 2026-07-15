@@ -95,6 +95,10 @@ export function AddFirstBirdScreen({ navigation }: Props) {
                 </AppText>
               </Pressable>
             </View>
+            <AppText variant="caption" color={colors.mutedText} align="center" style={styles.uploadNotice}>
+              Continuing uploads this photo to Flockora's own server to suggest breed, sex, color, and life stage.
+              It is not shared with any third party or AI provider. See Settings → Privacy Information for details.
+            </AppText>
           </View>
         ) : (
           <View style={styles.captureCard}>
@@ -219,6 +223,10 @@ const styles = StyleSheet.create({
   previewActions: {
     flexDirection: 'row',
     gap: spacing.md,
+  },
+  uploadNotice: {
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
   secondaryButton: {
     paddingVertical: spacing.sm,

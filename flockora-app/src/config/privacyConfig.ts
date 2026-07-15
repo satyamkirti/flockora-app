@@ -1,10 +1,8 @@
 /**
- * Flockora has no published privacy policy yet. `PRIVACY_POLICY_URL` uses the
- * IANA-reserved `.example` domain (RFC 2606) as an explicit, non-resolving placeholder —
- * never a real or invented website. `PRIVACY_POLICY_URL_IS_PLACEHOLDER` must be flipped to
- * `false` (and the URL replaced with the real, hosted policy) before any Play Store / App
- * Store submission — both stores require a working privacy policy link for an app that
- * uploads a photo off-device (see SettingsScreen's privacy disclosure).
+ * Flockora's official privacy policy is published at https://flockora.com/privacy
+ * (Flockora's official website is https://flockora.com). `PRIVACY_POLICY_URL_IS_PLACEHOLDER`
+ * stays exported (rather than deleted) so `SettingsScreen`'s existing fallback-alert code path
+ * remains valid if this ever needs to be reverted to a placeholder during development.
  */
-export const PRIVACY_POLICY_URL_IS_PLACEHOLDER = true;
-export const PRIVACY_POLICY_URL = 'https://flockora.example/privacy-policy';
+export const PRIVACY_POLICY_URL_IS_PLACEHOLDER = false;
+export const PRIVACY_POLICY_URL = 'https://flockora.com/privacy';

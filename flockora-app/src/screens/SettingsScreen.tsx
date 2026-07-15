@@ -25,7 +25,7 @@ const PRIVACY_POINTS: { title: string; body: string }[] = [
   },
   {
     title: 'Bird photo for AI analysis',
-    body: "When you add your first bird, its photo is uploaded to Flockora's own backend server (never a third-party AI provider) so it can suggest breed, sex, color, and life stage details for you to confirm. This is the only thing Flockora sends off this device automatically.",
+    body: "When you add your first bird, its photo is uploaded to Flockora's own backend server (never a third-party AI provider) so it can suggest breed, sex, color, and life stage details for you to confirm. This is the only thing Flockora sends off this device automatically. The backend holds the photo in memory only for the duration of that one request and does not save it to disk, a database, or any log.",
   },
   {
     title: 'No analytics',
